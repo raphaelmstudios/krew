@@ -1,0 +1,44 @@
+/* KREW design tokens — straight from the design brief / HTML previews.
+   Keep this file as the single source of truth for color so every screen
+   built from here on (Task d1-4 onward) stays on-system automatically. */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --surface: #FAF7F2;
+  --surface-card: #FFFFFF;
+  --border: #E8E1D6;
+  --ink: #241C2C;
+  --ink-soft: #6B6274;
+  --ink-faint: #9C94A3;
+
+  --purple: #5B2C8C;
+  --purple-dark: #46216C;
+  --purple-bg: #EFE8F7;
+
+  --green: #1E8A5F;
+  --green-bg: #E6F4EC;
+  --amber: #B4740C;
+  --amber-bg: #FCF1DD;
+  --red: #C23B3B;
+  --red-bg: #FBEAEA;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+button {
+  font-family: inherit;
+}
