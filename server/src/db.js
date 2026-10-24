@@ -1,6 +1,6 @@
 // KREW Database Setup
 // This file opens the database file and creates the tables KREW needs if they don't exist yet.
-//
+
 
 import Database from 'better-sqlite3';
 import path from 'node:path';
