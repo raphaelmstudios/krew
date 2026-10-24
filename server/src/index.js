@@ -1,10 +1,13 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { db, migrate } from './db.js';
 
 dotenv.config();
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 4000;
 
@@ -13,7 +16,7 @@ app.use(express.json());
 
 migrate();
 
-// Health check — confirms the API is up and the database file opened.
+// Health check endpoint that confirma the server is functioning and the database is well conected.
 app.get('/api/health', (req, res) => {
   const row = db.prepare('SELECT 1 AS ok').get();
   res.json({ status: 'ok', db: row.ok === 1 ? 'connected' : 'error' });
@@ -25,6 +28,14 @@ app.get('/api/health', (req, res) => {
 //   Task d2-1 -> POST /api/jobs
 //   Task d2-2 -> POST /api/jobs/:id/confirm
 //   ...and so on, one route group per checklist task.
+//Each route is defined in its own file within the folder server/src/routes. THe ndividual route files are imported and used in this file.
+const clientDistPath = path.join(__dirname, '..', 'client', 'dist');
+app.use(express.static(clientDistPath));
+
+// This route is a catch-all route that serves the index.html file for any request that doesn't match an existing API route or static file. 
+app.get('/*splat', (req, res) => {
+  res.sendFile(path.join(clientDistPath, 'index.html'));
+});
 
 app.listen(PORT, () => {
   console.log(`KREW API listening on http://localhost:${PORT}`);
