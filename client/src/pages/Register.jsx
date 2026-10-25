@@ -8,13 +8,17 @@ export default function Register() {
     const [name, setName] = useState('');
     const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
-    
+
+    // showing one error per field is enough for now, since the server will also validate and return a single error message if something is wrong.
     const [fieldErrors, setFieldErrors] = useState({});
 
-    const [banner, setBanner] = useState(null);
+    // A single banner message that shows up at the top of the form for things
+    //that aren't specific to a single field, e.g network errors, server errors, or success messages.
+    const [banner, setBanner] = useState(null);  // { type: 'error' | 'success', text: string }
 
     const [submitting, setSubmitting] = useState(false);
 
+    // Checks the form fields for errors and returns an object with the errors. If there are no errors, returns an empty object.
     function validate() {
         const errors = {};
 
