@@ -22,16 +22,13 @@ db.exec(
   `CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
-    phone TEXT NOT NULL,
+    phone TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
     role TEXT NOT NULL CHECK(role IN ('organizer', 'crew_member' , 'admin')),
     id_document_path TEXT,
     verification_status TEXT NOT NULL DEFAULT 'pending' CHECK(verification_status IN ('pending', 'approved', 'rejected')),
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );`);
- 
-// This index is created when searching for users by phone numbers
-db.exec(`CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone);`);
 
 //transactions
 // This table handles every job agreement between an organizer and a crew member 
