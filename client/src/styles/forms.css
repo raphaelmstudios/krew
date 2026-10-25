@@ -1,0 +1,165 @@
+/* Shared styles for every form screen in KREW (registration, login, job
+   creation, and so on). */
+
+.krew-auth-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 24px 80px 24px;
+}
+
+.krew-wordmark {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin-bottom: 40px;
+}
+
+.krew-wordmark span {
+  color: var(--purple);
+}
+
+.krew-headline-wrap {
+  width: 100%;
+  max-width: 480px;
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.krew-headline {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 8px 0;
+}
+
+.krew-subhead {
+  font-size: 15px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.krew-card {
+  width: 100%;
+  max-width: 480px;
+  background: var(--surface-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 36px;
+}
+
+/* The organizer / crew member switch, one control, two choices, so it
+   never reads as two competing buttons. */
+.krew-role-toggle {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px;
+  margin-bottom: 26px;
+}
+
+.krew-role-option {
+  flex: 1;
+  text-align: center;
+  padding: 11px 0;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.krew-role-option.selected {
+  background: var(--purple);
+  color: #fff;
+}
+
+.krew-field {
+  margin-bottom: 20px;
+}
+
+.krew-field-label {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 9px;
+  display: block;
+}
+
+.krew-field-input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 13px 15px;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--ink);
+  background: #fff;
+}
+
+.krew-field-input:focus {
+  outline: 2px solid var(--purple);
+  outline-offset: 1px;
+}
+
+.krew-field-input.has-error {
+  border-color: var(--red);
+}
+
+.krew-field-error {
+  font-size: 12.5px;
+  color: var(--red);
+  margin-top: 6px;
+}
+
+/* Only one shape and color for every primary action in the whole app,
+   this is what makes it instantly obvious what's clickable. */
+.krew-button-primary {
+  width: 100%;
+  background: var(--purple);
+  color: #fff;
+  border: none;
+  padding: 16px 0;
+  border-radius: 999px;
+  font-size: 15.5px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  margin-top: 6px;
+}
+
+.krew-button-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.krew-form-banner {
+  font-size: 13.5px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.krew-form-banner.error {
+  background: var(--red-bg);
+  color: var(--red);
+}
+
+.krew-form-banner.success {
+  background: var(--green-bg);
+  color: var(--green);
+}
+
+.krew-fine-print {
+  font-size: 12.5px;
+  color: var(--ink-faint);
+  text-align: center;
+  margin-top: 16px;
+  line-height: 1.5;
+}
