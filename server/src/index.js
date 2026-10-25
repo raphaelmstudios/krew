@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { db, migrate } from './db.js';
+import { authRouter } from './routes/auth.js';
 
 dotenv.config();
 
@@ -29,10 +30,12 @@ app.get('/api/health', (req, res) => {
 //   Task d2-2 -> POST /api/jobs/:id/confirm
 //   ...and so on, one route group per checklist task.
 //Each route is defined in its own file within the folder server/src/routes. The individual route files are imported and used in this file.
+app.use('/api/auth', authRouter);
+
 const clientDistPath = path.join(__dirname, '..', '..', 'client', 'dist');
 app.use(express.static(clientDistPath));
 
-// This route is a catch-all route that serves the index.html file for any request that doesn't match an existing API route or static file. 
+// This route is a catch-all route that serves the index.html file for any request that doesn't match an existing API route or static file.
 app.get('/{*splat}', (req, res) => {
   res.sendFile(path.join(clientDistPath, 'index.html'));
 });
