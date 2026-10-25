@@ -30,21 +30,35 @@ db.exec(
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );`);
 
+// The users table already exists on most machines by this point, so the line above
+// won't add a new column to it. We add the selfie column separately here instead,
+// and just ignore the error on any machine where it's already been added.
+try {
+  db.exec(`ALTER TABLE users ADD COLUMN selfie_path TEXT;`);
+} catch (err) {
+  if (!err.message.includes('duplicate column name')) throw err;
+}
+
 //transactions
 // This table handles every job agreement between an organizer and a crew member 
 // Each job agreement between an organizer and a crew member is presented in one row in this table.
+// due_date and job_description are the terms the organizer sets when creating the job.
+// daraja_confirmed_at stays empty for now, it gets filled in once M-Pesa Daraja is wired up.
 db.exec(`
     CREATE TABLE IF NOT EXISTS transactions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       organizer_id INTEGER NOT NULL REFERENCES users(id),
       crew_member_id INTEGER NOT NULL REFERENCES users(id),
       amount REAL NOT NULL,
+      due_date TEXT NOT NULL,
+      job_description TEXT,
       status TEXT NOT NULL CHECK (status IN ('pending', 'confirmed', 'disputed')),
 
       organizer_confirmed_at TEXT,
       organizer_confirmed_amount REAL,
       crew_confirmed_at TEXT,
       crew_confirmed_amount REAL,
+      daraja_confirmed_at TEXT,
     
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );`);
