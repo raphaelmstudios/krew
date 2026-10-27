@@ -1,5 +1,6 @@
 /* Shared styles for every form screen in KREW (registration, login, job
-   creation, and so on). */
+   creation, and so on). Having one shared file means every form looks and
+   behaves the same way without copying the same CSS into each screen. */
 
 .krew-auth-page {
   min-height: 100vh;
@@ -51,7 +52,7 @@
   padding: 36px;
 }
 
-/* The organizer / crew member switch, one control, two choices, so it
+/* The organizer / crew member switch — one control, two choices, so it
    never reads as two competing buttons. */
 .krew-role-toggle {
   display: flex;
@@ -118,8 +119,7 @@
   margin-top: 6px;
 }
 
-/* Only one shape and color for every primary action in the whole app,
-   this is what makes it instantly obvious what's clickable. */
+
 .krew-button-primary {
   width: 100%;
   background: var(--purple);
@@ -162,4 +162,41 @@
   text-align: center;
   margin-top: 16px;
   line-height: 1.5;
+}
+
+/* File upload boxes */
+.krew-upload-box {
+  display: block;
+  border: 1.5px dashed var(--border);
+  border-radius: 12px;
+  padding: 20px 16px;
+  text-align: center;
+  cursor: pointer;
+  background: var(--surface);
+}
+
+.krew-upload-box.has-file {
+  border-style: solid;
+  border-color: var(--purple);
+}
+
+.krew-upload-box input[type='file'] {
+  display: none;
+}
+
+.krew-upload-icon {
+  font-size: 22px;
+  margin-bottom: 6px;
+}
+
+.krew-upload-hint {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.krew-upload-filename {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--purple);
+  word-break: break-all;
 }

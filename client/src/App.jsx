@@ -4,11 +4,7 @@ import IDUpload from './pages/IDUpload.jsx';
 import './styles/forms.css';
 
 // The sign-up flow is three small steps: register, then verify identity,
-// then wait for admin approval. `step` tracks which one we're on, and
-// `user` holds the account created in step one so step two knows whose
-// documents it's uploading. There's no routing library yet, so this is
-// just plain state — a real set of page URLs can replace this later
-// without changing how Register or IDUpload themselves work.
+// then wait for admin approval. 
 export default function App() {
   const [step, setStep] = useState('register');
   const [user, setUser] = useState(null);
