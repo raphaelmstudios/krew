@@ -5,6 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { db, migrate } from './db.js';
 import { authRouter } from './routes/auth.js';
+import { documentsRouter } from './routes/documents.js';
 
 dotenv.config();
 
@@ -25,12 +26,14 @@ app.get('/api/health', (req, res) => {
 
 // Routes land here as each build task lands:
 //   Task d1-4 -> POST /api/auth/register
+//   Task d1-5 -> POST /api/users/:id/documents
 //   Task d1-7 -> POST /api/auth/login
 //   Task d2-1 -> POST /api/jobs
 //   Task d2-2 -> POST /api/jobs/:id/confirm
 //   ...and so on, one route group per checklist task.
 //Each route is defined in its own file within the folder server/src/routes. The individual route files are imported and used in this file.
 app.use('/api/auth', authRouter);
+app.use('/api/users', documentsRouter);
 
 const clientDistPath = path.join(__dirname, '..', '..', 'client', 'dist');
 app.use(express.static(clientDistPath));
