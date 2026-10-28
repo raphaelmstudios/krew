@@ -16,7 +16,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 //The uploaded files live in the uploads folder, which is outside of the client and server folders. 
 // This is to prevent the files from being served directly by the web server, which would be a security risk. 
 // The files are served through a separate endpoint that checks whether the user is authorized to view them.
-//Render's free tier removes the uploads on every deploy, so we need to create the uploads filder on every erver start
+//Render's free tier removes the uploads on every deploy, so we need to create the uploads folder on every server start
 const UPLOAD_ROOT = path.join(__dirname, '..', '..', 'uploads');
 fs.mkdirSync(path.join(UPLOAD_ROOT, 'id-documents'), { recursive: true });
 fs.mkdirSync(path.join(UPLOAD_ROOT, 'selfies'), { recursive: true });
@@ -36,7 +36,7 @@ const storage = multer.diskStorage({
     cb(null, path.join(UPLOAD_ROOT, folder));
   },
   filename: (req, file, cb) => {
-    const safeExt = path.extname(file.originalname).toLowerCase().replace(/[^a-z0-9]/g, '');
+    const safeExt = path.extname(file.originalname).toLowerCase().replace(/[^a-z0-9.]/g, '');
     cb(null, `user-${req.params.id}-${file.fieldname}-${Date.now()}${safeExt}`);
     },
 });
@@ -50,7 +50,7 @@ function fileFilter(req, file, cb) {
     cb(null, true);
 }
 
-const upload = multer({ storage, fileFilter, limits: { fileSize: MAX_FILE_SIZE_BYTES } });
+const upload = multer({ storage, fileFilter, limits: { fileSize: MAX_FILE_SIZE } });
 
 // The field names MUST match what the frontend sends in its form data.
 const uploadFields = upload.fields([
@@ -59,7 +59,7 @@ const uploadFields = upload.fields([
 ]);
 
 
-//This is when we are about to reject a requesr after multer already saved one
+//This is when we are about to reject a request after multer already saved one
 //This deletes all the files that were saved by multer, so we don't leave unused files on the server.
 
 function cleanUpSavedFiles(files) {
@@ -84,7 +84,16 @@ documentsRouter.post('/:id/documents', (req, res) => {
             const userId = Number(req.params.id);
             if (!Number.isInteger(userId) || userId <= 0) {
                 cleanUpSavedFiles(req.files);
-                return res.status(400).json({ error: 'No account found for that id' });
+                return res.status(400).json({ error: 'Invalid user id' });
+            }
+
+            // Look the user up so we know their account actually exists, and so we
+            // have their current file paths in case they're uploading again and the
+            // old files need to be replaced.
+            const user = db.prepare('SELECT id, id_document_path, selfie_path FROM users WHERE id = ?').get(userId);
+            if (!user) {
+                cleanUpSavedFiles(req.files);
+                return res.status(404).json({ error: 'No account found for that id' });
             }
 
             const idFile = req.files?.id_document?.[0];
