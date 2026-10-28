@@ -35,7 +35,7 @@ export default function IDUpload({ user, onSubmitted }) {
     setSubmitting(true);
     try {
       const formData = new FormData();
-      formData.append('idDocument', idDocument);
+      formData.append('id_document', idDocument);
       formData.append('selfie', selfie);
 
       const response = await fetch(`/api/users/${user.id}/documents`, {
