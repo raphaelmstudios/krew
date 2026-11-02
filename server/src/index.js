@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { db, migrate } from './db.js';
 import { authRouter } from './routes/auth.js';
 import { documentsRouter } from './routes/documents.js';
+import { adminRouter } from './routes/admin.js';
 
 dotenv.config();
 
@@ -34,6 +35,7 @@ app.get('/api/health', (req, res) => {
 //Each route is defined in its own file within the folder server/src/routes. The individual route files are imported and used in this file.
 app.use('/api/auth', authRouter);
 app.use('/api/users', documentsRouter);
+app.use('/api/admin', adminRouter);
 
 const clientDistPath = path.join(__dirname, '..', '..', 'client', 'dist');
 app.use(express.static(clientDistPath));
