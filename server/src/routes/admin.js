@@ -29,7 +29,7 @@ function setVerificationStatus(newStatus) {
         }
 
         const result = db
-        .prepare('UPDATE users SET verification_status = ? WHERE id = ? AND verification_status = "pending"')
+        .prepare("UPDATE users SET verification_status = ? WHERE id = ? AND verification_status = 'pending'")
         .run(newStatus, userId);
 
         // If nothing gets updated, it means the user either doesn't exist or is not pending (it was already approved or rejected)
