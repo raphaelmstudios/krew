@@ -9,6 +9,10 @@ export default function App() {
   const [step, setStep] = useState('register');
   const [user, setUser] = useState(null);
 
+  if (window.location.pathname === '/admin') {
+    return <Admin />;
+  }
+
   if (step === 'register') {
     return (
       <Register
@@ -29,9 +33,8 @@ export default function App() {
     );
   }
 
-  // Task d1-6 builds the real "pending admin approval" screen and the
-  // admin-side toggle to approve it. For now this is just a plain
-  // confirmation that the documents made it to the server.
+  // This confirmation page is shown after the user has submitted their documents and is waiting for admin approval. 
+  // It does not require any further action from the user.
   return (
     <div className="krew-auth-page">
       <div className="krew-wordmark">
