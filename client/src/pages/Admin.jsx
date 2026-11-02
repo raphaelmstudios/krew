@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 export default function Admin() {
     const [pendingUsers, setPendingUsers] = useState(null); //null means still loading
     const [actioningId, setActioningId] = useState(null); 
+    const [error, setError] = useState(null);
     
      useEffect(() => {
     loadPendingUsers();
@@ -49,7 +50,7 @@ export default function Admin() {
             <h1 className="krew-admin-title">Pending Approvals </h1>
             <p className="krew-admin-subhead">Accounts waiting on ID verification before they can use KREW</p>
 
-            {error && <div className="krew-form-banner-error">{error}</div>}
+            {error && <div className="krew-form-banner error">{error}</div>}
 
             {pendingUsers === null && <div className="krew-admin-empty">Loading…</div>}
     
@@ -94,4 +95,3 @@ export default function Admin() {
         </div>
     );
 }
-    
