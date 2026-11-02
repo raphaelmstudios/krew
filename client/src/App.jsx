@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import Register from './pages/Register.jsx';
 import IDUpload from './pages/IDUpload.jsx';
+import Admin from './pages/Admin.jsx';
 import './styles/forms.css';
+import './styles/admin.css';
 
 // The sign-up flow is three small steps: register, then verify identity,
 // then wait for admin approval. 
