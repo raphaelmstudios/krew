@@ -6,11 +6,11 @@ import { useEffect, useState } from 'react';
 //Thats only acceptable since there's no real loging system yet
 //Once built this screen will need to require an admin session to be able to approve or reject real accounts.
 
-export default function Admin() {
+export default function Admin({ onLogout }) {
     const [pendingUsers, setPendingUsers] = useState(null); //null means still loading
-    const [actioningId, setActioningId] = useState(null); 
+    const [actioningId, setActioningId] = useState(null);
     const [error, setError] = useState(null);
-    
+
      useEffect(() => {
     loadPendingUsers();
   }, []);
@@ -21,7 +21,7 @@ export default function Admin() {
             const data = await response.json();
             setPendingUsers(data);
         } catch (err) {
-            setError(`Could not reach the server.`);    
+            setError(`Could not reach the server.`);
         }
     }
 
@@ -47,17 +47,22 @@ export default function Admin() {
 
     return (
         <div className="krew-admin-page">
-            <h1 className="krew-admin-title">Pending Approvals </h1>
-            <p className="krew-admin-subhead">Accounts waiting on ID verification before they can use KREW</p>
+            <div className="krew-admin-header">
+                <div>
+                    <h1 className="krew-admin-title">Pending Approvals </h1>
+                    <p className="krew-admin-subhead">Accounts waiting on ID verification before they can use KREW</p>
+                </div>
+                {onLogout && <button type="button" className="krew-admin-logout" onClick={onLogout}>Log out</button>}
+            </div>
 
             {error && <div className="krew-form-banner error">{error}</div>}
 
             {pendingUsers === null && <div className="krew-admin-empty">Loading…</div>}
-    
+
         {pendingUsers && pendingUsers.length === 0 && (
             <div className="krew-admin-empty">No accounts are waiting on review right now.</div>
         )}
-    
+
         {pendingUsers && pendingUsers.length > 0 && (
             <div>
             {pendingUsers.map((user) => (

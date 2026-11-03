@@ -39,8 +39,21 @@ try {
   if (!err.message.includes('duplicate column name')) throw err;
 }
 
+//sessions
+// One row per logged-in device. The token is a long random string, stored in an
+// httpOnly cookie so JavaScript on the page can never read it, only the browser
+// sends it back automatically. Sessions expire after 7 days (see server/src/routes/auth.js).
+db.exec(
+  `CREATE TABLE IF NOT EXISTS sessions (
+    token TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    expires_at TEXT NOT NULL
+    );`);
+db.exec(`CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);`);
+
 //transactions
-// This table handles every job agreement between an organizer and a crew member 
+// This table handles every job agreement between an organizer and a crew member
 // Each job agreement between an organizer and a crew member is presented in one row in this table.
 // due_date and job_description are the terms the organizer sets when creating the job.
 // daraja_confirmed_at stays empty for now, it gets filled in once M-Pesa Daraja is wired up.
@@ -59,7 +72,7 @@ db.exec(`
       crew_confirmed_at TEXT,
       crew_confirmed_amount REAL,
       daraja_confirmed_at TEXT,
-    
+
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );`);
 

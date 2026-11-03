@@ -1,4 +1,4 @@
-/* Admin page styles */
+/* Admin page styles */ 
 
 .krew-admin-page {
   min-height: 100vh;
@@ -7,11 +7,31 @@
   margin: 0 auto;
 }
 
+.krew-admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
 .krew-admin-title {
   font-size: 24px;
   font-weight: 800;
   letter-spacing: -0.02em;
   margin: 0 0 4px 0;
+}
+
+.krew-admin-logout {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-decoration: underline;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 4px 0;
 }
 
 .krew-admin-subhead {
