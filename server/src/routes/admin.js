@@ -1,11 +1,15 @@
 //Admin approval route
-// For the new accounts created by the users, the admin can approve or reject the accounts. 
+// For the new accounts created by the users, the admin can approve or reject the accounts.
 // The admin can also view the list of all the users and their details.
+// Task d1-7 locked this down - every route below requires a logged-in admin session now.
 
 import express from 'express';
 import { db } from '../db.js';
+import { requireAdmin } from '../middleware/auth.js';
 
 export const adminRouter = express.Router();
+
+adminRouter.use(requireAdmin);
 
 // THis is everything an admin needs to see about a pending user account
 // not password_hash which should never leave the server
