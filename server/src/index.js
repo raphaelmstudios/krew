@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -16,6 +17,7 @@ const PORT = process.env.PORT || 4000;
 
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
 
 migrate();
 
@@ -25,14 +27,7 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', db: row.ok === 1 ? 'connected' : 'error' });
 });
 
-// Routes land here as each build task lands:
-//   Task d1-4 -> POST /api/auth/register
-//   Task d1-5 -> POST /api/users/:id/documents
-//   Task d1-7 -> POST /api/auth/login
-//   Task d2-1 -> POST /api/jobs
-//   Task d2-2 -> POST /api/jobs/:id/confirm
-//   ...and so on, one route group per checklist task.
-//Each route is defined in its own file within the folder server/src/routes. The individual route files are imported and used in this file.
+// Mounts the routers for authentication, user document management, and admin operations.
 app.use('/api/auth', authRouter);
 app.use('/api/users', documentsRouter);
 app.use('/api/admin', adminRouter);
