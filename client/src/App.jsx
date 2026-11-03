@@ -1,18 +1,18 @@
 import { useState } from 'react';
 import Register from './pages/Register.jsx';
 import IDUpload from './pages/IDUpload.jsx';
-import Admin from './pages/Admin.jsx';
+import AdminGate from './pages/AdminGate.jsx';
 import './styles/forms.css';
 import './styles/admin.css';
 
 // The sign-up flow is three small steps: register, then verify identity,
-// then wait for admin approval. 
+// then wait for admin approval.
 export default function App() {
   const [step, setStep] = useState('register');
   const [user, setUser] = useState(null);
 
   if (window.location.pathname === '/admin') {
-    return <Admin />;
+    return <AdminGate />;
   }
 
   if (step === 'register') {
@@ -35,7 +35,7 @@ export default function App() {
     );
   }
 
-  // This confirmation page is shown after the user has submitted their documents and is waiting for admin approval. 
+  // This confirmation page is shown after the user has submitted their documents and is waiting for admin approval.
   // It does not require any further action from the user.
   return (
     <div className="krew-auth-page">
