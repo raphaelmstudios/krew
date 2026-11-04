@@ -8,6 +8,9 @@ import { db, migrate } from './db.js';
 import { authRouter } from './routes/auth.js';
 import { documentsRouter } from './routes/documents.js';
 import { adminRouter } from './routes/admin.js';
+import { jobsRouter } from './routes/jobs.js';
+import { listingsRouter } from './routes/listings.js';
+import { usersRouter } from './routes/users.js';
 
 dotenv.config();
 
@@ -27,10 +30,20 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', db: row.ok === 1 ? 'connected' : 'error' });
 });
 
-// Mounts the routers for authentication, user document management, and admin operations.
+// Mounts the routers for authentication, user document management, admin operations, job
+// agreements, job listings, and crew directory lookups.
+// The authRouter handles login, logout, and registration endpoints.
+// The documentsRouter handles endpoints related to user document uploads and retrievals.
+// The adminRouter handles endpoints for admin-specific operations, such as approving users and managing the system.
+// The jobsRouter handles an organizer hiring a known crew member directly, and listing the confirmed jobs either side is part of.
+// The listingsRouter handles the job board: posting an open listing, crew applying to it, and the organizer accepting one applicant.
+// The usersRouter handles the crew directory and a crew member's own availability status.
 app.use('/api/auth', authRouter);
 app.use('/api/users', documentsRouter);
+app.use('/api/users', usersRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/jobs', jobsRouter);
+app.use('/api/job-listings', listingsRouter);
 
 const clientDistPath = path.join(__dirname, '..', '..', 'client', 'dist');
 app.use(express.static(clientDistPath));

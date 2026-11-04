@@ -39,6 +39,18 @@ try {
   if (!err.message.includes('duplicate column name')) throw err;
 }
 
+// Self-reported by crew members (see routes/users.js) so an organizer can check
+// whether someone they want to hire directly is free before reaching out, rather
+// than only finding out through applicants on an open listing. Meaningless for
+// organizer/admin accounts - they just keep the default.
+try {
+  db.exec(
+    `ALTER TABLE users ADD COLUMN availability_status TEXT NOT NULL DEFAULT 'available' CHECK (availability_status IN ('available', 'working'));`
+  );
+} catch (err) {
+  if (!err.message.includes('duplicate column name')) throw err;
+}
+
 //sessions
 // One row per logged-in device. The token is a long random string, stored in an
 // httpOnly cookie so JavaScript on the page can never read it, only the browser
@@ -79,6 +91,43 @@ db.exec(`
 // This query makes looking up either the jobs an organizer has posted or the jobs a crew member has accepted faster
 db.exec(`CREATE INDEX IF NOT EXISTS idx_transactions_organizer_id ON transactions(organizer_id);`);
 db.exec(`CREATE INDEX IF NOT EXISTS idx_transactions_crew_member_id ON transactions(crew_member_id);`);
+
+//job_listings
+// An open job posting, before it's matched to anyone - the marketplace side of KREW.
+// An organizer posts one without naming a crew member yet; crew members browse open
+// listings and apply. Once the organizer accepts one applicant, this listing is marked
+// 'filled' and a row is added to `transactions` above for the actual agreement - that's
+// the paper trail the rest of the app (payment confirmation, disputes, reciprocal
+// records) is built around.
+db.exec(`
+    CREATE TABLE IF NOT EXISTS job_listings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      organizer_id INTEGER NOT NULL REFERENCES users(id),
+      amount REAL NOT NULL,
+      due_date TEXT NOT NULL,
+      job_description TEXT,
+      status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'filled', 'cancelled')),
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );`);
+db.exec(`CREATE INDEX IF NOT EXISTS idx_job_listings_organizer_id ON job_listings(organizer_id);`);
+db.exec(`CREATE INDEX IF NOT EXISTS idx_job_listings_status ON job_listings(status);`);
+
+//job_applications
+// One row per crew member who expresses interest in one open listing. A crew member
+// can only apply once to the same listing (the UNIQUE constraint below enforces that).
+// When the organizer accepts one, that row's status becomes 'accepted' and every other
+// applicant on the same listing is automatically marked 'declined'.
+db.exec(`
+    CREATE TABLE IF NOT EXISTS job_applications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      listing_id INTEGER NOT NULL REFERENCES job_listings(id),
+      crew_member_id INTEGER NOT NULL REFERENCES users(id),
+      status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'declined')),
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(listing_id, crew_member_id)
+    );`);
+db.exec(`CREATE INDEX IF NOT EXISTS idx_job_applications_listing_id ON job_applications(listing_id);`);
+db.exec(`CREATE INDEX IF NOT EXISTS idx_job_applications_crew_member_id ON job_applications(crew_member_id);`);
 
 //disputes
 // This table handles disputes raised by either the organizer or the crew member regarding a specific transaction.
