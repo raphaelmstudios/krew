@@ -166,6 +166,14 @@
   color: var(--ink-soft);
 }
 
+/* New here badge, for no track record yet - purple instead of amber/green/red since
+   it isn't a status to warn about or celebrate */
+.krew-status-pill.new {
+  background: var(--purple-bg);
+  color: var(--purple);
+  text-transform: none;
+}
+
 .krew-job-card-actions {
   display: flex;
   gap: 12px;

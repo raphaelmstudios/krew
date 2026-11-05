@@ -6,13 +6,14 @@ import JobCard from './JobCard.jsx';
 // The dashboard also handles loading states, error messages, and user interactions such as applying for a job and toggling availability status.
 // It also has a My Jobs tab, where crew members can see the jobs they're actually confirmed for (from either path) and confirm their own side of the payment.
 
-// Turns an organizer's payment record into one readable line on an open listing's card, so
-// a crew member has something to go on before applying. on_time_percentage comes back null
-// when the organizer has no confirmed jobs yet, so this just says that plainly for now
-// instead of showing a misleading 0%.
+// Turns an organizer's payment record into something to show on an open listing's card,
+// so a crew member has something to go on before applying. An organizer with no
+// confirmed jobs yet gets a plain "New here" badge instead of a misleading 0% - new
+// organizers still show up in this list exactly like everyone else, just without a track
+// record yet to report.
 function formatOrganizerRecord(record) {
   if (!record || record.confirmed_job_count === 0) {
-    return 'New organizer - no completed jobs yet';
+    return <span className="krew-status-pill new">New here</span>;
   }
   const jobWord = record.confirmed_job_count === 1 ? 'job' : 'jobs';
   return `${record.confirmed_job_count} completed ${jobWord} · ${record.on_time_percentage}% on time`;
