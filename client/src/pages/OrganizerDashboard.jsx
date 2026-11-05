@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import PostListingForm from './PostListingForm.jsx';
 import ListingApplicants from './ListingApplicants.jsx';
 import HireForm from './HireForm.jsx';
+import JobCard from './JobCard.jsx';
 
-// The organizer dashboard is the main interface for organizers to manage their job postings and hire crew members directly. 
-// It has two main sections: the Job Board, where organizers can post jobs and view applicants, and the Find Crew section, where organizers can browse approved crew members and hire them directly. 
+// The organizer dashboard is the main interface for organizers to manage their job postings and hire crew members directly.
+// It has two main sections: the Job Board, where organizers can post jobs and view applicants, and the Find Crew section, where organizers can browse approved crew members and hire them directly.
 // The dashboard also handles loading states, error messages, and user interactions such as posting a job, viewing applicants, and hiring crew members.
 
 export default function OrganizerDashboard({ user, onLogout }) {
@@ -68,7 +69,11 @@ export default function OrganizerDashboard({ user, onLogout }) {
 
   function switchSection(nextSection) {
     setSection(nextSection);
-    if (nextSection === 'directory' && crewDirectory === null) {
+    // Reload every time this tab is opened, not just the first time - crew
+    // availability and, now that jobs can be confirmed, each job's payment
+    // confirmations can change while the organizer was looking at the Job
+    // Board tab instead, so this tab shouldn't keep showing old data.
+    if (nextSection === 'directory') {
       loadCrewDirectory();
       loadDirectHires();
     }
@@ -288,21 +293,12 @@ export default function OrganizerDashboard({ user, onLogout }) {
                           the Job Board tab) - both land in the same `transactions` table, see
                           server/src/routes/jobs.js. This is the only screen that shows a
                           confirmed job's crew member and amount together, so it's worth keeping
-                          here rather than only under the tab that happens to have created it. */}
+                          here rather than only under the tab that happens to have created it.
+                          Each card also lets the organizer confirm their side of the payment. */}
                       <h2 className="krew-dash-subtitle">Your confirmed jobs</h2>
                       <div className="krew-job-list">
                         {directHires.map((job) => (
-                          <div className="krew-job-card" key={job.id}>
-                            <div className="krew-job-card-main">
-                              <div className="krew-job-card-crew">{job.crew_member_name}</div>
-                              {job.job_description && <div className="krew-job-card-desc">{job.job_description}</div>}
-                              <div className="krew-job-card-meta">Due {new Date(job.due_date).toLocaleDateString()}</div>
-                            </div>
-                            <div className="krew-job-card-side">
-                              <div className="krew-job-card-amount">KES {Number(job.amount).toLocaleString()}</div>
-                              <span className={`krew-status-pill ${job.status}`}>{job.status}</span>
-                            </div>
-                          </div>
+                          <JobCard key={job.id} job={job} viewerRole="organizer" onConfirmed={loadDirectHires} />
                         ))}
                       </div>
                     </div>
