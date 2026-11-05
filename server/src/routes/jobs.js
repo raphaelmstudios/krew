@@ -113,10 +113,11 @@ jobsRouter.get('/mine', requireAuth, (req, res) => {
 });
 
 // Either the organizer or the crew member on a job can confirm that a payment happened, along with the amount they are confirming.
-// This only records that one side's confirmation (amount and the time it was confirmed) - the time is always set by the server's own
+// This records that one side's confirmation (amount and the time it was confirmed) - the time is always set by the server's own
 // clock, not something either person can send us, so nobody can backdate a confirmation.
-// Confirming does not change the job's overall status by itself. A single side's confirmation isn't enough to call a job paid; the
-// status only moves to 'confirmed' once both sides' entries match, which is handled separately.
+// A single side's confirmation isn't enough to call a job paid on its own. Once BOTH sides have confirmed, we compare the two
+// amounts: if they match, the job's status moves to 'confirmed' automatically; if they don't, the status stays 'pending' and
+// whoever looks at the job can see both numbers side by side and sort it out (raising an actual dispute is a separate task).
 jobsRouter.post('/:id/confirm', requireAuth, (req, res) => {
   const transactionId = Number(req.params.id);
   const { amount } = req.body;
@@ -148,7 +149,19 @@ jobsRouter.post('/:id/confirm', requireAuth, (req, res) => {
     `UPDATE transactions SET ${side}_confirmed_at = datetime('now'), ${side}_confirmed_amount = ? WHERE id = ?`
   ).run(amountNumber, transactionId);
 
-  const updated = db.prepare(`SELECT * FROM transactions WHERE id = ?`).get(transactionId);
+  let updated = db.prepare(`SELECT * FROM transactions WHERE id = ?`).get(transactionId);
+
+  // Match-and-confirm (Task d2-3): once both sides have an entry in, see if
+  // they agree. Only a match moves the job to 'confirmed' - a mismatch
+  // leaves it 'pending' rather than guessing which side is right.
+  const bothConfirmed = updated.organizer_confirmed_at !== null && updated.crew_confirmed_at !== null;
+  const amountsMatch = bothConfirmed && Number(updated.organizer_confirmed_amount) === Number(updated.crew_confirmed_amount);
+
+  if (bothConfirmed && amountsMatch) {
+    db.prepare(`UPDATE transactions SET status = 'confirmed' WHERE id = ?`).run(transactionId);
+    updated = db.prepare(`SELECT * FROM transactions WHERE id = ?`).get(transactionId);
+  }
+
   res.json({
     id: updated.id,
     status: updated.status,
@@ -156,5 +169,13 @@ jobsRouter.post('/:id/confirm', requireAuth, (req, res) => {
     organizer_confirmed_amount: updated.organizer_confirmed_amount,
     crew_confirmed_at: updated.crew_confirmed_at,
     crew_confirmed_amount: updated.crew_confirmed_amount,
+    mismatch: bothConfirmed && !amountsMatch,
   });
+});
+
+// This route is a placeholder for future integration with Daraja, a mobile payment platform. 
+// It currently returns a 501 Not Implemented status, indicating that the feature is not yet available. 
+// When implemented, this route will handle payment confirmations through Daraja for jobs posted on the platform.
+jobsRouter.post('/:id/daraja-confirm', (req, res) => {
+  res.status(501).json({ error: 'Daraja integration is not implemented yet.' });
 });

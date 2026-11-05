@@ -35,9 +35,9 @@ app.get('/api/health', (req, res) => {
 // The authRouter handles login, logout, and registration endpoints.
 // The documentsRouter handles endpoints related to user document uploads and retrievals.
 // The adminRouter handles endpoints for admin-specific operations, such as approving users and managing the system.
-// The jobsRouter handles an organizer hiring a known crew member directly, listing the confirmed jobs either side is part of, and either side manually confirming a payment on one of them.
+// The jobsRouter handles an organizer hiring a known crew member directly, listing the confirmed jobs either side is part of, either side manually confirming a payment on one of them (auto-confirming once both sides agree), and a stubbed, not-yet-wired-up endpoint for where M-Pesa Daraja will eventually call in.
 // The listingsRouter handles the job board: posting an open listing, crew applying to it, and the organizer accepting one applicant.
-// The usersRouter handles the crew directory and a crew member's own availability status.
+// The usersRouter handles the crew directory, a crew member's own availability status, and computing an organizer's on-time payment record.
 app.use('/api/auth', authRouter);
 app.use('/api/users', documentsRouter);
 app.use('/api/users', usersRouter);
