@@ -288,13 +288,7 @@ export default function OrganizerDashboard({ user, onLogout }) {
 
                   {directHires && directHires.length > 0 && (
                     <div className="krew-dash-directory-hires">
-                      {/* /api/jobs/mine returns every confirmed job for this organizer, whichever
-                          path created it (direct hire here, or accepting a listing applicant on
-                          the Job Board tab) - both land in the same `transactions` table, see
-                          server/src/routes/jobs.js. This is the only screen that shows a
-                          confirmed job's crew member and amount together, so it's worth keeping
-                          here rather than only under the tab that happens to have created it.
-                          Each card also lets the organizer confirm their side of the payment. */}
+                      {/* this is the only screen that shows a confirmed job's crew member and amount together */}
                       <h2 className="krew-dash-subtitle">Your confirmed jobs</h2>
                       <div className="krew-job-list">
                         {directHires.map((job) => (
