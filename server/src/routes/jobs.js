@@ -70,9 +70,10 @@ jobsRouter.post('/', requireRole('organizer'), (req, res) => {
   });
 });
 
-// Both organizers and crew members can view their own jobs. 
+// Both organizers and crew members can view their own jobs.
 // Admins don't have jobs of their own, so they get an empty list.
 // The jobs are returned in descending order of creation date, so the most recent jobs appear first.
+// Each job also includes both sides' payment confirmation details (date confirmed and amount confirmed), if either side has submitted one yet.
 jobsRouter.get('/mine', requireAuth, (req, res) => {
   const { id, role } = req.user;
 
@@ -80,6 +81,8 @@ jobsRouter.get('/mine', requireAuth, (req, res) => {
     const jobs = db
       .prepare(
         `SELECT t.id, t.amount, t.due_date, t.job_description, t.status, t.created_at,
+                t.organizer_confirmed_at, t.organizer_confirmed_amount,
+                t.crew_confirmed_at, t.crew_confirmed_amount,
                 cm.id AS crew_member_id, cm.name AS crew_member_name
          FROM transactions t
          JOIN users cm ON cm.id = t.crew_member_id
@@ -94,6 +97,8 @@ jobsRouter.get('/mine', requireAuth, (req, res) => {
     const jobs = db
       .prepare(
         `SELECT t.id, t.amount, t.due_date, t.job_description, t.status, t.created_at,
+                t.organizer_confirmed_at, t.organizer_confirmed_amount,
+                t.crew_confirmed_at, t.crew_confirmed_amount,
                 org.id AS organizer_id, org.name AS organizer_name
          FROM transactions t
          JOIN users org ON org.id = t.organizer_id
@@ -105,4 +110,51 @@ jobsRouter.get('/mine', requireAuth, (req, res) => {
   }
 
   res.json([]);
+});
+
+// Either the organizer or the crew member on a job can confirm that a payment happened, along with the amount they are confirming.
+// This only records that one side's confirmation (amount and the time it was confirmed) - the time is always set by the server's own
+// clock, not something either person can send us, so nobody can backdate a confirmation.
+// Confirming does not change the job's overall status by itself. A single side's confirmation isn't enough to call a job paid; the
+// status only moves to 'confirmed' once both sides' entries match, which is handled separately.
+jobsRouter.post('/:id/confirm', requireAuth, (req, res) => {
+  const transactionId = Number(req.params.id);
+  const { amount } = req.body;
+
+  const transaction = db.prepare(`SELECT * FROM transactions WHERE id = ?`).get(transactionId);
+  if (!transaction) {
+    return res.status(404).json({ error: 'No job found with that id.' });
+  }
+
+  // Only the organizer or crew member who are actually part of this specific job are allowed to confirm it.
+  const isOrganizer = transaction.organizer_id === req.user.id;
+  const isCrewMember = transaction.crew_member_id === req.user.id;
+  if (!isOrganizer && !isCrewMember) {
+    return res.status(403).json({ error: "You're not part of this job." });
+  }
+
+  if (transaction.status !== 'pending') {
+    return res.status(409).json({ error: `This job is already ${transaction.status} - it can't be confirmed again.` });
+  }
+
+  const amountNumber = Number(amount);
+  if (!Number.isFinite(amountNumber) || amountNumber <= 0) {
+    return res.status(400).json({ error: 'Enter an amount greater than zero.' });
+  }
+
+  // Which pair of columns we write to depends on which side of the agreement the logged-in person is on, never on anything they send us.
+  const side = isOrganizer ? 'organizer' : 'crew';
+  db.prepare(
+    `UPDATE transactions SET ${side}_confirmed_at = datetime('now'), ${side}_confirmed_amount = ? WHERE id = ?`
+  ).run(amountNumber, transactionId);
+
+  const updated = db.prepare(`SELECT * FROM transactions WHERE id = ?`).get(transactionId);
+  res.json({
+    id: updated.id,
+    status: updated.status,
+    organizer_confirmed_at: updated.organizer_confirmed_at,
+    organizer_confirmed_amount: updated.organizer_confirmed_amount,
+    crew_confirmed_at: updated.crew_confirmed_at,
+    crew_confirmed_amount: updated.crew_confirmed_amount,
+  });
 });
