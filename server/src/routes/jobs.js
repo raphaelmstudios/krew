@@ -173,9 +173,66 @@ jobsRouter.post('/:id/confirm', requireAuth, (req, res) => {
   });
 });
 
-// This route is a placeholder for future integration with Daraja, a mobile payment platform. 
-// It currently returns a 501 Not Implemented status, indicating that the feature is not yet available. 
-// When implemented, this route will handle payment confirmations through Daraja for jobs posted on the platform.
+// Either side of a job agreement can flag it as disputed, with a reason - the main case
+// this is for is a confirmation mismatch (Task d2-3: both sides confirmed but the amounts
+// didn't match), but it's open to either side on a pending or confirmed job generally,
+// not just that one case. Raising a dispute never deletes the underlying job - it just
+// moves its status to 'disputed' and adds a row to the `disputes` table (schema from Task
+// d1-2) with who raised it and why. Moving the status is also what keeps a disputed job
+// out of both sides' reciprocal records without any extra logic: computeOrganizerRecord
+// and computeCrewRecord (routes/users.js) only ever count transactions with
+// status = 'confirmed', so a disputed one simply stops being one of those. Actually
+// resolving a dispute - putting the job back to 'confirmed' or closing it some other way -
+// is a separate task, not this one.
+jobsRouter.post('/:id/dispute', requireAuth, (req, res) => {
+  const transactionId = Number(req.params.id);
+  const { reason, details } = req.body;
+
+  const transaction = db.prepare(`SELECT * FROM transactions WHERE id = ?`).get(transactionId);
+  if (!transaction) {
+    return res.status(404).json({ error: 'No job found with that id.' });
+  }
+
+  const isOrganizer = transaction.organizer_id === req.user.id;
+  const isCrewMember = transaction.crew_member_id === req.user.id;
+  if (!isOrganizer && !isCrewMember) {
+    return res.status(403).json({ error: "You're not part of this job." });
+  }
+
+  if (transaction.status === 'disputed') {
+    return res.status(409).json({ error: 'This job is already disputed.' });
+  }
+
+  const trimmedReason = reason && reason.trim() ? reason.trim() : null;
+  if (!trimmedReason) {
+    return res.status(400).json({ error: 'Enter a reason for the dispute.' });
+  }
+  const trimmedDetails = details && details.trim() ? details.trim() : null;
+
+  // The dispute row and the status change have to land together - a disputed job with no
+  // dispute record, or a dispute record on a job that's still showing as confirmed, would
+  // both leave the data telling two different stories about the same job.
+  const raiseDispute = db.transaction(() => {
+    db.prepare(
+      `INSERT INTO disputes (transaction_id, raised_by, reason, details) VALUES (?, ?, ?, ?)`
+    ).run(transactionId, req.user.id, trimmedReason, trimmedDetails);
+    db.prepare(`UPDATE transactions SET status = 'disputed' WHERE id = ?`).run(transactionId);
+  });
+  raiseDispute();
+
+  res.status(201).json({ id: transactionId, status: 'disputed' });
+});
+
+// TODO (Task d2-4, not wired up yet): once KREW integrates Safaricom's Daraja API, M-Pesa
+// itself will call a route like this one when a payment actually goes through, instead of
+// either person having to manually confirm it through POST /:id/confirm above. This route
+// exists only so that integration point is visible in the codebase - it is not registered
+// with Safaricom, does not verify who is calling it, and does not touch the database.
+// When it's actually built, it should at minimum: verify the request really came from
+// Safaricom (Daraja signs or whitelists its callbacks, it doesn't use our session cookies),
+// look up the transaction the payment was for, and record it in the transaction's
+// `daraja_confirmed_at` column (already in the schema, see db.js) - probably auto-confirming
+// the job outright, since a real M-Pesa receipt is stronger proof than either side's word.
 jobsRouter.post('/:id/daraja-confirm', (req, res) => {
   res.status(501).json({ error: 'Daraja integration is not implemented yet.' });
 });
