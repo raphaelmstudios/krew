@@ -8,13 +8,15 @@ import JobCard from './JobCard.jsx';
 // It has two main sections: the Job Board, where organizers can post jobs and view applicants, and the Find Crew section, where organizers can browse approved crew members and hire them directly.
 // The dashboard also handles loading states, error messages, and user interactions such as posting a job, viewing applicants, and hiring crew members.
 
-// Turns a crew member's completed jobs count into one readable line on a crew directory
+// Turns a crew member's completed jobs count into something to show on a crew directory
 // card, so an organizer has something to go on before hiring. Shared with
-// ListingApplicants.jsx, which shows the same number for each applicant before the
-// organizer accepts one.
+// ListingApplicants.jsx, which shows the same badge for each applicant before the
+// organizer accepts one. A crew member with no confirmed jobs yet gets a plain "New here"
+// badge instead of a misleading zero - new crew members still show up in these lists
+// exactly like everyone else, just without a track record yet to report.
 export function formatCrewRecord(crewMember) {
   if (!crewMember.confirmed_job_count) {
-    return 'New crew member - no completed jobs yet';
+    return <span className="krew-status-pill new">New here</span>;
   }
   const jobWord = crewMember.confirmed_job_count === 1 ? 'job' : 'jobs';
   return `${crewMember.confirmed_job_count} completed ${jobWord}`;
