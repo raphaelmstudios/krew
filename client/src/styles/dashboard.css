@@ -148,7 +148,7 @@
   color: var(--red);
 }
 
-/* Listing / application statuses (Task d2-1 job board) */
+/* Listing statuses */
 .krew-status-pill.open {
   background: var(--amber-bg);
   color: var(--amber);
@@ -274,7 +274,7 @@
   cursor: not-allowed;
 }
 
-/* Availability toggle on the dashboard */
+/* Availability */
 .krew-dash-availability {
   background: var(--surface-card);
   border: 1px solid var(--border);
@@ -295,7 +295,7 @@
   margin-top: 6px;
 }
 
-/* Directory of available crew members */
+/* Directory hires */
 .krew-dash-directory-hires {
   margin-top: 36px;
 }
@@ -305,4 +305,58 @@
   font-weight: 700;
   letter-spacing: -0.01em;
   margin: 0 0 14px 0;
+}
+
+/* Confirmable job cards */
+.krew-job-card-confirmable {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.krew-job-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.krew-confirmation-block {
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+  margin-top: 14px;
+}
+
+.krew-confirmation-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  padding: 4px 0;
+}
+
+.krew-confirmation-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.krew-confirmation-form .krew-field-input {
+  flex: 1;
+  min-width: 140px;
+}
+
+.krew-confirmation-form .krew-form-banner {
+  flex: 1 0 100%;
+  margin: 0 0 4px 0;
+}
+
+.krew-confirmation-form-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
 }

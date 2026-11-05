@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react';
+import JobCard from './JobCard.jsx';
 
 // The crew dashboard is the main interface for crew members to manage their job applications and availability status.
 // It has two main sections: the Open Jobs tab, where crew members can view and apply to open job listings, and the My Applications tab, where they can track the status of their applications.
-// The dashboard also handles loading states, error messages, and user interactions such as applying for a job and toggling availability status.   
+// The dashboard also handles loading states, error messages, and user interactions such as applying for a job and toggling availability status.
+// It also has a My Jobs tab, where crew members can see the jobs they're actually confirmed for (from either path) and confirm their own side of the payment.
 
 export default function CrewDashboard({ user, onLogout }) {
-  const [tab, setTab] = useState('open'); // open | applications
+  const [tab, setTab] = useState('open'); // open | applications | jobs
   const [listings, setListings] = useState(null);
   const [applications, setApplications] = useState(null);
+  const [myJobs, setMyJobs] = useState(null);
   const [error, setError] = useState(null);
   const [applyingId, setApplyingId] = useState(null);
 
@@ -70,11 +73,31 @@ export default function CrewDashboard({ user, onLogout }) {
     }
   }
 
+  async function loadMyJobs() {
+    try {
+      const response = await fetch('/api/jobs/mine');
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.error || 'Could not load your jobs.');
+        return;
+      }
+      setMyJobs(data);
+    } catch (err) {
+      setError('Could not reach the server.');
+    }
+  }
+
   function switchTab(nextTab) {
     setTab(nextTab);
     setError(null);
     if (nextTab === 'applications' && applications === null) {
       loadApplications();
+    }
+    // Reloaded every time, not just the first time - the organizer could
+    // confirm a payment on one of these jobs while this tab isn't open, so
+    // this tab shouldn't keep showing an old confirmation state.
+    if (nextTab === 'jobs') {
+      loadMyJobs();
     }
   }
 
@@ -156,6 +179,13 @@ export default function CrewDashboard({ user, onLogout }) {
             >
               My Applications
             </button>
+            <button
+              type="button"
+              className={`krew-dash-tab ${tab === 'jobs' ? 'active' : ''}`}
+              onClick={() => switchTab('jobs')}
+            >
+              My Jobs
+            </button>
           </div>
 
           {error && <div className="krew-form-banner error">{error}</div>}
@@ -227,6 +257,26 @@ export default function CrewDashboard({ user, onLogout }) {
                         <span className={`krew-status-pill ${application.status}`}>{application.status}</span>
                       </div>
                     </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {tab === 'jobs' && (
+            <>
+              {myJobs === null && !error && <div className="krew-dash-loading-note">Loading…</div>}
+
+              {myJobs && myJobs.length === 0 && (
+                <div className="krew-dash-empty">
+                  <p>No confirmed jobs yet - once an organizer hires you or accepts your application, it'll show up here.</p>
+                </div>
+              )}
+
+              {myJobs && myJobs.length > 0 && (
+                <div className="krew-job-list">
+                  {myJobs.map((job) => (
+                    <JobCard key={job.id} job={job} viewerRole="crew_member" onConfirmed={loadMyJobs} />
                   ))}
                 </div>
               )}

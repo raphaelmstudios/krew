@@ -35,7 +35,7 @@ app.get('/api/health', (req, res) => {
 // The authRouter handles login, logout, and registration endpoints.
 // The documentsRouter handles endpoints related to user document uploads and retrievals.
 // The adminRouter handles endpoints for admin-specific operations, such as approving users and managing the system.
-// The jobsRouter handles an organizer hiring a known crew member directly, and listing the confirmed jobs either side is part of.
+// The jobsRouter handles an organizer hiring a known crew member directly, listing the confirmed jobs either side is part of, and either side manually confirming a payment on one of them.
 // The listingsRouter handles the job board: posting an open listing, crew applying to it, and the organizer accepting one applicant.
 // The usersRouter handles the crew directory and a crew member's own availability status.
 app.use('/api/auth', authRouter);
