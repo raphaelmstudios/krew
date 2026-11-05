@@ -1,10 +1,11 @@
-// This is  the job listings and applications system for KREW. 
-// It allows organizers to post open job listings, crew members to apply to those listings, and organizers to accept one applicant to create a formal job agreement. 
+// This is  the job listings and applications system for KREW.
+// It allows organizers to post open job listings, crew members to apply to those listings, and organizers to accept one applicant to create a formal job agreement.
 // It also allows organizers to hire approved crew members directly without going through the open job board.
 
 import express from 'express';
 import { db } from '../db.js';
 import { requireRole } from '../middleware/auth.js';
+import { computeOrganizerRecord, computeCrewRecord } from './users.js';
 
 export const listingsRouter = express.Router();
 
@@ -83,6 +84,8 @@ listingsRouter.post('/:id/cancel', requireRole('organizer'), (req, res) => {
 });
 
 // --- organizer: who has applied to one of their listings ---
+// Each applicant also comes with their completed jobs count, giving the organizer
+// something to go on before deciding who to accept.
 listingsRouter.get('/:id/applicants', requireRole('organizer'), (req, res) => {
   const listingId = Number(req.params.id);
   const listing = db.prepare(`SELECT id FROM job_listings WHERE id = ? AND organizer_id = ?`).get(listingId, req.user.id);
@@ -100,7 +103,7 @@ listingsRouter.get('/:id/applicants', requireRole('organizer'), (req, res) => {
        ORDER BY a.created_at ASC`
     )
     .all(listingId);
-  res.json(applicants);
+  res.json(applicants.map((applicant) => ({ ...applicant, ...computeCrewRecord(applicant.crew_member_id) })));
 });
 
 // --- organizer: accept one applicant - creates the real job agreement ---
@@ -159,11 +162,13 @@ listingsRouter.post('/:id/accept', requireRole('organizer'), (req, res) => {
 });
 
 // --- crew: browse open listings ---
+// Each listing also comes with the organizer's payment record, giving crew members
+// something to go on before deciding whether to apply.
 listingsRouter.get('/open', requireRole('crew_member'), (req, res) => {
   const listings = db
     .prepare(
       `SELECT l.id, l.amount, l.due_date, l.job_description, l.created_at,
-              org.name AS organizer_name,
+              org.id AS organizer_id, org.name AS organizer_name,
               EXISTS(
                 SELECT 1 FROM job_applications a WHERE a.listing_id = l.id AND a.crew_member_id = ?
               ) AS already_applied
@@ -174,7 +179,13 @@ listingsRouter.get('/open', requireRole('crew_member'), (req, res) => {
     )
     .all(req.user.id);
   // SQLite returns 0/1 for EXISTS(...) - send real booleans to the frontend.
-  res.json(listings.map((listing) => ({ ...listing, already_applied: Boolean(listing.already_applied) })));
+  res.json(
+    listings.map((listing) => ({
+      ...listing,
+      already_applied: Boolean(listing.already_applied),
+      organizer_record: computeOrganizerRecord(listing.organizer_id),
+    }))
+  );
 });
 
 // --- crew: apply to an open listing ---

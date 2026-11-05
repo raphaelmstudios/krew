@@ -8,6 +8,18 @@ import JobCard from './JobCard.jsx';
 // It has two main sections: the Job Board, where organizers can post jobs and view applicants, and the Find Crew section, where organizers can browse approved crew members and hire them directly.
 // The dashboard also handles loading states, error messages, and user interactions such as posting a job, viewing applicants, and hiring crew members.
 
+// Turns a crew member's completed jobs count into one readable line on a crew directory
+// card, so an organizer has something to go on before hiring. Shared with
+// ListingApplicants.jsx, which shows the same number for each applicant before the
+// organizer accepts one.
+export function formatCrewRecord(crewMember) {
+  if (!crewMember.confirmed_job_count) {
+    return 'New crew member - no completed jobs yet';
+  }
+  const jobWord = crewMember.confirmed_job_count === 1 ? 'job' : 'jobs';
+  return `${crewMember.confirmed_job_count} completed ${jobWord}`;
+}
+
 export default function OrganizerDashboard({ user, onLogout }) {
   const [section, setSection] = useState('board'); // board | directory
 
@@ -268,6 +280,7 @@ export default function OrganizerDashboard({ user, onLogout }) {
                             <span className={`krew-status-pill ${crewMember.availability_status === 'available' ? 'confirmed' : 'pending'}`}>
                               {crewMember.availability_status === 'available' ? 'Available' : 'Currently working'}
                             </span>
+                            <div className="krew-job-card-meta">{formatCrewRecord(crewMember)}</div>
                           </div>
                           <div className="krew-job-card-side">
                             <button
@@ -288,13 +301,7 @@ export default function OrganizerDashboard({ user, onLogout }) {
 
                   {directHires && directHires.length > 0 && (
                     <div className="krew-dash-directory-hires">
-                      {/* /api/jobs/mine returns every confirmed job for this organizer, whichever
-                          path created it (direct hire here, or accepting a listing applicant on
-                          the Job Board tab) - both land in the same `transactions` table, see
-                          server/src/routes/jobs.js. This is the only screen that shows a
-                          confirmed job's crew member and amount together, so it's worth keeping
-                          here rather than only under the tab that happens to have created it.
-                          Each card also lets the organizer confirm their side of the payment. */}
+                      {/* this is the only screen that shows a confirmed job's crew member and amount together */}
                       <h2 className="krew-dash-subtitle">Your confirmed jobs</h2>
                       <div className="krew-job-list">
                         {directHires.map((job) => (

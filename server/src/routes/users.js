@@ -1,5 +1,5 @@
 // A means of looking up users and their availability status, so organizers can hire crew members directly without going through the open job board.
-// Crew members can also set their own availability status, which is self-reported and not tied to job status. This is also where an organizer's payment record lives, so a crew member can check it before working with them.
+// Crew members can also set their own availability status, which is self-reported and not tied to job status. This is also where an organizer's payment record and a crew member's completed jobs count live, so either side can check the other before working together.
 
 import express from 'express';
 import { db } from '../db.js';
@@ -9,7 +9,7 @@ export const usersRouter = express.Router();
 
 const AVAILABILITY_VALUES = ['available', 'working'];
 
-// Organizers can look up crew members and their availability status, so they can hire them directly without going through the open job board.
+// Organizers can look up crew members and their availability status, so they can hire them directly without going through the open job board. Each crew member's completed jobs count comes along too, so the organizer has something to go on before picking who to hire.
 usersRouter.get('/crew-directory', requireRole('organizer'), (req, res) => {
   const crewMembers = db
     .prepare(
@@ -19,7 +19,7 @@ usersRouter.get('/crew-directory', requireRole('organizer'), (req, res) => {
        ORDER BY name ASC`
     )
     .all();
-  res.json(crewMembers);
+  res.json(crewMembers.map((crewMember) => ({ ...crewMember, ...computeCrewRecord(crewMember.id) })));
 });
 
 // Crew members can set their own availability status, which is self-reported and not tied to job status. This allows organizers to see whether a crew member is available for hire or currently working on a job.
@@ -44,17 +44,16 @@ function median(values) {
   return sorted.length % 2 === 0 ? (sorted[middle - 1] + sorted[middle]) / 2 : sorted[middle];
 }
 
-// Anyone logged in can look up an organizer's payment record, so a crew member can check it before applying to a listing or accepting a direct hire. "On time" means the payment was confirmed on or before the job's due date. A job only has a real payment date once both sides have confirmed and the amounts matched, and at that point whichever of organizer_confirmed_at / crew_confirmed_at is later is treated as when the payment actually happened, since that's the moment the two sides actually agreed. Organizers with no confirmed jobs yet get null stats instead of a misleading 0%, since that's a different situation from an organizer with an actual bad record.
-usersRouter.get('/:id/organizer-record', requireAuth, (req, res) => {
-  const organizerId = Number(req.params.id);
-
-  const organizer = db
-    .prepare(`SELECT id FROM users WHERE id = ? AND role = 'organizer'`)
-    .get(organizerId);
-  if (!organizer) {
-    return res.status(404).json({ error: 'No organizer found with that id.' });
-  }
-
+// The actual math behind an organizer's payment record, pulled out on its own so both the
+// lookup route below and the job board (crew browsing open listings, see
+// routes/listings.js) can show the same numbers without working them out twice. "On time"
+// means the payment was confirmed on or before the job's due date. A job only has a real
+// payment date once both sides have confirmed and the amounts matched, and at that point
+// whichever of organizer_confirmed_at / crew_confirmed_at is later is treated as when the
+// payment actually happened, since that's the moment the two sides actually agreed.
+// Organizers with no confirmed jobs yet get null stats instead of a misleading 0%, since
+// that's a different situation from an organizer with an actual bad record.
+export function computeOrganizerRecord(organizerId) {
   const confirmedJobs = db
     .prepare(
       `SELECT due_date, organizer_confirmed_at, crew_confirmed_at
@@ -64,7 +63,7 @@ usersRouter.get('/:id/organizer-record', requireAuth, (req, res) => {
     .all(organizerId);
 
   if (confirmedJobs.length === 0) {
-    return res.json({ confirmed_job_count: 0, on_time_percentage: null, median_days_to_payment: null });
+    return { confirmed_job_count: 0, on_time_percentage: null, median_days_to_payment: null };
   }
 
   const daysToPayment = confirmedJobs.map((job) => {
@@ -78,9 +77,51 @@ usersRouter.get('/:id/organizer-record', requireAuth, (req, res) => {
 
   const onTimeCount = daysToPayment.filter((days) => days <= 0).length;
 
-  res.json({
+  return {
     confirmed_job_count: confirmedJobs.length,
     on_time_percentage: Math.round((onTimeCount / confirmedJobs.length) * 100),
     median_days_to_payment: Math.round(median(daysToPayment) * 10) / 10,
-  });
+  };
+}
+
+// Anyone logged in can look up an organizer's payment record this way, so a crew member can check it before applying to a listing or accepting a direct hire.
+usersRouter.get('/:id/organizer-record', requireAuth, (req, res) => {
+  const organizerId = Number(req.params.id);
+
+  const organizer = db
+    .prepare(`SELECT id FROM users WHERE id = ? AND role = 'organizer'`)
+    .get(organizerId);
+  if (!organizer) {
+    return res.status(404).json({ error: 'No organizer found with that id.' });
+  }
+
+  res.json(computeOrganizerRecord(organizerId));
+});
+
+// The actual math behind a crew member's completed jobs count, pulled out on its own so
+// both the lookup route below and the crew directory and applicants list (an organizer
+// browsing or deciding who to hire, see this file's crew-directory route and
+// routes/listings.js) can show the same number without working it out twice. A completed
+// job here means one that reached status = 'confirmed' - both sides confirmed the payment
+// and the amounts matched - since anything short of that isn't a real completed job yet,
+// just one still in progress.
+export function computeCrewRecord(crewMemberId) {
+  const { confirmed_job_count } = db
+    .prepare(`SELECT COUNT(*) AS confirmed_job_count FROM transactions WHERE crew_member_id = ? AND status = 'confirmed'`)
+    .get(crewMemberId);
+  return { confirmed_job_count };
+}
+
+// Organizers can look up a crew member's record this way, so they can see how many jobs that crew member has actually completed and gotten paid for before hiring them.
+usersRouter.get('/:id/crew-record', requireAuth, (req, res) => {
+  const crewMemberId = Number(req.params.id);
+
+  const crewMember = db
+    .prepare(`SELECT id FROM users WHERE id = ? AND role = 'crew_member'`)
+    .get(crewMemberId);
+  if (!crewMember) {
+    return res.status(404).json({ error: 'No crew member found with that id.' });
+  }
+
+  res.json(computeCrewRecord(crewMemberId));
 });

@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react';
+import { formatCrewRecord } from './OrganizerDashboard.jsx';
 
 // A page for viewing the applicants to a specific job listing.
 // The organizer can see the list of applicants, their application status, and the date they applied.
 // The organizer can accept an applicant, which will create a formal job agreement and remove the listing from the open job board.
 // The page handles loading states, error messages, and displays a back button to return to the organizer's listings.
+// Each applicant also comes with their completed jobs count (see formatCrewRecord in
+// OrganizerDashboard.jsx), so the organizer has something to go on before picking who to
+// accept - the same number the crew directory shows for a direct hire.
 
 export default function ListingApplicants({ listing, onBack, onAccepted }) {
   const [applicants, setApplicants] = useState(null); // null = still loading
@@ -82,6 +86,7 @@ export default function ListingApplicants({ listing, onBack, onAccepted }) {
             <div className="krew-job-card" key={applicant.application_id}>
               <div className="krew-job-card-main">
                 <div className="krew-job-card-crew">{applicant.crew_member_name}</div>
+                <div className="krew-job-card-meta">{formatCrewRecord(applicant)}</div>
                 <div className="krew-job-card-meta">
                   Applied {new Date(applicant.created_at).toLocaleDateString()}
                 </div>
