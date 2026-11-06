@@ -6,10 +6,14 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
-    // Lets the client call fetch('/api/...') in dev without a CORS dance —
-    // Vite forwards it to the Express server on 4000.
+    // Proxy API requests to the backend server running on port 4000. 
+    // This allows the frontend to make requests to /api and /uploads without CORS issues.
     proxy: {
       '/api': {
+        target: 'http://localhost:4000',
+        changeOrigin: true,
+      },
+      '/uploads': {
         target: 'http://localhost:4000',
         changeOrigin: true,
       },
