@@ -192,7 +192,8 @@ export default function Register({ onRegistered }) {
             </div>
 
             <div className="krew-fine-print">
-              By creating an account you agree to KREW's Terms of Service and Privacy Policy.
+              By creating an account you agree to KREW's <Link to="/terms">Terms of Service</Link> and{' '}
+              <Link to="/privacy">Privacy Policy</Link>.
             </div>
           </>
         )}
