@@ -297,6 +297,78 @@
   cursor: not-allowed;
 }
 
+/* My profile card (crew self-service: photo, professional role, skills,
+   availability) - everything an organizer sees about a crew member on the
+   public Hire Crew directory, editable in one place. */
+.krew-dash-profile-card {
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 24px 28px;
+  margin-bottom: 24px;
+}
+
+.krew-dash-profile-top {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.krew-dash-profile-fields {
+  flex: 1;
+  min-width: 220px;
+}
+
+.krew-dash-profile-fields .krew-field {
+  margin-bottom: 14px;
+}
+
+/* A circular photo upload control - same hidden-input-under-a-label trick as
+   .krew-upload-box in forms.css, just round and with a photo preview instead
+   of a dashed box, since this is a portrait rather than a document. */
+.krew-dash-avatar {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+  width: 108px;
+}
+
+.krew-dash-avatar img {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+}
+
+.krew-dash-avatar-placeholder {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-faint);
+}
+
+.krew-dash-avatar-edit {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-brand-text);
+  text-align: center;
+}
+
+.krew-dash-avatar input[type='file'] {
+  display: none;
+}
+
 /* Availability */
 .krew-dash-availability {
   background: var(--color-surface-card);
@@ -309,6 +381,15 @@
   gap: 16px;
   margin-bottom: 24px;
   flex-wrap: wrap;
+}
+
+/* Nested inside .krew-dash-profile-card above, rather than its own standalone
+   card at the top of the dashboard - no outer border/margin needed there, a
+   plain divider reads better as "part of the same profile". */
+.krew-dash-availability-inline {
+  background: var(--color-surface);
+  margin: 20px 0 0 0;
+  border-radius: var(--radius-md);
 }
 
 .krew-dash-availability-note {
