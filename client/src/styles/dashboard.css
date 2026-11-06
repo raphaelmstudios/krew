@@ -9,8 +9,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px 24px;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface-card);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface-card);
 }
 
 .krew-dash-header-right {
@@ -21,7 +21,7 @@
 
 .krew-dash-greeting {
   font-size: 13.5px;
-  color: var(--ink-soft);
+  color: var(--color-text-soft);
   font-weight: 600;
 }
 
@@ -56,17 +56,17 @@
 
 .krew-dash-loading-note {
   font-size: 13.5px;
-  color: var(--ink-soft);
+  color: var(--color-text-soft);
   padding: 4px 0;
 }
 
 .krew-dash-empty {
-  background: var(--surface-card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
   padding: 40px 32px;
   text-align: center;
-  color: var(--ink-soft);
+  color: var(--color-text-soft);
   font-size: 14px;
 }
 
@@ -81,9 +81,9 @@
 }
 
 .krew-job-card {
-  background: var(--surface-card);
-  border: 1px solid var(--border);
-  border-radius: 14px;
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
   padding: 18px 20px;
   display: flex;
   justify-content: space-between;
@@ -103,14 +103,14 @@
 
 .krew-job-card-desc {
   font-size: 13.5px;
-  color: var(--ink-soft);
+  color: var(--color-text-soft);
   margin-bottom: 6px;
   line-height: 1.4;
 }
 
 .krew-job-card-meta {
   font-size: 12.5px;
-  color: var(--ink-faint);
+  color: var(--color-text-faint);
 }
 
 .krew-job-card-side {
@@ -124,6 +124,11 @@
   margin-bottom: 6px;
 }
 
+/* The only badges anywhere in KREW (per the brief) - a transaction's own
+   status, and nothing else. Still a rounded pill shape here on purpose:
+   the brief's "no pill-shaped buttons" rule is about buttons, something
+   you click - a status pill isn't interactive, it's a label, the same way
+   it's described throughout the brief itself ("status pills"). */
 .krew-status-pill {
   display: inline-block;
   font-size: 11px;
@@ -134,43 +139,43 @@
 }
 
 .krew-status-pill.pending {
-  background: var(--amber-bg);
-  color: var(--amber);
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
 }
 
 .krew-status-pill.confirmed {
-  background: var(--green-bg);
-  color: var(--green);
+  background: var(--color-success-bg);
+  color: var(--color-success);
 }
 
 .krew-status-pill.disputed {
-  background: var(--red-bg);
-  color: var(--red);
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
 }
 
 /* Listing statuses */
 .krew-status-pill.open {
-  background: var(--amber-bg);
-  color: var(--amber);
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
 }
 
 .krew-status-pill.filled,
 .krew-status-pill.accepted {
-  background: var(--green-bg);
-  color: var(--green);
+  background: var(--color-success-bg);
+  color: var(--color-success);
 }
 
 .krew-status-pill.cancelled,
 .krew-status-pill.declined {
-  background: var(--border);
-  color: var(--ink-soft);
+  background: var(--color-border);
+  color: var(--color-text-soft);
 }
 
 /* New here badge, for no track record yet - purple instead of amber/green/red since
    it isn't a status to warn about or celebrate */
 .krew-status-pill.new {
-  background: var(--purple-bg);
-  color: var(--purple);
+  background: var(--color-brand-bg);
+  color: var(--color-ink-plum);
   text-transform: none;
 }
 
@@ -187,14 +192,14 @@
   padding: 0;
   font-size: 12.5px;
   font-weight: 600;
-  color: var(--purple);
+  color: var(--color-brand-text);
   text-decoration: underline;
   cursor: pointer;
   font-family: inherit;
 }
 
 .krew-dash-text-btn.danger {
-  color: var(--red);
+  color: var(--color-danger);
 }
 
 .krew-dash-back-link {
@@ -204,23 +209,26 @@
   margin-bottom: 18px;
   font-size: 13.5px;
   font-weight: 600;
-  color: var(--ink-soft);
+  color: var(--color-text-soft);
   cursor: pointer;
   font-family: inherit;
 }
 
 .krew-dash-listing-summary {
   font-size: 13px;
-  color: var(--ink-soft);
+  color: var(--color-text-soft);
   margin: 4px 0 0 0;
 }
 
-/* Tabs on the crew dashboard */
+/* Tabs on the crew dashboard. Same reasoning as the role toggle in
+   forms.css - rounded, but to the controlled scale, not a 999px pill,
+   since these ARE buttons (each one is a click target that switches
+   tabs). */
 .krew-dash-tabs {
   display: flex;
   gap: 4px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
   padding: 4px;
   margin-bottom: 24px;
   width: fit-content;
@@ -228,19 +236,20 @@
 
 .krew-dash-tab {
   padding: 9px 20px;
-  border-radius: 999px;
+  border-radius: var(--radius-lg);
   font-size: 13.5px;
   font-weight: 600;
-  color: var(--ink-soft);
+  color: var(--color-text-soft);
   background: none;
   border: none;
   cursor: pointer;
   font-family: inherit;
+  transition: background-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
 }
 
 .krew-dash-tab.active {
-  background: var(--purple);
-  color: #fff;
+  background: var(--color-brand);
+  color: var(--color-text-on-brand);
 }
 
 .krew-dash-form-card {
@@ -267,14 +276,20 @@
 
 .krew-button-secondary {
   background: none;
-  border: 1px solid var(--border);
-  color: var(--ink-soft);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-soft);
   padding: 13px 20px;
-  border-radius: 999px;
+  border-radius: var(--radius-md);
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
+  transition: border-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
+}
+
+.krew-button-secondary:hover:not(:disabled) {
+  border-color: var(--color-text-soft);
+  color: var(--color-text);
 }
 
 .krew-button-secondary:disabled {
@@ -284,9 +299,9 @@
 
 /* Availability */
 .krew-dash-availability {
-  background: var(--surface-card);
-  border: 1px solid var(--border);
-  border-radius: 14px;
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
   padding: 16px 20px;
   display: flex;
   justify-content: space-between;
@@ -299,7 +314,7 @@
 .krew-dash-availability-note {
   display: block;
   font-size: 12.5px;
-  color: var(--ink-faint);
+  color: var(--color-text-faint);
   margin-top: 6px;
 }
 
@@ -329,7 +344,7 @@
 }
 
 .krew-confirmation-block {
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--color-border);
   padding-top: 14px;
   margin-top: 14px;
 }
@@ -340,7 +355,7 @@
   align-items: center;
   gap: 12px;
   font-size: 13px;
-  color: var(--ink-soft);
+  color: var(--color-text-soft);
   padding: 4px 0;
 }
 
