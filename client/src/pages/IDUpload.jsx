@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { IdCard, Camera } from 'lucide-react';
+import AuthLayout from '../components/AuthLayout.jsx';
 
 // This is an ID and selfie upload form that is used in the KREW identity verification flow.
 // It is used in the IDUpload.jsx page, which is shown to users after they register and log in for the first time.
@@ -61,11 +62,7 @@ export default function IDUpload({ user, onSubmitted }) {
   }
 
   return (
-    <div className="krew-auth-page">
-      <div className="krew-wordmark">
-        KRE<span>W</span>
-      </div>
-
+    <AuthLayout>
       <div className="krew-headline-wrap">
         <h1 className="krew-headline">Verify your identity</h1>
         <p className="krew-subhead">
@@ -117,6 +114,6 @@ export default function IDUpload({ user, onSubmitted }) {
           Your documents are only used to verify your identity and are never shared publicly.
         </div>
       </div>
-    </div>
+    </AuthLayout>
   );
 }
