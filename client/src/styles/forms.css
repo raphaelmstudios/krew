@@ -1,6 +1,4 @@
-/* Shared styles for every form screen in KREW (registration, login, job
-   creation, and so on). Having one shared file means every form looks and
-   behaves the same way without copying the same CSS into each screen. */
+/* Auth page styles */
 
 .krew-auth-page {
   min-height: 100vh;
@@ -20,6 +18,109 @@
 
 .krew-wordmark span {
   color: var(--color-brand-text);
+}
+
+/* Auth split layout */
+.krew-auth-split {
+  min-height: 100vh;
+  display: flex;
+}
+
+.krew-auth-visual {
+  flex: 1 1 42%;
+  position: relative;
+  overflow: hidden;
+  background: var(--color-ink-plum);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 56px;
+}
+
+/* Auth visual shapes */
+.krew-auth-shape {
+  position: absolute;
+  display: block;
+}
+
+.krew-auth-shape-1 {
+  width: 140%;
+  height: 65%;
+  bottom: -10%;
+  left: -20%;
+  background: var(--color-electric-violet);
+  clip-path: polygon(0 100%, 100% 40%, 100% 100%);
+  opacity: 0.9;
+}
+
+.krew-auth-shape-2 {
+  width: 90%;
+  height: 45%;
+  bottom: -5%;
+  right: -15%;
+  background: var(--color-soft-violet);
+  clip-path: polygon(30% 100%, 100% 20%, 100% 100%);
+  opacity: 0.5;
+}
+
+.krew-auth-shape-3 {
+  width: 60%;
+  height: 30%;
+  top: 8%;
+  right: -10%;
+  background: var(--color-lavender-mist);
+  clip-path: polygon(40% 0, 100% 0, 70% 100%, 0 100%);
+  opacity: 0.12;
+}
+
+.krew-auth-visual-content {
+  position: relative;
+  z-index: 1;
+}
+
+.krew-wordmark-on-dark {
+  color: var(--color-text-on-dark);
+  margin-bottom: 16px;
+}
+
+.krew-wordmark-on-dark span {
+  color: var(--color-soft-violet);
+}
+
+.krew-auth-visual-tagline {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--color-text-on-dark);
+  max-width: 320px;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.krew-auth-form-panel {
+  flex: 1 1 58%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-y: auto;
+  padding: 48px 24px 80px 24px;
+}
+
+/* Mobile wordmark */
+.krew-auth-mobile-wordmark {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .krew-auth-visual {
+    display: none;
+  }
+
+  .krew-auth-mobile-wordmark {
+    display: block;
+  }
 }
 
 .krew-headline-wrap {
@@ -52,11 +153,7 @@
   padding: 36px;
 }
 
-/* The organizer / crew member switch - one control, two choices, so it
-   never reads as two competing buttons. Rounded but not a pill (the brief
-   rules out pill-shaped buttons sitewide) - the outer wrapper and the two
-   options inside it use the same controlled-radius scale as everything
-   else, just at a larger size that suits a segmented control. */
+/* Role toggle */
 .krew-role-toggle {
   display: flex;
   border: 1px solid var(--color-border);
@@ -117,16 +214,53 @@
   border-color: var(--color-danger);
 }
 
+/* Field input wrapper */
+.krew-field-input-wrap {
+  position: relative;
+}
+
+.krew-field-input-wrap .krew-field-input {
+  padding-left: 44px;
+}
+
+.krew-field-input-wrap.has-toggle .krew-field-input {
+  padding-right: 44px;
+}
+
+.krew-field-input-icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-faint);
+  display: flex;
+  pointer-events: none;
+}
+
+.krew-field-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 4px;
+  display: flex;
+  color: var(--color-text-faint);
+  cursor: pointer;
+}
+
+.krew-field-toggle:hover {
+  color: var(--color-text-soft);
+}
+
 .krew-field-error {
   font-size: 12.5px;
   color: var(--color-danger);
   margin-top: 6px;
 }
 
-/* Only one shape and color for every primary action in the whole app -
-   this is what makes it instantly obvious what's clickable. Rectangular
-   with a controlled corner radius, not a pill - see the brief's rule
-   against pill-shaped buttons. */
+/* Primary button */
 .krew-button-primary {
   width: 100%;
   background: var(--color-brand);
@@ -191,9 +325,7 @@
   text-decoration: underline;
 }
 
-/* File upload boxes (ID + selfie, Task d1-5). Each one is a big dashed
-   tappable area instead of the browser's own tiny "Choose file" button,
-   since that default control is easy to miss on a phone screen. */
+/* File upload boxes section */
 .krew-upload-box {
   display: block;
   border: 1.5px dashed var(--color-border);
