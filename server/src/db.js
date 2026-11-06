@@ -51,6 +51,17 @@ try {
   if (!err.message.includes('duplicate column name')) throw err;
 }
 
+// A profile photo a crew member uploads themselves once they're already logged in -
+// different from id_document_path/selfie_path above, which are the private KYC files
+// from signup and are never shown to anyone but an admin. This one is meant to be
+// shown publicly on the crew directory, so it's stored and served separately from
+// those two.
+try {
+  db.exec(`ALTER TABLE users ADD COLUMN profile_photo_path TEXT;`);
+} catch (err) {
+  if (!err.message.includes('duplicate column name')) throw err;
+}
+
 //sessions
 // One row per logged-in device. The token is a long random string, stored in an
 // httpOnly cookie so JavaScript on the page can never read it, only the browser
