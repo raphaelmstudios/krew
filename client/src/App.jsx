@@ -6,6 +6,7 @@ import AdminGate from './pages/AdminGate.jsx';
 import RoleGate from './pages/RoleGate.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Login from './pages/Login.jsx';
+import AuthLayout from './components/AuthLayout.jsx';
 import './styles/forms.css';
 import './styles/admin.css';
 import './styles/dashboard.css';
@@ -42,10 +43,7 @@ function RegisterFlow() {
   // This confirmation page is shown after the user has submitted their documents and is waiting for admin approval.
   // It does not require any further action from the user.
   return (
-    <div className="krew-auth-page">
-      <div className="krew-wordmark">
-        KRE<span>W</span>
-      </div>
+    <AuthLayout>
       <div className="krew-card" style={{ textAlign: 'center' }}>
         <div className="krew-headline" style={{ marginBottom: 8 }}>You're all set, {user.name}</div>
         <p className="krew-subhead">
@@ -55,7 +53,7 @@ function RegisterFlow() {
           Already approved? <Link to="/login">Log in</Link>.
         </p>
       </div>
-    </div>
+    </AuthLayout>
   );
 }
 
