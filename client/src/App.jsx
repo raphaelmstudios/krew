@@ -7,15 +7,17 @@ import RoleGate from './pages/RoleGate.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Login from './pages/Login.jsx';
 import AuthLayout from './components/AuthLayout.jsx';
+import Home from './pages/Home.jsx';
 import './styles/forms.css';
 import './styles/admin.css';
 import './styles/dashboard.css';
+import './styles/public.css';
 
 // The sign-up flow is three small steps: register, then verify identity,
-// then wait for admin approval. Pulled out into its own component so it can
-// be the route for both "/" and any URL that doesn't match anything else
-// below - that second part matches how this worked before the router was
-// added, when every unrecognised path fell through to this same flow.
+// then wait for admin approval. Lives at /register now that "/" is the real
+// public homepage (redesign brief section 7.1) instead of falling straight
+// into this flow - before that homepage existed, "/" was the only thing
+// there was to show a first-time visitor.
 function RegisterFlow() {
   const [step, setStep] = useState('register');
   const [user, setUser] = useState(null);
@@ -96,8 +98,12 @@ export default function App() {
 
       <Route path="/admin" element={<AdminGate />} />
 
-      <Route path="/" element={<RegisterFlow />} />
-      <Route path="*" element={<RegisterFlow />} />
+      <Route path="/register" element={<RegisterFlow />} />
+
+      <Route path="/" element={<Home />} />
+      {/* No dedicated 404 page yet - an unrecognised path falls back to the
+          homepage rather than a dead end. */}
+      <Route path="*" element={<Home />} />
     </Routes>
   );
 }
