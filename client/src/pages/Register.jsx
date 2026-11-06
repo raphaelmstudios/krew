@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { User, Phone, Lock, Eye, EyeOff } from 'lucide-react';
+import AuthLayout from '../components/AuthLayout.jsx';
 
 //This is the sign up screen for new users. It collects the user's name, phone number, password, and role (organizer or crew member).
 // Every check here also happens again on the server
@@ -13,6 +15,7 @@ export default function Register({ onRegistered }) {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   //We show one error message per field, and we also show a banner for errors that aren't specific to one field (like "that phone number is already registered").
   const [fieldErrors, setFieldErrors] = useState({});
@@ -78,11 +81,7 @@ export default function Register({ onRegistered }) {
   }
 
   return (
-    <div className="krew-auth-page">
-      <div className="krew-wordmark">
-        KRE<span>W</span>
-      </div>
-
+    <AuthLayout>
       <div className="krew-headline-wrap">
         <h1 className="krew-headline">Create your account</h1>
         <p className="krew-subhead">Join as an organizer to post jobs, or as crew to get hired and paid on time.</p>
@@ -126,40 +125,57 @@ export default function Register({ onRegistered }) {
 
               <div className="krew-field">
                 <label className="krew-field-label" htmlFor="name">Full Name</label>
-                <input
-                  id="name"
-                  type="text"
-                  className={`krew-field-input ${fieldErrors.name ? 'has-error' : ''}`}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Wanjiru Kamau"
-                />
+                <div className="krew-field-input-wrap">
+                  <span className="krew-field-input-icon" aria-hidden="true"><User size={17} strokeWidth={1.75} /></span>
+                  <input
+                    id="name"
+                    type="text"
+                    className={`krew-field-input ${fieldErrors.name ? 'has-error' : ''}`}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="e.g. Wanjiru Kamau"
+                  />
+                </div>
                 {fieldErrors.name && <div className="krew-field-error">{fieldErrors.name}</div>}
               </div>
 
               <div className="krew-field">
                 <label className="krew-field-label" htmlFor="phone">Phone Number</label>
-                <input
-                  id="phone"
-                  type="tel"
-                  className={`krew-field-input ${fieldErrors.phone ? 'has-error' : ''}`}
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="0712345678"
-                />
+                <div className="krew-field-input-wrap">
+                  <span className="krew-field-input-icon" aria-hidden="true"><Phone size={17} strokeWidth={1.75} /></span>
+                  <input
+                    id="phone"
+                    type="tel"
+                    className={`krew-field-input ${fieldErrors.phone ? 'has-error' : ''}`}
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="0712345678"
+                  />
+                </div>
                 {fieldErrors.phone && <div className="krew-field-error">{fieldErrors.phone}</div>}
               </div>
 
               <div className="krew-field">
                 <label className="krew-field-label" htmlFor="password">Password</label>
-                <input
-                  id="password"
-                  type="password"
-                  className={`krew-field-input ${fieldErrors.password ? 'has-error' : ''}`}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="At least 8 characters"
-                />
+                <div className="krew-field-input-wrap has-toggle">
+                  <span className="krew-field-input-icon" aria-hidden="true"><Lock size={17} strokeWidth={1.75} /></span>
+                  <input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    className={`krew-field-input ${fieldErrors.password ? 'has-error' : ''}`}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="At least 8 characters"
+                  />
+                  <button
+                    type="button"
+                    className="krew-field-toggle"
+                    onClick={() => setShowPassword((current) => !current)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff size={17} strokeWidth={1.75} /> : <Eye size={17} strokeWidth={1.75} />}
+                  </button>
+                </div>
                 {fieldErrors.password && <div className="krew-field-error">{fieldErrors.password}</div>}
               </div>
 
@@ -181,6 +197,6 @@ export default function Register({ onRegistered }) {
           </>
         )}
       </div>
-    </div>
+    </AuthLayout>
   );
 }
