@@ -217,16 +217,20 @@ listingsRouter.get('/open', requireRole('crew_member'), (req, res) => {
 
 // --- anyone: a public preview of open listings, for the "Find Work" marketplace page ---
 // Same idea as GET /open above, but for a visitor who isn't logged in (or isn't crew)
-// yet. Deliberately thinner: no organizer_name, since that's identifying someone who
-// hasn't agreed to be shown to the public - just enough (amount, due date, description,
-// and the organizer's payment stats on their own) to make signing up worth it. Actually
+// yet. Includes organizer_name - the redesign brief's own Find Work card spec (section
+// 7.3) lists "Organizer" as a field to show, and crew members' names are already shown
+// publicly on the Hire Crew directory (routes/users.js), so withholding only organizer
+// names here would be an inconsistent, not more protective, rule. Still never includes
+// phone numbers or any other contact/account detail - that line hasn't moved. Actually
 // applying still needs a real, approved crew account, same requireRole('crew_member')
 // gate as /:id/apply below.
 listingsRouter.get('/public', (req, res) => {
   const listings = db
     .prepare(
-      `SELECT l.id, l.amount, l.due_date, l.job_description, l.title, l.category, l.location, l.created_at, l.organizer_id
+      `SELECT l.id, l.amount, l.due_date, l.job_description, l.title, l.category, l.location, l.created_at,
+              l.organizer_id, org.name AS organizer_name
        FROM job_listings l
+       JOIN users org ON org.id = l.organizer_id
        WHERE l.status = 'open'
        ORDER BY l.created_at DESC`
     )
@@ -240,15 +244,18 @@ listingsRouter.get('/public', (req, res) => {
 });
 
 // --- anyone: a single open listing's public detail, for the gig-detail page ---
-// Same thin shape as GET /public above (no organizer_name), just for one listing
-// instead of the whole list. A cancelled, filled, or non-existent listing id all
-// come back as a 404 rather than leaking which one it is.
+// Same shape as GET /public above (organizer_name included, nothing else about the
+// organizer's account), just for one listing instead of the whole list. A cancelled,
+// filled, or non-existent listing id all come back as a 404 rather than leaking which
+// one it is.
 listingsRouter.get('/public/:id', (req, res) => {
   const listingId = Number(req.params.id);
   const listing = db
     .prepare(
-      `SELECT l.id, l.amount, l.due_date, l.job_description, l.title, l.category, l.location, l.created_at, l.organizer_id
+      `SELECT l.id, l.amount, l.due_date, l.job_description, l.title, l.category, l.location, l.created_at,
+              l.organizer_id, org.name AS organizer_name
        FROM job_listings l
+       JOIN users org ON org.id = l.organizer_id
        WHERE l.id = ? AND l.status = 'open'`
     )
     .get(listingId);
