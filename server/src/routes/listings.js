@@ -188,6 +188,30 @@ listingsRouter.get('/open', requireRole('crew_member'), (req, res) => {
   );
 });
 
+// --- anyone: a public preview of open listings, for the "Find Work" marketplace page ---
+// Same idea as GET /open above, but for a visitor who isn't logged in (or isn't crew)
+// yet. Deliberately thinner: no organizer_name, since that's identifying someone who
+// hasn't agreed to be shown to the public - just enough (amount, due date, description,
+// and the organizer's payment stats on their own) to make signing up worth it. Actually
+// applying still needs a real, approved crew account, same requireRole('crew_member')
+// gate as /:id/apply below.
+listingsRouter.get('/public', (req, res) => {
+  const listings = db
+    .prepare(
+      `SELECT l.id, l.amount, l.due_date, l.job_description, l.created_at, l.organizer_id
+       FROM job_listings l
+       WHERE l.status = 'open'
+       ORDER BY l.created_at DESC`
+    )
+    .all();
+  res.json(
+    listings.map(({ organizer_id, ...listing }) => ({
+      ...listing,
+      organizer_record: computeOrganizerRecord(organizer_id),
+    }))
+  );
+});
+
 // --- crew: apply to an open listing ---
 listingsRouter.post('/:id/apply', requireRole('crew_member'), (req, res) => {
   const crewMember = req.user;
