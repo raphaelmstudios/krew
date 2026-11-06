@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import Register from './pages/Register.jsx';
 import IDUpload from './pages/IDUpload.jsx';
 import AdminGate from './pages/AdminGate.jsx';
@@ -10,41 +11,13 @@ import './styles/admin.css';
 import './styles/dashboard.css';
 
 // The sign-up flow is three small steps: register, then verify identity,
-// then wait for admin approval.
-export default function App() {
+// then wait for admin approval. Pulled out into its own component so it can
+// be the route for both "/" and any URL that doesn't match anything else
+// below - that second part matches how this worked before the router was
+// added, when every unrecognised path fell through to this same flow.
+function RegisterFlow() {
   const [step, setStep] = useState('register');
   const [user, setUser] = useState(null);
-
-  if (window.location.pathname === '/admin') {
-    return <AdminGate />;
-  }
-
-  // Task d2-1: a logged-in home for organizers (and, later, crew members)
-  // to actually reach the job form from, instead of only a bare URL.
-  if (window.location.pathname === '/dashboard') {
-    return (
-      <RoleGate
-        role={['organizer', 'crew_member']}
-        loginHeading="Log in to KREW"
-        loginSubhead="Sign in to post jobs and manage your account."
-        forbiddenMessage="Admins don't have a dashboard yet — try /admin instead."
-      >
-        {({ user, onLogout }) => <Dashboard user={user} onLogout={onLogout} />}
-      </RoleGate>
-    );
-  }
-
-  // A plain login screen for anyone coming back after registering, rather
-  // than only ever logging in by accident on their way into /dashboard.
-  if (window.location.pathname === '/login') {
-    return (
-      <Login
-        heading="Log in to KREW"
-        subhead="Sign in to post jobs and manage your account."
-        onLoggedIn={() => window.location.assign('/dashboard')}
-      />
-    );
-  }
 
   if (step === 'register') {
     return (
@@ -83,5 +56,50 @@ export default function App() {
         </p>
       </div>
     </div>
+  );
+}
+
+// A plain login screen for anyone coming back after registering, rather than
+// only ever logging in by accident on their way into /dashboard. Its own
+// small component just so it can call useNavigate() - that hook only works
+// inside a component that's actually rendered under the router.
+function LoginRoute() {
+  const navigate = useNavigate();
+  return (
+    <Login
+      heading="Log in to KREW"
+      subhead="Sign in to post jobs and manage your account."
+      onLoggedIn={() => navigate('/dashboard')}
+    />
+  );
+}
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginRoute />} />
+
+      {/* Task d2-1: a logged-in home for organizers (and, later, crew
+          members) to actually reach the job form from, instead of only a
+          bare URL. */}
+      <Route
+        path="/dashboard"
+        element={
+          <RoleGate
+            role={['organizer', 'crew_member']}
+            loginHeading="Log in to KREW"
+            loginSubhead="Sign in to post jobs and manage your account."
+            forbiddenMessage="Admins don't have a dashboard yet — try /admin instead."
+          >
+            {({ user, onLogout }) => <Dashboard user={user} onLogout={onLogout} />}
+          </RoleGate>
+        }
+      />
+
+      <Route path="/admin" element={<AdminGate />} />
+
+      <Route path="/" element={<RegisterFlow />} />
+      <Route path="*" element={<RegisterFlow />} />
+    </Routes>
   );
 }
