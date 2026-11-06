@@ -12,6 +12,9 @@ import { requireAuth, requireRole } from '../middleware/auth.js';
 export const usersRouter = express.Router();
 
 const AVAILABILITY_VALUES = ['available', 'working'];
+const MAX_PROFESSIONAL_ROLE_LENGTH = 60;
+const MAX_SKILLS = 8;
+const MAX_SKILL_LENGTH = 30;
 
 // Profile photos (shown publicly on the crew directory) are a separate, later upload
 // from the private id_document_path/selfie_path pair collected at signup - those two
@@ -48,17 +51,29 @@ const uploadPhoto = multer({
   limits: { fileSize: MAX_PHOTO_SIZE },
 }).single('profile_photo');
 
+// Splits the comma-separated skills column back into an array for the frontend - the
+// reverse of the .join(',') done in POST /me/profile above.
+function splitSkills(skills) {
+  return skills ? skills.split(',') : [];
+}
+
 // Organizers can look up crew members and their availability status, so they can hire them directly without going through the open job board. Each crew member's completed jobs count comes along too, so the organizer has something to go on before picking who to hire.
 usersRouter.get('/crew-directory', requireRole('organizer'), (req, res) => {
   const crewMembers = db
     .prepare(
-      `SELECT id, name, availability_status
+      `SELECT id, name, availability_status, professional_role, skills
        FROM users
        WHERE role = 'crew_member' AND verification_status = 'approved'
        ORDER BY name ASC`
     )
     .all();
-  res.json(crewMembers.map((crewMember) => ({ ...crewMember, ...computeCrewRecord(crewMember.id) })));
+  res.json(
+    crewMembers.map(({ skills, ...crewMember }) => ({
+      ...crewMember,
+      skills: splitSkills(skills),
+      ...computeCrewRecord(crewMember.id),
+    }))
+  );
 });
 
 // The public "Hire Crew" marketplace page (anyone, logged in or not, can browse who's
@@ -71,13 +86,19 @@ usersRouter.get('/crew-directory', requireRole('organizer'), (req, res) => {
 usersRouter.get('/crew-directory/public', (req, res) => {
   const crewMembers = db
     .prepare(
-      `SELECT id, name, profile_photo_path, availability_status
+      `SELECT id, name, profile_photo_path, availability_status, professional_role, skills
        FROM users
        WHERE role = 'crew_member' AND verification_status = 'approved'
        ORDER BY name ASC`
     )
     .all();
-  res.json(crewMembers.map((crewMember) => ({ ...crewMember, ...computeCrewRecord(crewMember.id) })));
+  res.json(
+    crewMembers.map(({ skills, ...crewMember }) => ({
+      ...crewMember,
+      skills: splitSkills(skills),
+      ...computeCrewRecord(crewMember.id),
+    }))
+  );
 });
 
 // Crew members can set their own availability status, which is self-reported and not tied to job status. This allows organizers to see whether a crew member is available for hire or currently working on a job.
@@ -88,6 +109,38 @@ usersRouter.post('/me/availability', requireRole('crew_member'), (req, res) => {
   }
   db.prepare(`UPDATE users SET availability_status = ? WHERE id = ?`).run(status, req.user.id);
   res.json({ availability_status: status });
+});
+
+// Crew members describe their own professional role and skills - there's no vetted
+// taxonomy behind either one, same self-reported spirit as availability above. Skills
+// come in as an array from the frontend (one chip per skill) and are stored as a single
+// comma-separated string, since this is only ever read back out for display on the
+// public Hire Crew directory, never filtered or searched against in SQL.
+usersRouter.post('/me/profile', requireRole('crew_member'), (req, res) => {
+  const { professional_role, skills } = req.body;
+
+  const trimmedRole = typeof professional_role === 'string' ? professional_role.trim() : '';
+  if (trimmedRole.length > MAX_PROFESSIONAL_ROLE_LENGTH) {
+    return res.status(400).json({ error: `Professional role must be ${MAX_PROFESSIONAL_ROLE_LENGTH} characters or fewer.` });
+  }
+
+  const skillsArray = Array.isArray(skills) ? skills : [];
+  const cleanedSkills = skillsArray
+    .map((skill) => (typeof skill === 'string' ? skill.trim() : ''))
+    .filter(Boolean);
+
+  if (cleanedSkills.length > MAX_SKILLS) {
+    return res.status(400).json({ error: `List at most ${MAX_SKILLS} skills.` });
+  }
+  if (cleanedSkills.some((skill) => skill.length > MAX_SKILL_LENGTH)) {
+    return res.status(400).json({ error: `Each skill must be ${MAX_SKILL_LENGTH} characters or fewer.` });
+  }
+
+  const skillsValue = cleanedSkills.length > 0 ? cleanedSkills.join(',') : null;
+  const roleValue = trimmedRole || null;
+
+  db.prepare(`UPDATE users SET professional_role = ?, skills = ? WHERE id = ?`).run(roleValue, skillsValue, req.user.id);
+  res.json({ professional_role: roleValue, skills: cleanedSkills });
 });
 
 // Any logged-in user can upload their own profile photo - the thing shown publicly on
