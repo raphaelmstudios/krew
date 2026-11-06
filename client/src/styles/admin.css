@@ -1,4 +1,4 @@
-/* Admin page styles */ 
+/* Admin styles */
 
 .krew-admin-page {
   min-height: 100vh;
@@ -27,7 +27,7 @@
   border: none;
   font-size: 13.5px;
   font-weight: 600;
-  color: var(--ink-soft);
+  color: var(--color-text-soft);
   text-decoration: underline;
   cursor: pointer;
   font-family: inherit;
@@ -36,24 +36,24 @@
 
 .krew-admin-subhead {
   font-size: 14px;
-  color: var(--ink-soft);
+  color: var(--color-text-soft);
   margin: 0 0 24px 0;
 }
 
 .krew-admin-empty {
-  background: var(--surface-card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
   padding: 32px;
   text-align: center;
-  color: var(--ink-soft);
+  color: var(--color-text-soft);
   font-size: 14px;
 }
 
 .krew-admin-row {
-  background: var(--surface-card);
-  border: 1px solid var(--border);
-  border-radius: 14px;
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
   padding: 18px 20px;
   margin-bottom: 12px;
   display: flex;
@@ -74,7 +74,7 @@
 
 .krew-admin-row-meta {
   font-size: 13px;
-  color: var(--ink-soft);
+  color: var(--color-text-soft);
 }
 
 .krew-admin-role-pill {
@@ -82,9 +82,9 @@
   font-size: 11.5px;
   font-weight: 600;
   padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--purple-bg);
-  color: var(--purple-dark);
+  border-radius: var(--radius-sm);
+  background: var(--color-brand-bg);
+  color: var(--color-ink-plum);
   margin-right: 6px;
   text-transform: capitalize;
 }
@@ -95,9 +95,12 @@
   flex-shrink: 0;
 }
 
+/* Approve/reject are real buttons, click targets - the brief's "no
+   pill-shaped buttons" rule applies here, so these get the same
+   controlled radius as every other button, not the 999px they used to. */
 .krew-admin-btn {
   border: none;
-  border-radius: 999px;
+  border-radius: var(--radius-md);
   padding: 9px 16px;
   font-size: 13.5px;
   font-weight: 600;
@@ -111,12 +114,12 @@
 }
 
 .krew-admin-btn.approve {
-  background: var(--green);
+  background: var(--color-success);
   color: #fff;
 }
 
 .krew-admin-btn.reject {
-  background: var(--surface);
-  color: var(--red);
-  border: 1px solid var(--red);
+  background: var(--color-surface);
+  color: var(--color-danger);
+  border: 1px solid var(--color-danger);
 }
