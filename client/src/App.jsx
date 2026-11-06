@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Routes, Route, Link, useNavigate } from 'react-router-dom';
 import Register from './pages/Register.jsx';
 import IDUpload from './pages/IDUpload.jsx';
 import AdminGate from './pages/AdminGate.jsx';
@@ -52,7 +52,7 @@ function RegisterFlow() {
           Your documents were received and your account is pending admin approval. We'll notify you once it's reviewed.
         </p>
         <p className="krew-fine-print" style={{ marginTop: 20 }}>
-          Already approved? <a href="/login">Log in</a>.
+          Already approved? <Link to="/login">Log in</Link>.
         </p>
       </div>
     </div>
