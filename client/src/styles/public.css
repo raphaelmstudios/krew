@@ -28,7 +28,7 @@
   flex-shrink: 0;
 }
 
-/* 
+/*
    The public navigation bar has a list of links on the left, and a set of
    actions (buttons) on the right. On smaller screens, the links and actions
    are hidden and replaced with a hamburger menu that toggles a mobile menu.
@@ -135,7 +135,7 @@
   }
 }
 
-/* 
+/*
    The homepage itself, which is a single-page scroll with multiple sections.
    Each section has a label, a heading, and a body. Some sections have a grid
    of cards or a split layout with two cards side by side. The hero section at
@@ -368,7 +368,439 @@
   text-decoration: underline;
 }
 
+/* ---------------------------------------------------------------------- */
+/* Find Work / Hire Crew (brief sections 7.3-7.4) - shared browse layout   */
+/* ---------------------------------------------------------------------- */
+
+.krew-browse-hero {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 48px 24px 32px 24px;
+}
+
+.krew-browse-hero h1 {
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0 0 12px 0;
+  max-width: 680px;
+}
+
+.krew-browse-hero-sub {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--color-text-soft);
+  max-width: 560px;
+  margin: 0;
+}
+
+.krew-browse-toolbar {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 24px 16px 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.krew-browse-search {
+  position: relative;
+  flex: 1 1 240px;
+  min-width: 200px;
+}
+
+.krew-browse-search-icon {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-faint);
+  pointer-events: none;
+}
+
+.krew-browse-search input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 11px 14px 11px 38px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--color-text);
+  background: var(--color-surface-card);
+}
+
+.krew-browse-search input:focus {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 1px;
+}
+
+.krew-browse-select {
+  flex: 0 1 180px;
+  min-width: 140px;
+  padding: 10px 14px;
+}
+
+.krew-browse-advanced-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-text-soft);
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.krew-browse-advanced-toggle:hover {
+  color: var(--color-text);
+  border-color: var(--color-text-soft);
+}
+
+.krew-browse-view-toggle {
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.krew-browse-advanced-panel {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 24px 20px 24px;
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.krew-browse-advanced-panel .krew-field {
+  margin-bottom: 0;
+  min-width: 140px;
+}
+
+.krew-browse-results {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 8px 24px 64px 24px;
+}
+
+.krew-browse-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+/* .krew-job-card is a <div> everywhere else it's used (CrewDashboard,
+   OrganizerDashboard); here the whole card is a react-router Link instead,
+   so it needs the usual anchor resets plus a bit of hover feedback that
+   makes sense for something clickable end to end, not just its button. */
+.krew-browse-card {
+  text-decoration: none;
+  color: inherit;
+  transition: border-color var(--motion-fast) var(--motion-ease), box-shadow var(--motion-fast) var(--motion-ease);
+}
+
+.krew-browse-card:hover {
+  border-color: var(--color-soft-violet);
+  box-shadow: var(--shadow-sm);
+}
+
+.krew-browse-card.grid {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.krew-browse-card.grid .krew-job-card-side {
+  text-align: left;
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.krew-browse-card-cta {
+  width: auto;
+  display: inline-block;
+  padding: 9px 16px;
+  font-size: 13px;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.krew-browse-card.grid .krew-browse-card-cta {
+  margin-top: 0;
+}
+
+/* Hire Crew's portrait-led directory (brief section 7.4). A deliberately
+   different shape from .krew-browse-grid's job cards: the photo leads here,
+   same way it would on a profile-first marketplace, rather than being
+   secondary to an amount and a due date. */
+.krew-crew-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.krew-crew-card {
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color var(--motion-fast) var(--motion-ease), box-shadow var(--motion-fast) var(--motion-ease);
+}
+
+.krew-crew-card:hover {
+  border-color: var(--color-soft-violet);
+  box-shadow: var(--shadow-sm);
+}
+
+.krew-crew-card-portrait {
+  position: relative;
+  margin-bottom: 14px;
+}
+
+.krew-crew-card-portrait img {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+}
+
+.krew-crew-card-portrait-placeholder {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-faint);
+}
+
+/* A small status pill tucked under the portrait rather than stacked inline
+   with the name - keeps the name the clear visual anchor of the card. */
+.krew-crew-card-availability {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.krew-crew-card-body {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.krew-crew-card-name {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.krew-crew-card-role {
+  color: var(--color-text-soft);
+  font-size: 13px;
+  margin-top: 2px;
+}
+
+.krew-crew-card-skills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+/* A compact rounded-rect tag, not a pill - the brief's "no pill buttons"
+   rule is about buttons/CTAs reading as gimmicky, not every small rounded
+   label (status pills are the brief's own named exception), but a skill
+   chip isn't a status either, so it gets its own smaller, squarer shape
+   rather than borrowing .krew-status-pill's fully-rounded one. */
+.krew-crew-skill-chip {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 3px 8px;
+  font-size: 11.5px;
+  color: var(--color-text-soft);
+}
+
+.krew-crew-skill-chip.more {
+  color: var(--color-text-faint);
+}
+
+.krew-crew-card-record {
+  font-size: 12.5px;
+  color: var(--color-text-faint);
+  margin-top: 10px;
+}
+
+.krew-crew-card-cta {
+  width: auto;
+  display: inline-block;
+  padding: 8px 18px;
+  font-size: 13px;
+  margin-top: 16px;
+}
+
+/* Gig detail (brief section 7.5) - the editorial page Find Work's cards
+   link to. A two-column layout (content, then a sticky-feeling payment +
+   apply panel) rather than a card grid, since this is one listing read in
+   full rather than many scanned at once. */
+.krew-gig-wrap {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 24px 64px 24px;
+}
+
+.krew-gig-back-link {
+  display: inline-block;
+  color: var(--color-text-soft);
+  text-decoration: none;
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+
+.krew-gig-back-link:hover {
+  color: var(--color-text);
+}
+
+.krew-gig-layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 40px;
+  align-items: start;
+}
+
+.krew-gig-title {
+  font-family: var(--font-display);
+  font-size: 34px;
+  line-height: 1.15;
+  margin: 6px 0 12px 0;
+}
+
+.krew-gig-organizer {
+  color: var(--color-text-soft);
+  font-size: 14.5px;
+}
+
+.krew-gig-organizer strong {
+  color: var(--color-text);
+}
+
+.krew-gig-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin: 20px 0;
+  padding: 16px 0;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.krew-gig-meta-row span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--color-text-soft);
+}
+
+.krew-gig-body {
+  margin-top: 24px;
+}
+
+.krew-gig-body h2 {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.krew-gig-body p {
+  color: var(--color-text-soft);
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.krew-gig-side {
+  position: sticky;
+  top: 90px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.krew-gig-amount-card {
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+
+.krew-gig-amount-label {
+  font-size: 12.5px;
+  color: var(--color-text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.krew-gig-amount {
+  font-family: var(--font-display);
+  font-size: 30px;
+  margin: 4px 0;
+}
+
+.krew-gig-amount-sub {
+  font-size: 13px;
+  color: var(--color-text-soft);
+}
+
+.krew-gig-apply-panel {
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+
+.krew-gig-apply-note {
+  font-size: 14px;
+  color: var(--color-text-soft);
+  margin-bottom: 12px;
+}
+
+.krew-gig-apply-cta {
+  width: 100%;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+}
+
 @media (max-width: 860px) {
+  .krew-gig-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .krew-gig-side {
+    position: static;
+  }
+
+  .krew-gig-title {
+    font-size: 28px;
+  }
+
   .krew-home-hero {
     grid-template-columns: 1fr;
     padding-top: 40px;
@@ -392,5 +824,52 @@
 
   .krew-home-section h2 {
     font-size: 26px;
+  }
+}
+
+/* Legal pages (Terms of Service, Privacy Policy) - a narrower, text-focused
+   column rather than the wider two-column layouts used elsewhere on the
+   public site, since this is meant to be read start to finish rather than
+   scanned. */
+.krew-legal-wrap {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 24px 80px 24px;
+}
+
+.krew-legal-title {
+  font-family: var(--font-display);
+  font-size: 34px;
+  margin: 6px 0 4px 0;
+}
+
+.krew-legal-updated {
+  color: var(--color-text-faint);
+  font-size: 13px;
+  margin-bottom: 32px;
+}
+
+.krew-legal-body h2 {
+  font-size: 19px;
+  margin: 32px 0 10px 0;
+}
+
+.krew-legal-body p {
+  color: var(--color-text-soft);
+  line-height: 1.75;
+  margin-bottom: 4px;
+}
+
+.krew-legal-footer-link {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
+  font-size: 14px;
+  color: var(--color-text-soft);
+}
+
+@media (max-width: 860px) {
+  .krew-legal-title {
+    font-size: 27px;
   }
 }
