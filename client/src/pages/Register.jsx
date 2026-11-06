@@ -1,11 +1,12 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 //This is the sign up screen for new users. It collects the user's name, phone number, password, and role (organizer or crew member).
-// Every check here also happens again on the server 
+// Every check here also happens again on the server
 const PHONE_PATTERN = /^(?:\+?254|0)(7|1)\d{8}$/;
 
 // `onRegistered` is called once the account is actually created, so the
-// parent screen (App.jsx) can move on to the next step 
+// parent screen (App.jsx) can move on to the next step
 // without this component needing to know what that step is.
 export default function Register({ onRegistered }) {
   const [role, setRole] = useState('organizer');
@@ -16,7 +17,7 @@ export default function Register({ onRegistered }) {
   //We show one error message per field, and we also show a banner for errors that aren't specific to one field (like "that phone number is already registered").
   const [fieldErrors, setFieldErrors] = useState({});
 
-  // A banner to show a single error or success message at the top of the form. 
+  // A banner to show a single error or success message at the top of the form.
   // This is for errors that aren't specific to one field, like "that phone number is already registered".
   const [banner, setBanner] = useState(null); // { type: 'error' | 'success', text: '...' }
 
@@ -61,7 +62,7 @@ export default function Register({ onRegistered }) {
       const data = await response.json();
 
       if (!response.ok) {
-        // The server sends back one error message as `data.error`. 
+        // The server sends back one error message as `data.error`.
         // Show it in the banner rather than guessing which field it belongs to.
         setBanner({ type: 'error', text: data.error || 'Something went wrong. Please try again.' });
         return;
@@ -166,6 +167,13 @@ export default function Register({ onRegistered }) {
                 {submitting ? 'Creating account…' : 'Create Account'}
               </button>
             </form>
+
+            {/* Without this, the only way back to /login was typing it into the
+                address bar yourself - not something to make someone who already
+                has an account do every time they land here. */}
+            <div className="krew-fine-print">
+              Have an account? <Link to="/login">Log in</Link>
+            </div>
 
             <div className="krew-fine-print">
               By creating an account you agree to KREW's Terms of Service and Privacy Policy.
