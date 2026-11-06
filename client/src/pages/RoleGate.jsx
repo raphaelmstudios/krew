@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
 import Login from './Login.jsx';
 
-// A gate that checks the user's role before showing the real content. 
-// If the user is not logged in, it shows a login form. 
-// If the user is logged in but does not have an allowed role, it shows a forbidden message and a logout button. 
+// A gate that checks the user's role before showing the real content.
+// If the user is not logged in, it shows a login form.
+// If the user is logged in but does not have an allowed role, it shows a forbidden message and a logout button.
 // If the user is logged in with an allowed role, it shows the real content (children).
-
-export default function RoleGate({ role, loginHeading, loginSubhead, forbiddenMessage, children }) {
+export default function RoleGate({ role, loginHeading, loginSubhead, forbiddenMessage, showSignupLink = true, children }) {
   const allowedRoles = Array.isArray(role) ? role : [role];
 
   // checking -> looking up the session on load
@@ -61,7 +60,14 @@ export default function RoleGate({ role, loginHeading, loginSubhead, forbiddenMe
   }
 
   if (status === 'loggedOut') {
-    return <Login heading={loginHeading} subhead={loginSubhead} onLoggedIn={checkSession} />;
+    return (
+      <Login
+        heading={loginHeading}
+        subhead={loginSubhead}
+        onLoggedIn={checkSession}
+        showSignupLink={showSignupLink}
+      />
+    );
   }
 
   return children({ user, onLogout: handleLogout });
