@@ -2,6 +2,10 @@
 // Crew members can also set their own availability status, which is self-reported and not tied to job status. This is also where an organizer's payment record and a crew member's completed jobs count live, so either side can check the other before working together.
 
 import express from 'express';
+import multer from 'multer';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import fs from 'node:fs';
 import { db } from '../db.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 
@@ -9,11 +13,65 @@ export const usersRouter = express.Router();
 
 const AVAILABILITY_VALUES = ['available', 'working'];
 
+// Profile photos (shown publicly on the crew directory) are a separate, later upload
+// from the private id_document_path/selfie_path pair collected at signup - those two
+// are never shown to anyone but an admin, this one is meant to be seen. Same
+// save-to-disk-not-the-database pattern as routes/documents.js: files live outside
+// client/server so the web server never serves them directly by accident.
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const PHOTO_UPLOAD_ROOT = path.join(__dirname, '..', '..', 'uploads');
+const PROFILE_PHOTOS_DIR = path.join(PHOTO_UPLOAD_ROOT, 'profile-photos');
+fs.mkdirSync(PROFILE_PHOTOS_DIR, { recursive: true });
+
+const ALLOWED_PHOTO_TYPES = ['image/jpeg', 'image/png'];
+const MAX_PHOTO_SIZE = 5 * 1024 * 1024; // 5MB, same limit as the ID/selfie upload
+
+const photoStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, PROFILE_PHOTOS_DIR),
+  filename: (req, file, cb) => {
+    // Never trust the filename the browser sends - build our own from the logged-in
+    // user's id and the current time instead.
+    const safeExt = path.extname(file.originalname).toLowerCase().replace(/[^a-z0-9.]/g, '');
+    cb(null, `user-${req.user.id}-profile-photo-${Date.now()}${safeExt}`);
+  },
+});
+
+const uploadPhoto = multer({
+  storage: photoStorage,
+  fileFilter: (req, file, cb) => {
+    if (!ALLOWED_PHOTO_TYPES.includes(file.mimetype)) {
+      cb(new Error('UNSUPPORTED_FILE_TYPE'));
+      return;
+    }
+    cb(null, true);
+  },
+  limits: { fileSize: MAX_PHOTO_SIZE },
+}).single('profile_photo');
+
 // Organizers can look up crew members and their availability status, so they can hire them directly without going through the open job board. Each crew member's completed jobs count comes along too, so the organizer has something to go on before picking who to hire.
 usersRouter.get('/crew-directory', requireRole('organizer'), (req, res) => {
   const crewMembers = db
     .prepare(
       `SELECT id, name, availability_status
+       FROM users
+       WHERE role = 'crew_member' AND verification_status = 'approved'
+       ORDER BY name ASC`
+    )
+    .all();
+  res.json(crewMembers.map((crewMember) => ({ ...crewMember, ...computeCrewRecord(crewMember.id) })));
+});
+
+// The public "Hire Crew" marketplace page (anyone, logged in or not, can browse who's
+// on KREW) - same idea as the organizer-only directory above, but deliberately returns
+// less. No phone number, and this is the one place profile_photo_path goes out over the
+// network unauthenticated, since it's the one upload meant to be public (see
+// POST /me/photo). Actually hiring someone - which needs an approved organizer account
+// and sends no money, but is still a real commitment - stays behind the existing
+// requireRole('organizer') gate on /api/jobs, same as before.
+usersRouter.get('/crew-directory/public', (req, res) => {
+  const crewMembers = db
+    .prepare(
+      `SELECT id, name, profile_photo_path, availability_status
        FROM users
        WHERE role = 'crew_member' AND verification_status = 'approved'
        ORDER BY name ASC`
@@ -30,6 +88,42 @@ usersRouter.post('/me/availability', requireRole('crew_member'), (req, res) => {
   }
   db.prepare(`UPDATE users SET availability_status = ? WHERE id = ?`).run(status, req.user.id);
   res.json({ availability_status: status });
+});
+
+// Any logged-in user can upload their own profile photo - the thing shown publicly on
+// the crew directory (see GET /crew-directory/public below), not the private
+// id_document_path/selfie_path pair from signup. Unlike that upload, this one knows who
+// the photo belongs to from the session rather than a URL param, so there's no need to
+// check an :id against anyone.
+usersRouter.post('/me/photo', requireAuth, (req, res) => {
+  uploadPhoto(req, res, (uploadErr) => {
+    if (uploadErr) {
+      if (uploadErr.message === 'UNSUPPORTED_FILE_TYPE') {
+        return res.status(400).json({ error: 'Please upload a JPG or PNG file.' });
+      }
+      if (uploadErr.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: 'Your photo must be smaller than 5MB.' });
+      }
+      console.error('Profile photo upload failed:', uploadErr);
+      return res.status(500).json({ error: 'Something went wrong. Please try again later.' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'Choose a photo to upload.' });
+    }
+
+    const relativePath = path.join('profile-photos', req.file.filename);
+
+    // If they already had a photo, swap it out and delete the old file so we don't
+    // leave orphaned uploads behind every time someone updates their photo.
+    const previous = db.prepare(`SELECT profile_photo_path FROM users WHERE id = ?`).get(req.user.id);
+    db.prepare(`UPDATE users SET profile_photo_path = ? WHERE id = ?`).run(relativePath, req.user.id);
+    if (previous?.profile_photo_path) {
+      fs.unlink(path.join(PHOTO_UPLOAD_ROOT, previous.profile_photo_path), () => {});
+    }
+
+    res.status(200).json({ profile_photo_path: relativePath });
+  });
 });
 
 // SQLite stores datetime('now') as "YYYY-MM-DD HH:MM:SS" with no timezone marker, even though it's actually UTC. Some JS engines will read that as local time instead, so this makes the UTC reading explicit rather than relying on parsing behaviour that can differ by platform.
