@@ -1,4 +1,6 @@
-/* Shared styles for all authentication pages */
+/* Shared styles for every form screen in KREW (registration, login, job
+   creation, and so on). Having one shared file means every form looks and
+   behaves the same way without copying the same CSS into each screen. */
 
 .krew-auth-page {
   min-height: 100vh;
@@ -50,7 +52,11 @@
   padding: 36px;
 }
 
-/* A toggle for switching between roles */
+/* The organizer / crew member switch - one control, two choices, so it
+   never reads as two competing buttons. Rounded but not a pill (the brief
+   rules out pill-shaped buttons sitewide) - the outer wrapper and the two
+   options inside it use the same controlled-radius scale as everything
+   else, just at a larger size that suits a segmented control. */
 .krew-role-toggle {
   display: flex;
   border: 1px solid var(--color-border);
@@ -117,7 +123,10 @@
   margin-top: 6px;
 }
 
-/* Primary button styles */
+/* Only one shape and color for every primary action in the whole app -
+   this is what makes it instantly obvious what's clickable. Rectangular
+   with a controlled corner radius, not a pill - see the brief's rule
+   against pill-shaped buttons. */
 .krew-button-primary {
   width: 100%;
   background: var(--color-brand);
@@ -170,6 +179,16 @@
   text-align: center;
   margin-top: 16px;
   line-height: 1.5;
+}
+
+.krew-fine-print a {
+  color: var(--color-brand-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.krew-fine-print a:hover {
+  text-decoration: underline;
 }
 
 /* File upload boxes (ID + selfie, Task d1-5). Each one is a big dashed
