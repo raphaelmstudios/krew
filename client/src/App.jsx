@@ -8,6 +8,11 @@ import Dashboard from './pages/Dashboard.jsx';
 import Login from './pages/Login.jsx';
 import AuthLayout from './components/AuthLayout.jsx';
 import Home from './pages/Home.jsx';
+import FindWork from './pages/FindWork.jsx';
+import HireCrew from './pages/HireCrew.jsx';
+import GigDetail from './pages/GigDetail.jsx';
+import Terms from './pages/Terms.jsx';
+import Privacy from './pages/Privacy.jsx';
 import './styles/forms.css';
 import './styles/admin.css';
 import './styles/dashboard.css';
@@ -99,6 +104,15 @@ export default function App() {
       <Route path="/admin" element={<AdminGate />} />
 
       <Route path="/register" element={<RegisterFlow />} />
+
+      <Route path="/find-work" element={<FindWork />} />
+
+      <Route path="/hire-crew" element={<HireCrew />} />
+
+      <Route path="/gigs/:id" element={<GigDetail />} />
+
+      <Route path="/terms" element={<Terms />} />
+      <Route path="/privacy" element={<Privacy />} />
 
       <Route path="/" element={<Home />} />
       {/* No dedicated 404 page yet - an unrecognised path falls back to the
