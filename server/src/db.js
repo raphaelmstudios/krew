@@ -62,6 +62,23 @@ try {
   if (!err.message.includes('duplicate column name')) throw err;
 }
 
+// Also self-reported by crew members (see POST /me/profile in routes/users.js), same
+// as availability_status above - there's no vetted skills taxonomy, so this is
+// whatever the crew member says about themselves, same as a real gig-work profile.
+// skills is stored as a single comma-separated string rather than its own table,
+// since it's just for display on the public Hire Crew directory, not for filtering
+// against a fixed list the way job_listings.category is.
+try {
+  db.exec(`ALTER TABLE users ADD COLUMN professional_role TEXT;`);
+} catch (err) {
+  if (!err.message.includes('duplicate column name')) throw err;
+}
+try {
+  db.exec(`ALTER TABLE users ADD COLUMN skills TEXT;`);
+} catch (err) {
+  if (!err.message.includes('duplicate column name')) throw err;
+}
+
 //sessions
 // One row per logged-in device. The token is a long random string, stored in an
 // httpOnly cookie so JavaScript on the page can never read it, only the browser
@@ -122,6 +139,28 @@ db.exec(`
     );`);
 db.exec(`CREATE INDEX IF NOT EXISTS idx_job_listings_organizer_id ON job_listings(organizer_id);`);
 db.exec(`CREATE INDEX IF NOT EXISTS idx_job_listings_status ON job_listings(status);`);
+
+// Added for the public Find Work / gig-detail pages (redesign brief section 7.3-7.5),
+// which need more to show than just an amount and a free-text description. Nullable
+// because existing rows from before this column existed don't have one - the frontend
+// falls back to a short excerpt of job_description for those. category is a short
+// label from a small fixed list (see PostListingForm.jsx) rather than free text, so
+// Find Work's category filter has something consistent to filter on.
+try {
+  db.exec(`ALTER TABLE job_listings ADD COLUMN title TEXT;`);
+} catch (err) {
+  if (!err.message.includes('duplicate column name')) throw err;
+}
+try {
+  db.exec(`ALTER TABLE job_listings ADD COLUMN category TEXT;`);
+} catch (err) {
+  if (!err.message.includes('duplicate column name')) throw err;
+}
+try {
+  db.exec(`ALTER TABLE job_listings ADD COLUMN location TEXT;`);
+} catch (err) {
+  if (!err.message.includes('duplicate column name')) throw err;
+}
 
 //job_applications
 // One row per crew member who expresses interest in one open listing. A crew member
