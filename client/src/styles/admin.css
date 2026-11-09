@@ -123,3 +123,68 @@
   color: var(--color-danger);
   border: 1px solid var(--color-danger);
 }
+
+/* Disputes tab (the admin-resolution half of Task d2-9). A dispute row reuses
+   .krew-admin-row's layout, but "resolve" isn't an approve/reject-style decision made in
+   one click - it needs a form - so its button gets a neutral brand color rather than
+   approve's green or reject's red, and expanding it adds a form block directly beneath
+   the row instead of a separate screen. */
+.krew-admin-dispute {
+  margin-bottom: 12px;
+}
+
+.krew-admin-dispute .krew-admin-row {
+  margin-bottom: 0;
+}
+
+.krew-admin-dispute-details {
+  font-style: italic;
+  margin-top: 2px;
+}
+
+.krew-admin-btn.resolve {
+  background: var(--color-brand-bg);
+  color: var(--color-ink-plum);
+}
+
+.krew-admin-resolve-form {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-top: none;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  padding: 18px 20px;
+  margin-top: -1px;
+}
+
+.krew-admin-resolve-outcome {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.krew-admin-resolve-outcome label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.krew-admin-resolve-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.krew-admin-resolved-heading {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 32px 0 12px 0;
+  color: var(--color-text-soft);
+}
+
+.krew-admin-row-resolved {
+  opacity: 0.75;
+}
