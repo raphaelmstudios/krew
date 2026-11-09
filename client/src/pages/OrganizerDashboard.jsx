@@ -3,6 +3,7 @@ import PostListingForm from './PostListingForm.jsx';
 import ListingApplicants from './ListingApplicants.jsx';
 import HireForm from './HireForm.jsx';
 import JobCard from './JobCard.jsx';
+import NotificationBell from '../components/NotificationBell.jsx';
 
 // The organizer dashboard is the main interface for organizers to manage their job postings and hire crew members directly.
 // It has two main sections: the Job Board, where organizers can post jobs and view applicants, and the Find Crew section, where organizers can browse approved crew members and hire them directly.
@@ -136,6 +137,7 @@ export default function OrganizerDashboard({ user, onLogout }) {
         </div>
         <div className="krew-dash-header-right">
           <span className="krew-dash-greeting">Hi, {user.name}</span>
+          <NotificationBell />
           <button type="button" className="krew-admin-logout" onClick={onLogout}>
             Log out
           </button>
