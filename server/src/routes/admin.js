@@ -6,6 +6,7 @@
 import express from 'express';
 import { db } from '../db.js';
 import { requireAdmin } from '../middleware/auth.js';
+import { createNotification } from '../notifications.js';
 
 export const adminRouter = express.Router();
 
@@ -40,6 +41,14 @@ function setVerificationStatus(newStatus) {
         if (result.changes === 0) {
             return res.status(404).json({ error: `No pending account found for user ID: ${userId}` });
         }
+
+        createNotification(
+            userId,
+            newStatus === 'approved' ? 'account_approved' : 'account_rejected',
+            newStatus === 'approved'
+                ? "Your KREW account has been approved - you're all set to get started."
+                : 'Your KREW account application was not approved.'
+        );
 
         res.json({ id: userId, verification_status: newStatus });
     };
@@ -147,6 +156,20 @@ adminRouter.post('/disputes/:id/resolve', (req, res) => {
         }
     });
     resolveDispute();
+
+    // Both sides get the same outcome notification - whichever one didn't open the admin
+    // panel to see this happen still finds out their dispute was actually resolved. The
+    // disputes table only has transaction_id, not organizer/crew member ids directly, so
+    // those come from the transaction itself.
+    const resolvedTransaction = db
+        .prepare(`SELECT organizer_id, crew_member_id FROM transactions WHERE id = ?`)
+        .get(dispute.transaction_id);
+    const resolutionMessage =
+        outcome === 'confirm'
+            ? `Your dispute was resolved - the job is now confirmed for KES ${finalAmountNumber.toLocaleString()}.`
+            : 'Your dispute was reviewed - please reconfirm your payment for this job.';
+    createNotification(resolvedTransaction.organizer_id, 'dispute_resolved', resolutionMessage, '/dashboard');
+    createNotification(resolvedTransaction.crew_member_id, 'dispute_resolved', resolutionMessage, '/dashboard');
 
     res.json({ id: disputeId, status: 'resolved', outcome });
 });
