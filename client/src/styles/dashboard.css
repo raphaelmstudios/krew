@@ -464,3 +464,139 @@
   gap: 14px;
   flex-shrink: 0;
 }
+
+/* Notification bell (NotificationBell.jsx) - dropped into the header of both dashboards
+   and Admin.jsx, so it lives here rather than in admin.css even though Admin uses it too. */
+.krew-notif-wrapper {
+  position: relative;
+}
+
+.krew-notif-bell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text-soft);
+  cursor: pointer;
+  padding: 0;
+}
+
+.krew-notif-bell:hover {
+  color: var(--color-text);
+  border-color: var(--color-text-soft);
+}
+
+.krew-notif-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--color-danger);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+}
+
+.krew-notif-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 320px;
+  max-width: calc(100vw - 48px);
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 32px rgba(33, 22, 43, 0.16);
+  z-index: 20;
+  overflow: hidden;
+}
+
+.krew-notif-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.krew-notif-empty {
+  padding: 28px 16px;
+  text-align: center;
+  color: var(--color-text-soft);
+  font-size: 13.5px;
+}
+
+.krew-notif-list {
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.krew-notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.krew-notif-item:last-child {
+  border-bottom: none;
+}
+
+.krew-notif-item:hover {
+  background: var(--color-surface);
+}
+
+.krew-notif-item.unread {
+  background: var(--color-brand-bg);
+}
+
+.krew-notif-item.unread:hover {
+  background: var(--color-brand-bg);
+  filter: brightness(0.97);
+}
+
+.krew-notif-dot {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-brand);
+  margin-top: 6px;
+}
+
+.krew-notif-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.krew-notif-item-message {
+  font-size: 13.5px;
+  color: var(--color-text);
+  line-height: 1.4;
+}
+
+.krew-notif-item-time {
+  font-size: 11.5px;
+  color: var(--color-text-faint);
+}
