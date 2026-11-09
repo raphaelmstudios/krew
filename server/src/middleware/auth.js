@@ -1,4 +1,4 @@
-// Checks who is logged in and whether they are an admin. 
+// Checks who is logged in and whether they are an admin.
 // If not, returns a 401 or 403 error.
 
 // Both attach the logged-in user to req.user (without the password hash)
@@ -27,7 +27,11 @@ export function requireAuth(req, res, next) {
   }
 
   const user = db
-    .prepare('SELECT id, name, phone, role, verification_status, availability_status FROM users WHERE id = ?')
+    .prepare(
+      `SELECT id, name, phone, role, verification_status, availability_status,
+              profile_photo_path, professional_role, skills
+       FROM users WHERE id = ?`
+    )
     .get(session.user_id);
   if (!user) {
     // The account was deleted after the session was created - treat it the

@@ -1,27 +1,176 @@
-/* KREW design tokens — straight from the design brief / HTML previews.
-   Keep this file as the single source of truth for color so every screen
-   built from here on (Task d1-4 onward) stays on-system automatically. */
+/* Global CSS variables for the KREW design system
+Usage: Define all themeable values here, and reference them throughout the app.
+Brand colors are fixed and should not be altered. */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap');
 
 :root {
-  --surface: #FAF7F2;
-  --surface-card: #FFFFFF;
-  --border: #E8E1D6;
-  --ink: #241C2C;
-  --ink-soft: #6B6274;
-  --ink-faint: #9C94A3;
+  color-scheme: light;
 
-  --purple: #5B2C8C;
-  --purple-dark: #46216C;
-  --purple-bg: #EFE8F7;
+  /* these are the six brand colors themselves, exactly as the brief specifies
+     them. Nothing below should invent a seventh brand color - every UI
+     color is one of these six, white, or a status color. ---   */
+  --color-ink-plum: #21162B;
+  --color-electric-violet: #6D3B91;
+  --color-soft-violet: #B69AD0;
+  --color-lavender-mist: #E9DDF1;
+  --color-warm-ivory: #F3F0E9;
+  --color-charcoal: #29242D;
 
-  --green: #1E8A5F;
-  --green-bg: #E6F4EC;
-  --amber: #B4740C;
-  --amber-bg: #FCF1DD;
-  --red: #C23B3B;
-  --red-bg: #FBEAEA;
+  /* this shows what each color is FOR  and how it's used 
+  light mode */
+  --color-surface: var(--color-warm-ivory);
+  --color-surface-card: #FFFFFF;
+  --color-surface-sunken: #EDE8DC;
+  --color-surface-selected: var(--color-lavender-mist);
+  --color-border: #E3DCCE;
+
+  --color-text: var(--color-charcoal);
+  --color-text-soft: #6E6475;
+  --color-text-faint: #9C94A3;
+  --color-text-on-dark: var(--color-warm-ivory);
+  --color-text-on-brand: #FFFFFF;
+
+  /* The primary button is always filled electric violet with white text -
+     that pairing doesn't change between themes, since it's a solid shape
+     with its own background, not text sitting directly on the page. */
+  --color-brand: var(--color-electric-violet);
+  --color-brand-pressed: #5A2F76;
+  --color-brand-soft: var(--color-soft-violet);
+  --color-brand-bg: var(--color-lavender-mist);
+
+  /* Brand text color */
+  --color-brand-text: var(--color-electric-violet);
+
+  /* Status colors (the only badges anywhere in KREW - transaction status
+     pills, nothing else). Slightly darker than the brand swatches you'd
+     reach for by eye, because the lighter, friendlier-looking green and
+     amber don't actually clear 4.5:1 against warm ivory at the small size
+     a status pill is set in - verified with the W3C relative-luminance
+     formula, not eyeballed. */
+
+  --color-success: #1B7C56;
+  --color-success-bg: #E6F4EC;
+  --color-warning: #905D0A;
+  --color-warning-bg: #FCF1DD;
+  --color-danger: #C23B3B;
+  --color-danger-bg: #FBEAEA;
+
+  /* --- typography --- */
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+
+  /* --- spacing scale (4px base) --- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  /* --- corner radius scale --- */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+
+  /* --- shadows. Mostly-flat per the brief - these exist for the handful
+     of places that need to lift off the page (a dropdown, a modal), not
+     for every card. --- */
+
+  --shadow-sm: 0 1px 2px rgba(33, 22, 43, 0.06);
+  --shadow-md: 0 4px 16px rgba(33, 22, 43, 0.10);
+  --shadow-lg: 0 12px 32px rgba(33, 22, 43, 0.16);
+
+  /* --- motion. One shared timing system so hover/press/transition
+     durations feel consistent instead of every component picking its own
+     number. prefers-reduced-motion below overrides all of these to near-
+     zero rather than every component needing to check it individually. --- */
+
+  --motion-fast: 120ms;
+  --motion-base: 200ms;
+  --motion-slow: 360ms;
+  --motion-ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Dark mode styles */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+
+    --color-surface: var(--color-ink-plum);
+    --color-surface-card: #2B2033;
+    --color-surface-sunken: #1A1121;
+    --color-surface-selected: #3A2A49;
+    --color-border: #3C2F49;
+
+    --color-text: var(--color-warm-ivory);
+    --color-text-soft: #C3B4CF;
+    --color-text-faint: #8C7D97;
+
+    --color-brand-text: var(--color-soft-violet);
+
+    --color-success: #3DDB9A;
+    --color-success-bg: #16332A;
+    --color-warning: #E8A93D;
+    --color-warning-bg: #3A2B12;
+    --color-danger: #F0695F;
+    --color-danger-bg: #3A1818;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.5);
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-surface: var(--color-ink-plum);
+  --color-surface-card: #2B2033;
+  --color-surface-sunken: #1A1121;
+  --color-surface-selected: #3A2A49;
+  --color-border: #3C2F49;
+
+  --color-text: var(--color-warm-ivory);
+  --color-text-soft: #C3B4CF;
+  --color-text-faint: #8C7D97;
+
+  --color-brand-text: var(--color-soft-violet);
+
+  --color-success: #3DDB9A;
+  --color-success-bg: #16332A;
+  --color-warning: #E8A93D;
+  --color-warning-bg: #3A2B12;
+  --color-danger: #F0695F;
+  --color-danger-bg: #3A1818;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* Base theme styles */
+:root {
+  --surface: var(--color-surface);
+  --surface-card: var(--color-surface-card);
+  --border: var(--color-border);
+  --ink: var(--color-text);
+  --ink-soft: var(--color-text-soft);
+  --ink-faint: var(--color-text-faint);
+
+  --purple: var(--color-brand);
+  --purple-dark: var(--color-ink-plum);
+  --purple-bg: var(--color-brand-bg);
+
+  --green: var(--color-success);
+  --green-bg: var(--color-success-bg);
+  --amber: var(--color-warning);
+  --amber-bg: var(--color-warning-bg);
+  --red: var(--color-danger);
+  --red-bg: var(--color-danger-bg);
 }
 
 * {
@@ -30,9 +179,10 @@
 
 body {
   margin: 0;
-  font-family: 'Inter', system-ui, sans-serif;
-  background: var(--surface);
-  color: var(--ink);
+  font-family: var(--font-body);
+  background: var(--color-surface);
+  color: var(--color-text);
+  transition: background-color var(--motion-base) var(--motion-ease), color var(--motion-base) var(--motion-ease);
 }
 
 #root {
@@ -41,4 +191,18 @@ body {
 
 button {
   font-family: inherit;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

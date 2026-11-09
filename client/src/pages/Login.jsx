@@ -1,11 +1,14 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Phone, Lock, Eye, EyeOff } from 'lucide-react';
+import AuthLayout from '../components/AuthLayout.jsx';
 
 // Login page component. Renders a form for the user to log in with their phone number and password.
 // On successful login, calls the onLoggedIn callback with the user data.
-
-export default function Login({ onLoggedIn, heading = 'Log in', subhead = '' }) {
+export default function Login({ onLoggedIn, heading = 'Log in', subhead = '', showSignupLink = true }) {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [banner, setBanner] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -36,11 +39,7 @@ export default function Login({ onLoggedIn, heading = 'Log in', subhead = '' }) 
   }
 
   return (
-    <div className="krew-auth-page">
-      <div className="krew-wordmark">
-        KRE<span>W</span>
-      </div>
-
+    <AuthLayout>
       <div className="krew-headline-wrap">
         <h1 className="krew-headline">{heading}</h1>
         {subhead && <p className="krew-subhead">{subhead}</p>}
@@ -52,33 +51,53 @@ export default function Login({ onLoggedIn, heading = 'Log in', subhead = '' }) 
         <form onSubmit={handleSubmit}>
           <div className="krew-field">
             <label className="krew-field-label" htmlFor="login-phone">Phone Number</label>
-            <input
-              id="login-phone"
-              type="tel"
-              className="krew-field-input"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="0712345678"
-            />
+            <div className="krew-field-input-wrap">
+              <span className="krew-field-input-icon" aria-hidden="true"><Phone size={17} strokeWidth={1.75} /></span>
+              <input
+                id="login-phone"
+                type="tel"
+                className="krew-field-input"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="0712345678"
+              />
+            </div>
           </div>
 
           <div className="krew-field">
             <label className="krew-field-label" htmlFor="login-password">Password</label>
-            <input
-              id="login-password"
-              type="password"
-              className="krew-field-input"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Your password"
-            />
+            <div className="krew-field-input-wrap has-toggle">
+              <span className="krew-field-input-icon" aria-hidden="true"><Lock size={17} strokeWidth={1.75} /></span>
+              <input
+                id="login-password"
+                type={showPassword ? 'text' : 'password'}
+                className="krew-field-input"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Your password"
+              />
+              <button
+                type="button"
+                className="krew-field-toggle"
+                onClick={() => setShowPassword((current) => !current)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff size={17} strokeWidth={1.75} /> : <Eye size={17} strokeWidth={1.75} />}
+              </button>
+            </div>
           </div>
 
           <button type="submit" className="krew-button-primary" disabled={submitting}>
             {submitting ? 'Logging in…' : 'Log in'}
           </button>
         </form>
+
+        {showSignupLink && (
+          <div className="krew-fine-print">
+            Don't have an account? <Link to="/">Sign up</Link>
+          </div>
+        )}
       </div>
-    </div>
+    </AuthLayout>
   );
 }

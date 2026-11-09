@@ -207,6 +207,10 @@ export default function OrganizerDashboard({ user, onLogout }) {
                       {listings.map((listing) => (
                         <div className="krew-job-card" key={listing.id}>
                           <div className="krew-job-card-main">
+                            <div className="krew-job-card-crew">{listing.title || 'Untitled listing'}</div>
+                            <div className="krew-job-card-meta">
+                              {listing.category}{listing.category && listing.location ? ' · ' : ''}{listing.location}
+                            </div>
                             {listing.job_description && <div className="krew-job-card-desc">{listing.job_description}</div>}
                             <div className="krew-job-card-meta">
                               Due {new Date(listing.due_date).toLocaleDateString()}

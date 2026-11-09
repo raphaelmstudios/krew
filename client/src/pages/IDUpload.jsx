@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { IdCard, Camera } from 'lucide-react';
+import AuthLayout from '../components/AuthLayout.jsx';
 
-// This is an ID and selfie upload form that is used in the KREW identity verification flow. 
-// It is used in the IDUpload.jsx page, which is shown to users after they register and log in for the first time. 
+// This is an ID and selfie upload form that is used in the KREW identity verification flow.
+// It is used in the IDUpload.jsx page, which is shown to users after they register and log in for the first time.
 // The form allows users to upload a photo of their ID and a selfie, which are then sent to the server for verification.
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // must match server/src/routes/documents.js
 
@@ -60,11 +62,7 @@ export default function IDUpload({ user, onSubmitted }) {
   }
 
   return (
-    <div className="krew-auth-page">
-      <div className="krew-wordmark">
-        KRE<span>W</span>
-      </div>
-
+    <AuthLayout>
       <div className="krew-headline-wrap">
         <h1 className="krew-headline">Verify your identity</h1>
         <p className="krew-subhead">
@@ -79,7 +77,7 @@ export default function IDUpload({ user, onSubmitted }) {
           <div className="krew-field">
             <label className="krew-field-label" htmlFor="id-document">ID Document (JPG, PNG, or PDF)</label>
             <label htmlFor="id-document" className={`krew-upload-box ${idDocument ? 'has-file' : ''}`}>
-              <div className="krew-upload-icon">🪪</div>
+              <div className="krew-upload-icon"><IdCard size={22} strokeWidth={1.75} /></div>
               {idDocument ? (
                 <div className="krew-upload-filename">{idDocument.name}</div>
               ) : (
@@ -97,7 +95,7 @@ export default function IDUpload({ user, onSubmitted }) {
           <div className="krew-field">
             <label className="krew-field-label" htmlFor="selfie">Selfie (JPG or PNG)</label>
             <label htmlFor="selfie" className={`krew-upload-box ${selfie ? 'has-file' : ''}`}>
-              <div className="krew-upload-icon">🤳</div>
+              <div className="krew-upload-icon"><Camera size={22} strokeWidth={1.75} /></div>
               {selfie ? (
                 <div className="krew-upload-filename">{selfie.name}</div>
               ) : (
@@ -116,6 +114,6 @@ export default function IDUpload({ user, onSubmitted }) {
           Your documents are only used to verify your identity and are never shared publicly.
         </div>
       </div>
-    </div>
+    </AuthLayout>
   );
 }

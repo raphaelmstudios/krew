@@ -9,6 +9,20 @@ import { computeOrganizerRecord, computeCrewRecord } from './users.js';
 
 export const listingsRouter = express.Router();
 
+// A small fixed list rather than free text, so Find Work's category filter has
+// something consistent to filter on. Mirrored in client/src/pages/PostListingForm.jsx -
+// if this list changes, that file's <select> options need to match.
+export const LISTING_CATEGORIES = [
+  'Bar Service',
+  'Catering',
+  'Security',
+  'Event Setup & Teardown',
+  'Ushering & Guest Services',
+  'Photography & Videography',
+  'Sound & AV',
+  'Other',
+];
+
 function startOfDay(value) {
   const date = new Date(value);
   date.setHours(0, 0, 0, 0);
@@ -18,7 +32,7 @@ function startOfDay(value) {
 // --- organizer: post an open listing ---
 listingsRouter.post('/', requireRole('organizer'), (req, res) => {
   const organizer = req.user;
-  const { amount, due_date, job_description } = req.body;
+  const { amount, due_date, job_description, title, category, location } = req.body;
 
   // An unapproved organizer shouldn't be able to post paid work yet - that's
   // the whole point of the ID verification step from Task d1-6.
@@ -38,14 +52,24 @@ listingsRouter.post('/', requireRole('organizer'), (req, res) => {
     return res.status(400).json({ error: 'Due date cannot be in the past.' });
   }
 
+  if (!title || !title.trim()) {
+    return res.status(400).json({ error: 'Give the job a short title.' });
+  }
+  if (!category || !LISTING_CATEGORIES.includes(category)) {
+    return res.status(400).json({ error: `Category must be one of: ${LISTING_CATEGORIES.join(', ')}.` });
+  }
+  if (!location || !location.trim()) {
+    return res.status(400).json({ error: 'Enter where the job is located.' });
+  }
+
   const description = job_description && job_description.trim() ? job_description.trim() : null;
 
   const result = db
     .prepare(
-      `INSERT INTO job_listings (organizer_id, amount, due_date, job_description, status)
-       VALUES (?, ?, ?, ?, 'open')`
+      `INSERT INTO job_listings (organizer_id, amount, due_date, job_description, title, category, location, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'open')`
     )
-    .run(organizer.id, amountNumber, due_date, description);
+    .run(organizer.id, amountNumber, due_date, description, title.trim(), category, location.trim());
 
   res.status(201).json({
     id: result.lastInsertRowid,
@@ -53,6 +77,9 @@ listingsRouter.post('/', requireRole('organizer'), (req, res) => {
     amount: amountNumber,
     due_date,
     job_description: description,
+    title: title.trim(),
+    category,
+    location: location.trim(),
     status: 'open',
   });
 });
@@ -61,7 +88,7 @@ listingsRouter.post('/', requireRole('organizer'), (req, res) => {
 listingsRouter.get('/mine', requireRole('organizer'), (req, res) => {
   const listings = db
     .prepare(
-      `SELECT l.id, l.amount, l.due_date, l.job_description, l.status, l.created_at,
+      `SELECT l.id, l.amount, l.due_date, l.job_description, l.title, l.category, l.location, l.status, l.created_at,
               (SELECT COUNT(*) FROM job_applications a WHERE a.listing_id = l.id AND a.status = 'pending') AS pending_applicant_count
        FROM job_listings l
        WHERE l.organizer_id = ?
@@ -167,7 +194,7 @@ listingsRouter.post('/:id/accept', requireRole('organizer'), (req, res) => {
 listingsRouter.get('/open', requireRole('crew_member'), (req, res) => {
   const listings = db
     .prepare(
-      `SELECT l.id, l.amount, l.due_date, l.job_description, l.created_at,
+      `SELECT l.id, l.amount, l.due_date, l.job_description, l.title, l.category, l.location, l.created_at,
               org.id AS organizer_id, org.name AS organizer_name,
               EXISTS(
                 SELECT 1 FROM job_applications a WHERE a.listing_id = l.id AND a.crew_member_id = ?
@@ -186,6 +213,59 @@ listingsRouter.get('/open', requireRole('crew_member'), (req, res) => {
       organizer_record: computeOrganizerRecord(listing.organizer_id),
     }))
   );
+});
+
+// --- anyone: a public preview of open listings, for the "Find Work" marketplace page ---
+// Same idea as GET /open above, but for a visitor who isn't logged in (or isn't crew)
+// yet. Includes organizer_name - the redesign brief's own Find Work card spec (section
+// 7.3) lists "Organizer" as a field to show, and crew members' names are already shown
+// publicly on the Hire Crew directory (routes/users.js), so withholding only organizer
+// names here would be an inconsistent, not more protective, rule. Still never includes
+// phone numbers or any other contact/account detail - that line hasn't moved. Actually
+// applying still needs a real, approved crew account, same requireRole('crew_member')
+// gate as /:id/apply below.
+listingsRouter.get('/public', (req, res) => {
+  const listings = db
+    .prepare(
+      `SELECT l.id, l.amount, l.due_date, l.job_description, l.title, l.category, l.location, l.created_at,
+              l.organizer_id, org.name AS organizer_name
+       FROM job_listings l
+       JOIN users org ON org.id = l.organizer_id
+       WHERE l.status = 'open'
+       ORDER BY l.created_at DESC`
+    )
+    .all();
+  res.json(
+    listings.map(({ organizer_id, ...listing }) => ({
+      ...listing,
+      organizer_record: computeOrganizerRecord(organizer_id),
+    }))
+  );
+});
+
+// --- anyone: a single open listing's public detail, for the gig-detail page ---
+// Same shape as GET /public above (organizer_name included, nothing else about the
+// organizer's account), just for one listing instead of the whole list. A cancelled,
+// filled, or non-existent listing id all come back as a 404 rather than leaking which
+// one it is.
+listingsRouter.get('/public/:id', (req, res) => {
+  const listingId = Number(req.params.id);
+  const listing = db
+    .prepare(
+      `SELECT l.id, l.amount, l.due_date, l.job_description, l.title, l.category, l.location, l.created_at,
+              l.organizer_id, org.name AS organizer_name
+       FROM job_listings l
+       JOIN users org ON org.id = l.organizer_id
+       WHERE l.id = ? AND l.status = 'open'`
+    )
+    .get(listingId);
+
+  if (!listing) {
+    return res.status(404).json({ error: 'No open listing found with that id.' });
+  }
+
+  const { organizer_id, ...rest } = listing;
+  res.json({ ...rest, organizer_record: computeOrganizerRecord(organizer_id) });
 });
 
 // --- crew: apply to an open listing ---
@@ -225,7 +305,7 @@ listingsRouter.get('/mine-applications', requireRole('crew_member'), (req, res) 
   const applications = db
     .prepare(
       `SELECT a.id, a.status, a.created_at,
-              l.id AS listing_id, l.amount, l.due_date, l.job_description, l.status AS listing_status,
+              l.id AS listing_id, l.amount, l.due_date, l.job_description, l.title, l.category, l.location, l.status AS listing_status,
               org.name AS organizer_name
        FROM job_applications a
        JOIN job_listings l ON l.id = a.listing_id

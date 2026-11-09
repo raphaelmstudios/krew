@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { User as UserIcon } from 'lucide-react';
 import JobCard from './JobCard.jsx';
 
 // The crew dashboard is the main interface for crew members to manage their job applications and availability status.
@@ -29,6 +30,69 @@ export default function CrewDashboard({ user, onLogout }) {
 
   const [availability, setAvailability] = useState(user.availability_status);
   const [availabilitySaving, setAvailabilitySaving] = useState(false);
+
+  // Self-service profile fields shown on the public Hire Crew directory
+  // (redesign brief section 7.4) - a photo, a professional role, and a
+  // comma-separated list of skills. All three are optional and purely
+  // self-reported, same spirit as availability above.
+  const [photoPath, setPhotoPath] = useState(user.profile_photo_path);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [professionalRole, setProfessionalRole] = useState(user.professional_role || '');
+  const [skillsText, setSkillsText] = useState(user.skills || '');
+  const [profileBanner, setProfileBanner] = useState(null);
+  const [profileSaving, setProfileSaving] = useState(false);
+
+  async function handlePhotoChange(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setPhotoUploading(true);
+    setProfileBanner(null);
+    try {
+      const formData = new FormData();
+      formData.append('profile_photo', file);
+      const response = await fetch('/api/users/me/photo', { method: 'POST', body: formData });
+      const data = await response.json();
+      if (!response.ok) {
+        setProfileBanner({ type: 'error', text: data.error || 'Could not upload your photo.' });
+        return;
+      }
+      setPhotoPath(data.profile_photo_path);
+    } catch (err) {
+      setProfileBanner({ type: 'error', text: 'Could not reach the server.' });
+    } finally {
+      setPhotoUploading(false);
+      e.target.value = '';
+    }
+  }
+
+  async function handleProfileSave(e) {
+    e.preventDefault();
+    setProfileSaving(true);
+    setProfileBanner(null);
+    try {
+      const response = await fetch('/api/users/me/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          professional_role: professionalRole,
+          skills: skillsText.split(',').map((skill) => skill.trim()).filter(Boolean),
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setProfileBanner({ type: 'error', text: data.error || 'Could not save your profile.' });
+        return;
+      }
+      setProfessionalRole(data.professional_role || '');
+      setSkillsText(data.skills.join(', '));
+      setProfileBanner({ type: 'success', text: 'Profile saved.' });
+    } catch (err) {
+      setProfileBanner({ type: 'error', text: 'Could not reach the server.' });
+    } finally {
+      setProfileSaving(false);
+    }
+  }
 
   useEffect(() => {
     if (user.verification_status === 'approved') {
@@ -154,27 +218,82 @@ export default function CrewDashboard({ user, onLogout }) {
         </div>
       ) : (
         <div className="krew-dash-body">
-          <div className="krew-dash-availability">
-            <div>
-              <span className={`krew-status-pill ${availability === 'available' ? 'confirmed' : 'pending'}`}>
-                {availability === 'available' ? 'Available' : 'Currently working'}
-              </span>
-              <span className="krew-dash-availability-note">
-                Organizers see this when they browse the crew directory.
-              </span>
+          <div className="krew-dash-profile-card">
+            <h2 className="krew-dash-form-title">My profile</h2>
+            <p className="krew-dash-availability-note" style={{ marginBottom: 18 }}>
+              This is what organizers see when they browse the public Hire Crew directory.
+            </p>
+
+            {profileBanner && <div className={`krew-form-banner ${profileBanner.type}`}>{profileBanner.text}</div>}
+
+            <div className="krew-dash-profile-top">
+              <label htmlFor="profile-photo-input" className="krew-dash-avatar">
+                {photoPath ? (
+                  <img src={`/uploads/${photoPath}`} alt="" />
+                ) : (
+                  <span className="krew-dash-avatar-placeholder"><UserIcon size={28} strokeWidth={1.75} /></span>
+                )}
+                <span className="krew-dash-avatar-edit">{photoUploading ? 'Uploading…' : 'Change photo'}</span>
+                <input
+                  id="profile-photo-input"
+                  type="file"
+                  accept="image/jpeg,image/png"
+                  onChange={handlePhotoChange}
+                  disabled={photoUploading}
+                />
+              </label>
+
+              <form className="krew-dash-profile-fields" onSubmit={handleProfileSave}>
+                <div className="krew-field">
+                  <label className="krew-field-label" htmlFor="professional-role">Professional role</label>
+                  <input
+                    id="professional-role"
+                    type="text"
+                    className="krew-field-input"
+                    value={professionalRole}
+                    onChange={(e) => setProfessionalRole(e.target.value)}
+                    placeholder="e.g. Bartender, Event Photographer"
+                  />
+                </div>
+                <div className="krew-field">
+                  <label className="krew-field-label" htmlFor="skills">Skills (comma-separated)</label>
+                  <input
+                    id="skills"
+                    type="text"
+                    className="krew-field-input"
+                    value={skillsText}
+                    onChange={(e) => setSkillsText(e.target.value)}
+                    placeholder="e.g. Mixology, Crowd Management, Setup"
+                  />
+                </div>
+                <button type="submit" className="krew-button-primary krew-dash-post-btn" disabled={profileSaving}>
+                  {profileSaving ? 'Saving…' : 'Save profile'}
+                </button>
+              </form>
             </div>
-            <button
-              type="button"
-              className="krew-button-secondary krew-dash-post-btn"
-              onClick={handleAvailabilityToggle}
-              disabled={availabilitySaving}
-            >
-              {availabilitySaving
-                ? 'Saving…'
-                : availability === 'available'
-                ? "Mark as currently working"
-                : 'Mark as available'}
-            </button>
+
+            <div className="krew-dash-availability krew-dash-availability-inline">
+              <div>
+                <span className={`krew-status-pill ${availability === 'available' ? 'confirmed' : 'pending'}`}>
+                  {availability === 'available' ? 'Available' : 'Currently working'}
+                </span>
+                <span className="krew-dash-availability-note">
+                  Organizers see this when they browse the crew directory.
+                </span>
+              </div>
+              <button
+                type="button"
+                className="krew-button-secondary krew-dash-post-btn"
+                onClick={handleAvailabilityToggle}
+                disabled={availabilitySaving}
+              >
+                {availabilitySaving
+                  ? 'Saving…'
+                  : availability === 'available'
+                  ? "Mark as currently working"
+                  : 'Mark as available'}
+              </button>
+            </div>
           </div>
 
           <div className="krew-dash-tabs">
@@ -218,8 +337,13 @@ export default function CrewDashboard({ user, onLogout }) {
                   {listings.map((listing) => (
                     <div className="krew-job-card" key={listing.id}>
                       <div className="krew-job-card-main">
-                        <div className="krew-job-card-crew">{listing.organizer_name}</div>
-                        <div className="krew-job-card-meta">{formatOrganizerRecord(listing.organizer_record)}</div>
+                        <div className="krew-job-card-crew">{listing.title || 'Untitled listing'}</div>
+                        <div className="krew-job-card-meta">
+                          {listing.organizer_name} · {formatOrganizerRecord(listing.organizer_record)}
+                        </div>
+                        <div className="krew-job-card-meta">
+                          {listing.category}{listing.category && listing.location ? ' · ' : ''}{listing.location}
+                        </div>
                         {listing.job_description && <div className="krew-job-card-desc">{listing.job_description}</div>}
                         <div className="krew-job-card-meta">
                           Due {new Date(listing.due_date).toLocaleDateString()}
@@ -258,7 +382,8 @@ export default function CrewDashboard({ user, onLogout }) {
                   {applications.map((application) => (
                     <div className="krew-job-card" key={application.id}>
                       <div className="krew-job-card-main">
-                        <div className="krew-job-card-crew">{application.organizer_name}</div>
+                        <div className="krew-job-card-crew">{application.title || 'Untitled listing'}</div>
+                        <div className="krew-job-card-meta">{application.organizer_name}</div>
                         {application.job_description && (
                           <div className="krew-job-card-desc">{application.job_description}</div>
                         )}
