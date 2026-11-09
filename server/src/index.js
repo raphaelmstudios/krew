@@ -11,6 +11,7 @@ import { adminRouter } from './routes/admin.js';
 import { jobsRouter } from './routes/jobs.js';
 import { listingsRouter } from './routes/listings.js';
 import { usersRouter } from './routes/users.js';
+import { notificationsRouter } from './routes/notifications.js';
 
 dotenv.config();
 
@@ -38,12 +39,14 @@ app.get('/api/health', (req, res) => {
 // The jobsRouter handles an organizer hiring a known crew member directly, listing the confirmed jobs either side is part of, either side manually confirming a payment on one of them (auto-confirming once both sides agree), and a stubbed, not-yet-wired-up endpoint for where M-Pesa Daraja will eventually call in.
 // The listingsRouter handles the job board: posting an open listing, crew applying to it, and the organizer accepting one applicant.
 // The usersRouter handles the crew directory, a crew member's own availability status, and computing each side's reciprocal record: an organizer's on-time payment stats and a crew member's completed jobs count.
+// The notificationsRouter handles a logged-in person's own notification feed - the rows in it are written by the other routers above (see notifications.js), this one only reads and dismisses them.
 app.use('/api/auth', authRouter);
 app.use('/api/users', documentsRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/jobs', jobsRouter);
 app.use('/api/job-listings', listingsRouter);
+app.use('/api/notifications', notificationsRouter);
 
 // Profile photos (routes/users.js) are the one upload meant to be seen by anyone, so
 // they get their own public static route - unlike the id_document/selfie uploads from
