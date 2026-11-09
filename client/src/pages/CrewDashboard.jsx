@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { User as UserIcon } from 'lucide-react';
 import JobCard from './JobCard.jsx';
+import NotificationBell from '../components/NotificationBell.jsx';
 
 // The crew dashboard is the main interface for crew members to manage their job applications and availability status.
 // It has two main sections: the Open Jobs tab, where crew members can view and apply to open job listings, and the My Applications tab, where they can track the status of their applications.
@@ -206,6 +207,7 @@ export default function CrewDashboard({ user, onLogout }) {
         </div>
         <div className="krew-dash-header-right">
           <span className="krew-dash-greeting">Hi, {user.name}</span>
+          <NotificationBell />
           <button type="button" className="krew-admin-logout" onClick={onLogout}>
             Log out
           </button>
