@@ -196,5 +196,25 @@ db.exec(`CREATE INDEX IF NOT EXISTS idx_job_applications_crew_member_id ON job_a
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );`);
 
+//notifications
+// One row per notification. Every type here is created only by server code (never from
+// anything a user submits directly - type and message are always written by whichever
+// route triggered it, in createNotification()/notifyAdmins(), see notifications.js), so
+// unlike job_listings.category there's no need for a CHECK constraint against a fixed
+// list - it's just a tag the frontend could use to pick an icon by, not something that
+// changes what's allowed to happen. link is an optional client-side path (e.g.
+// '/dashboard') for where clicking the notification should take you; read_at stays NULL
+// until the person opens/dismisses it.
+db.exec(`
+    CREATE TABLE IF NOT EXISTS notifications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      type TEXT NOT NULL,
+      message TEXT NOT NULL,
+      link TEXT,
+      read_at TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );`);
+db.exec(`CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);`);
 
  }
