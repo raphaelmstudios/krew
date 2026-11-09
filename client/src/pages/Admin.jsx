@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import NotificationBell from '../components/NotificationBell.jsx';
 
 //Admin screen - two tabs: pending account approvals, and dispute resolution.
 //NOTE: this screen used to have no login checks; anyone with the /admin URL could open it
@@ -118,7 +119,10 @@ export default function Admin({ onLogout }) {
               : "Jobs either side has flagged as disputed, waiting on a decision"}
           </p>
         </div>
-        {onLogout && <button type="button" className="krew-admin-logout" onClick={onLogout}>Log out</button>}
+        <div className="krew-dash-header-right">
+          <NotificationBell />
+          {onLogout && <button type="button" className="krew-admin-logout" onClick={onLogout}>Log out</button>}
+        </div>
       </div>
 
       <div className="krew-dash-tabs">
