@@ -12,6 +12,7 @@ import { jobsRouter } from './routes/jobs.js';
 import { listingsRouter } from './routes/listings.js';
 import { usersRouter } from './routes/users.js';
 import { notificationsRouter } from './routes/notifications.js';
+import { startReminderScheduler } from './reminders.js';
 
 dotenv.config();
 
@@ -64,4 +65,7 @@ app.get('/{*splat}', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`KREW API listening on http://localhost:${PORT}`);
+  // Payment due-date reminder (FR7.1, see reminders.js) - started here rather than at
+  // import time so it only ever runs against a server that's actually up and serving.
+  startReminderScheduler();
 });
