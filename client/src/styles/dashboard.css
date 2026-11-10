@@ -31,7 +31,11 @@
   padding: 36px 24px 80px 24px;
 }
 
-/* Mobile responsive */
+/* Mobile pass (Day 3 checklist): .krew-dash-header had no flex-wrap, so on a phone-width
+   screen the bell + "Log out" on the right were pushed straight past the edge of the
+   viewport instead of wrapping - a real clipping bug, not just a cosmetic squeeze, found
+   by actually screenshotting these pages at 390px rather than assuming the existing flex
+   layout would hold up. */
 @media (max-width: 860px) {
   .krew-dash-header {
     flex-wrap: wrap;
@@ -284,6 +288,64 @@
   font-size: 13px;
   color: var(--color-text-soft);
   margin: 4px 0 0 0;
+}
+
+/* Pilot readiness: the survey banner shown to organizers/crew during the Sprint 4 pilot
+   (PilotSurveyBanner.jsx). Reuses the brand-tint tokens rather than the error/warning/success
+   ones in forms.css since this isn't a status message about something the user did - it's
+   just an informational nudge. */
+.krew-pilot-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--color-brand-bg);
+  color: var(--color-brand-text);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  font-size: 13.5px;
+}
+
+.krew-pilot-banner-text {
+  margin: 0;
+}
+
+.krew-pilot-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.krew-pilot-banner-link {
+  font-weight: 600;
+  color: inherit;
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
+.krew-pilot-banner-dismiss {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+  opacity: 0.7;
+}
+
+.krew-pilot-banner-dismiss:hover {
+  opacity: 1;
+}
+
+@media (max-width: 860px) {
+  .krew-pilot-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
 }
 
 /* Tabs on the crew dashboard. Same reasoning as the role toggle in
