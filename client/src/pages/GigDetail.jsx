@@ -2,15 +2,26 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { MapPin, Calendar, Tag } from 'lucide-react';
 import PublicNav from '../components/PublicNav.jsx';
+import InfoTooltip from '../components/InfoTooltip.jsx';
 
-// Formats the organizer's record for display in the listing. Same badge logic as CrewDashboard.jsx's formatOrganizerRecord. 
-// Duplicated rather than imported since this is a public page with its own fetch (GET /job-listings/public, no session needed) and the two pages don't otherwise share state or a parent component worth threading a prop through.
+// Formats the organizer's record for display in the listing. Same badge logic as CrewDashboard.jsx's formatOrganizerRecord.
+// Duplicated rather than imported since this is a public page with its own fetch (GET /job-listings/public, no session needed) and the two pages don't otherwise share state or a parent component worth threading a prop through. Comes with a small info icon explaining what it means.
 function formatOrganizerRecord(record) {
   if (!record || record.confirmed_job_count === 0) {
-    return <span className="krew-status-pill new">New here</span>;
+    return (
+      <>
+        <span className="krew-status-pill new">New here</span>
+        <InfoTooltip text="New here means this organizer hasn't had a job confirmed on KREW yet - everyone starts without a track record, it isn't a red flag." />
+      </>
+    );
   }
   const jobWord = record.confirmed_job_count === 1 ? 'job' : 'jobs';
-  return `${record.confirmed_job_count} completed ${jobWord} · ${record.on_time_percentage}% on time`;
+  return (
+    <>
+      {record.confirmed_job_count} completed {jobWord} · {record.on_time_percentage}% on time
+      <InfoTooltip text="How many of this organizer's jobs were confirmed paid, and what percentage were paid by the due date - calculated automatically from payment confirmations, not a self-reported rating." />
+    </>
+  );
 }
 
 // The Gig Detail page is a public-facing page that shows the details of a single job listing.
@@ -65,7 +76,7 @@ export default function GigDetail() {
     };
   }, []);
 
-  // This effect checks if the logged-in crew member has already applied to this gig. 
+  // This effect checks if the logged-in crew member has already applied to this gig.
   // If they have, it sets the applyState to 'already_applied'.
   useEffect(() => {
     if (!session || session.role !== 'crew_member' || session.verification_status !== 'approved') return;
@@ -107,7 +118,7 @@ export default function GigDetail() {
   }
 
   function renderApplyPanel() {
-    // Session is still being checked, so don't render anything yet. 
+    // Session is still being checked, so don't render anything yet.
     // This avoids a flash of the "Sign up to apply" panel for logged-in users.
     if (session === undefined) return null;
 
@@ -229,6 +240,7 @@ export default function GigDetail() {
         <div className="krew-public-footer-inner">
           <span>© {new Date().getFullYear()} KREW</span>
           <div className="krew-public-footer-links">
+            <Link to="/faq">FAQ</Link>
             <Link to="/terms">Terms of Service</Link>
             <Link to="/privacy">Privacy Policy</Link>
           </div>
