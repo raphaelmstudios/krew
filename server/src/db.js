@@ -116,6 +116,17 @@ db.exec(`
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );`);
 
+// Pilot readiness (FR7.1): the SRS calls for a reminder to the organizer when a payment's
+// due date is within 24 hours. Without this column the reminder check (reminders.js) would
+// re-notify the same organizer about the same job every time it runs, rather than once -
+// it's set the moment a reminder is actually sent, and the check skips any row where it's
+// already filled in.
+try {
+  db.exec(`ALTER TABLE transactions ADD COLUMN due_reminder_sent_at TEXT;`);
+} catch (err) {
+  if (!err.message.includes('duplicate column name')) throw err;
+}
+
 // This query makes looking up either the jobs an organizer has posted or the jobs a crew member has accepted faster
 db.exec(`CREATE INDEX IF NOT EXISTS idx_transactions_organizer_id ON transactions(organizer_id);`);
 db.exec(`CREATE INDEX IF NOT EXISTS idx_transactions_crew_member_id ON transactions(crew_member_id);`);
