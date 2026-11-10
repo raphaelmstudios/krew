@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, SlidersHorizontal, LayoutGrid, List as ListIcon } from 'lucide-react';
 import PublicNav from '../components/PublicNav.jsx';
+import InfoTooltip from '../components/InfoTooltip.jsx';
 
-// The public, editorial opportunity-discovery page. 
+// The public, editorial opportunity-discovery page.
 // Anyone can browse and search open listings without an account.
 const LISTING_CATEGORIES = [
   'Bar Service',
@@ -16,13 +17,23 @@ const LISTING_CATEGORIES = [
   'Other',
 ];
 
-// Formats the organizer's record for display in the listing.
+// Formats the organizer's record for display in the listing, with a small info icon explaining what it means.
 function formatOrganizerRecord(record) {
   if (!record || record.confirmed_job_count === 0) {
-    return <span className="krew-status-pill new">New here</span>;
+    return (
+      <>
+        <span className="krew-status-pill new">New here</span>
+        <InfoTooltip text="New here means this organizer hasn't had a job confirmed on KREW yet - everyone starts without a track record, it isn't a red flag." />
+      </>
+    );
   }
   const jobWord = record.confirmed_job_count === 1 ? 'job' : 'jobs';
-  return `${record.confirmed_job_count} completed ${jobWord} · ${record.on_time_percentage}% on time`;
+  return (
+    <>
+      {record.confirmed_job_count} completed {jobWord} · {record.on_time_percentage}% on time
+      <InfoTooltip text="How many of this organizer's jobs were confirmed paid, and what percentage were paid by the due date - calculated automatically from payment confirmations, not a self-reported rating." />
+    </>
+  );
 }
 
 function truncate(text, max) {
@@ -30,8 +41,8 @@ function truncate(text, max) {
   return `${text.slice(0, max).trimEnd()}…`;
 }
 
-// The Find Work page is a public-facing page that allows users to browse and search for open job listings. 
-// It fetches the listings from the server, applies filters based on user input, and displays the results in either a list or grid view. 
+// The Find Work page is a public-facing page that allows users to browse and search for open job listings.
+// It fetches the listings from the server, applies filters based on user input, and displays the results in either a list or grid view.
 // The page includes a search bar, category filter, location filter, and advanced filters for minimum/maximum amount and due date.
 
 export default function FindWork() {
@@ -251,6 +262,7 @@ export default function FindWork() {
         <div className="krew-public-footer-inner">
           <span>© {new Date().getFullYear()} KREW</span>
           <div className="krew-public-footer-links">
+            <Link to="/faq">FAQ</Link>
             <Link to="/terms">Terms of Service</Link>
             <Link to="/privacy">Privacy Policy</Link>
           </div>
