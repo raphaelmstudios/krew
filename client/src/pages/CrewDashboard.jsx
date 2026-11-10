@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { User as UserIcon } from 'lucide-react';
 import JobCard from './JobCard.jsx';
 import NotificationBell from '../components/NotificationBell.jsx';
+import PilotSurveyBanner from '../components/PilotSurveyBanner.jsx';
+import InfoTooltip from '../components/InfoTooltip.jsx';
 
 // The crew dashboard is the main interface for crew members to manage their job applications and availability status.
 // It has two main sections: the Open Jobs tab, where crew members can view and apply to open job listings, and the My Applications tab, where they can track the status of their applications.
@@ -15,10 +17,20 @@ import NotificationBell from '../components/NotificationBell.jsx';
 // record yet to report.
 function formatOrganizerRecord(record) {
   if (!record || record.confirmed_job_count === 0) {
-    return <span className="krew-status-pill new">New here</span>;
+    return (
+      <>
+        <span className="krew-status-pill new">New here</span>
+        <InfoTooltip text="New here means this organizer hasn't had a job confirmed on KREW yet - everyone starts without a track record, it isn't a red flag." />
+      </>
+    );
   }
   const jobWord = record.confirmed_job_count === 1 ? 'job' : 'jobs';
-  return `${record.confirmed_job_count} completed ${jobWord} · ${record.on_time_percentage}% on time`;
+  return (
+    <>
+      {record.confirmed_job_count} completed {jobWord} · {record.on_time_percentage}% on time
+      <InfoTooltip text="How many of this organizer's jobs were confirmed paid, and what percentage were paid by the due date - calculated automatically from payment confirmations, not a self-reported rating." />
+    </>
+  );
 }
 
 export default function CrewDashboard({ user, onLogout }) {
@@ -220,6 +232,7 @@ export default function CrewDashboard({ user, onLogout }) {
         </div>
       ) : (
         <div className="krew-dash-body">
+          <PilotSurveyBanner />
           <div className="krew-dash-profile-card">
             <h2 className="krew-dash-form-title">My profile</h2>
             <p className="krew-dash-availability-note" style={{ marginBottom: 18 }}>
