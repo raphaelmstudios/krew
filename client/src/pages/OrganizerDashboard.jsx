@@ -4,6 +4,8 @@ import ListingApplicants from './ListingApplicants.jsx';
 import HireForm from './HireForm.jsx';
 import JobCard from './JobCard.jsx';
 import NotificationBell from '../components/NotificationBell.jsx';
+import PilotSurveyBanner from '../components/PilotSurveyBanner.jsx';
+import InfoTooltip from '../components/InfoTooltip.jsx';
 
 // The organizer dashboard is the main interface for organizers to manage their job postings and hire crew members directly.
 // It has two main sections: the Job Board, where organizers can post jobs and view applicants, and the Find Crew section, where organizers can browse approved crew members and hire them directly.
@@ -17,10 +19,20 @@ import NotificationBell from '../components/NotificationBell.jsx';
 // exactly like everyone else, just without a track record yet to report.
 export function formatCrewRecord(crewMember) {
   if (!crewMember.confirmed_job_count) {
-    return <span className="krew-status-pill new">New here</span>;
+    return (
+      <>
+        <span className="krew-status-pill new">New here</span>
+        <InfoTooltip text="New here means this crew member hasn't completed a job on KREW yet - everyone starts without a track record, it isn't a red flag." />
+      </>
+    );
   }
   const jobWord = crewMember.confirmed_job_count === 1 ? 'job' : 'jobs';
-  return `${crewMember.confirmed_job_count} completed ${jobWord}`;
+  return (
+    <>
+      {crewMember.confirmed_job_count} completed {jobWord}
+      <InfoTooltip text="The number of jobs this crew member has completed and had payment confirmed on KREW." />
+    </>
+  );
 }
 
 export default function OrganizerDashboard({ user, onLogout }) {
@@ -150,6 +162,7 @@ export default function OrganizerDashboard({ user, onLogout }) {
         </div>
       ) : (
         <div className="krew-dash-body">
+          <PilotSurveyBanner />
           <div className="krew-dash-tabs">
             <button
               type="button"
