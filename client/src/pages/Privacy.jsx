@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import PublicNav from '../components/PublicNav.jsx';
 
-// The Privacy Policy page is a public-facing page that explains what information KREW collects, what's shown publicly, and what stays private. 
+// The Privacy Policy page is a public-facing page that explains what information KREW collects, what's shown publicly, and what stays private.
 // The page also provides a link to the Terms of Service for further information.
 
 export default function Privacy() {
@@ -82,6 +82,7 @@ export default function Privacy() {
         <div className="krew-public-footer-inner">
           <span>© {new Date().getFullYear()} KREW</span>
           <div className="krew-public-footer-links">
+            <Link to="/faq">FAQ</Link>
             <Link to="/terms">Terms of Service</Link>
             <Link to="/privacy">Privacy Policy</Link>
           </div>
