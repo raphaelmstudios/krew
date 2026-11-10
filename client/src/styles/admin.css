@@ -188,3 +188,36 @@
 .krew-admin-row-resolved {
   opacity: 0.75;
 }
+
+/* Mobile pass (Day 3 checklist). Found by actually screenshotting this page at 390px
+   rather than assuming the flex layouts below would hold: .krew-admin-header had no
+   flex-wrap, so the notification bell and "Log out" on the right were pushed off the edge
+   of the screen instead of wrapping onto their own line - a real clipping bug. Same
+   two-column-flex-too-narrow problem applied to .krew-admin-row (both the plain approval
+   rows and, since the Disputes tab reuses this class, the dispute rows), where "Review"/
+   "Resolve" ended up squeezed against wrapped name/meta text instead of having its own
+   space. */
+@media (max-width: 860px) {
+  .krew-admin-page {
+    padding: 24px 16px 60px 16px;
+  }
+
+  .krew-admin-header {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .krew-admin-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .krew-admin-actions {
+    justify-content: flex-start;
+  }
+
+  .krew-admin-resolve-actions {
+    flex-wrap: wrap;
+  }
+}
