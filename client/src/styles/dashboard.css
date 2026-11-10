@@ -31,11 +31,7 @@
   padding: 36px 24px 80px 24px;
 }
 
-/* Mobile pass (Day 3 checklist): .krew-dash-header had no flex-wrap, so on a phone-width
-   screen the bell + "Log out" on the right were pushed straight past the edge of the
-   viewport instead of wrapping - a real clipping bug, not just a cosmetic squeeze, found
-   by actually screenshotting these pages at 390px rather than assuming the existing flex
-   layout would hold up. */
+/* Mobile responsive */
 @media (max-width: 860px) {
   .krew-dash-header {
     flex-wrap: wrap;
