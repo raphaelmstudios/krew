@@ -31,6 +31,52 @@
   padding: 36px 24px 80px 24px;
 }
 
+/* Mobile pass (Day 3 checklist): .krew-dash-header had no flex-wrap, so on a phone-width
+   screen the bell + "Log out" on the right were pushed straight past the edge of the
+   viewport instead of wrapping - a real clipping bug, not just a cosmetic squeeze, found
+   by actually screenshotting these pages at 390px rather than assuming the existing flex
+   layout would hold up. */
+@media (max-width: 860px) {
+  .krew-dash-header {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 16px 20px;
+  }
+
+  .krew-dash-header-right {
+    gap: 12px;
+    /* When the right-hand block wraps onto its own line below the wordmark/title, a
+       single flex item on a line with justify-content: space-between lands at the start
+       of that line (there's nothing to "space between" it and) - margin-left: auto is
+       the actual fix, pushing it to the end of its own line regardless. Found this by
+       screenshotting at 360px: without it, the bell + notification panel ended up
+       anchored near the LEFT edge of the screen instead of under the bell. */
+    margin-left: auto;
+  }
+
+  /* .krew-notif-panel positions itself with `right: 0` against .krew-notif-wrapper (the
+     bell), not against this whole header-right block - and "Log out" sits to the bell's
+     right, so the bell was never actually the rightmost element. On desktop there's
+     enough spare width that the panel overflowing a bit past the bell's own right edge
+     still stays on screen; at 360-390px it doesn't, and the panel clipped off the left
+     edge of the viewport (found by screenshotting the open panel, not just the closed
+     bell). Reordering the bell after "Log out" makes it genuinely the rightmost element,
+     so right: 0 lines the panel up with the real edge of the content area. */
+  .krew-notif-wrapper {
+    order: 1;
+  }
+
+  .krew-dash-body {
+    padding: 24px 16px 60px 16px;
+  }
+
+  .krew-dash-tabs {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
 .krew-dash-title-row {
   display: flex;
   justify-content: space-between;
@@ -184,6 +230,30 @@
   gap: 12px;
   margin-top: 8px;
   justify-content: flex-end;
+}
+
+/* On a phone-width screen, a job card's amount/status/actions crammed into a narrow
+   right-hand column read worse than just stacking the whole card top to bottom - plenty of
+   vertical room on mobile, not much horizontal. .krew-job-card-confirmable already did
+   this (see below); this brings the plainer job-board/crew-directory cards in line with it
+   instead of leaving them squeezed into the old two-column layout. */
+@media (max-width: 860px) {
+  .krew-job-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .krew-job-card-side {
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .krew-job-card-actions {
+    justify-content: flex-start;
+  }
 }
 
 .krew-dash-text-btn {
@@ -519,6 +589,12 @@
   box-shadow: 0 12px 32px rgba(33, 22, 43, 0.16);
   z-index: 20;
   overflow: hidden;
+}
+
+@media (max-width: 420px) {
+  .krew-notif-panel {
+    max-width: calc(100vw - 32px);
+  }
 }
 
 .krew-notif-panel-header {
