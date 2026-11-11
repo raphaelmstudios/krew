@@ -788,7 +788,109 @@
   display: inline-block;
 }
 
+/* Crew profile (redesign moodboard panel 5) - a portrait-and-stats header
+   followed by an About section and a portfolio gallery, read the same way
+   a resume or portfolio site would be: one person, read top to bottom,
+   rather than a grid of many like Hire Crew's directory. */
+.krew-crew-profile-wrap {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 32px 24px 64px 24px;
+}
+
+.krew-crew-profile-header {
+  display: flex;
+  gap: 28px;
+  align-items: flex-start;
+  margin-bottom: 32px;
+}
+
+.krew-crew-profile-portrait {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.krew-crew-profile-portrait img {
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+}
+
+.krew-crew-profile-portrait-placeholder {
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-faint);
+}
+
+.krew-crew-profile-info h1 {
+  font-family: var(--font-display);
+  font-size: 32px;
+  margin: 0 0 4px 0;
+}
+
+.krew-crew-profile-role {
+  color: var(--color-text-soft);
+  font-size: 16px;
+  margin: 0;
+}
+
+.krew-crew-profile-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: 14px;
+}
+
+.krew-crew-profile-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--color-text-soft);
+}
+
+.krew-crew-profile-bio {
+  margin-bottom: 32px;
+}
+
+.krew-crew-profile-bio h2,
+.krew-crew-profile-portfolio h2 {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.krew-crew-profile-bio p {
+  color: var(--color-text-soft);
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
 @media (max-width: 860px) {
+  .krew-crew-profile-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .krew-crew-profile-stats {
+    justify-content: center;
+  }
+
+  .krew-crew-profile-info .krew-crew-card-skills {
+    justify-content: center !important;
+  }
+
   .krew-gig-layout {
     grid-template-columns: 1fr;
   }
