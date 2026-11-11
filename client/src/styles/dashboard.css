@@ -31,7 +31,11 @@
   padding: 36px 24px 80px 24px;
 }
 
-/* Mobile responsive */
+/* Mobile pass (Day 3 checklist): .krew-dash-header had no flex-wrap, so on a phone-width
+   screen the bell + "Log out" on the right were pushed straight past the edge of the
+   viewport instead of wrapping - a real clipping bug, not just a cosmetic squeeze, found
+   by actually screenshotting these pages at 390px rather than assuming the existing flex
+   layout would hold up. */
 @media (max-width: 860px) {
   .krew-dash-header {
     flex-wrap: wrap;
@@ -50,14 +54,7 @@
     margin-left: auto;
   }
 
-  /* .krew-notif-panel positions itself with `right: 0` against .krew-notif-wrapper (the
-     bell), not against this whole header-right block - and "Log out" sits to the bell's
-     right, so the bell was never actually the rightmost element. On desktop there's
-     enough spare width that the panel overflowing a bit past the bell's own right edge
-     still stays on screen; at 360-390px it doesn't, and the panel clipped off the left
-     edge of the viewport (found by screenshotting the open panel, not just the closed
-     bell). Reordering the bell after "Log out" makes it genuinely the rightmost element,
-     so right: 0 lines the panel up with the real edge of the content area. */
+ 
   .krew-notif-wrapper {
     order: 1;
   }
@@ -166,11 +163,7 @@
   margin-bottom: 6px;
 }
 
-/* The only badges anywhere in KREW (per the brief) - a transaction's own
-   status, and nothing else. Still a rounded pill shape here on purpose:
-   the brief's "no pill-shaped buttons" rule is about buttons, something
-   you click - a status pill isn't interactive, it's a label, the same way
-   it's described throughout the brief itself ("status pills"). */
+
 .krew-status-pill {
   display: inline-block;
   font-size: 11px;
@@ -213,8 +206,7 @@
   color: var(--color-text-soft);
 }
 
-/* New here badge, for no track record yet - purple instead of amber/green/red since
-   it isn't a status to warn about or celebrate */
+
 .krew-status-pill.new {
   background: var(--color-brand-bg);
   color: var(--color-ink-plum);
@@ -228,11 +220,7 @@
   justify-content: flex-end;
 }
 
-/* On a phone-width screen, a job card's amount/status/actions crammed into a narrow
-   right-hand column read worse than just stacking the whole card top to bottom - plenty of
-   vertical room on mobile, not much horizontal. .krew-job-card-confirmable already did
-   this (see below); this brings the plainer job-board/crew-directory cards in line with it
-   instead of leaving them squeezed into the old two-column layout. */
+
 @media (max-width: 860px) {
   .krew-job-card {
     flex-direction: column;
@@ -491,6 +479,97 @@
 
 .krew-dash-avatar input[type='file'] {
   display: none;
+}
+
+/* Portfolio manager, nested in .krew-dash-profile-card below the role/skills
+   form - a crew member's own work-sample photos (redesign moodboard's Crew
+   Profile page). A plain grid of square thumbnails, each with a small
+   remove button in the corner, plus one more tile that's the upload
+   control itself rather than a separate button elsewhere on the page. */
+.krew-dash-portfolio {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
+}
+
+.krew-portfolio-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 10px;
+}
+
+.krew-portfolio-thumb {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+
+.krew-portfolio-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.krew-portfolio-thumb-remove {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(33, 22, 43, 0.65);
+  color: var(--color-warm-ivory);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color var(--motion-fast) var(--motion-ease);
+}
+
+.krew-portfolio-thumb-remove:hover:not(:disabled) {
+  background: rgba(33, 22, 43, 0.85);
+}
+
+.krew-portfolio-thumb-remove:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.krew-portfolio-add {
+  aspect-ratio: 1;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-faint);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
+}
+
+.krew-portfolio-add:hover {
+  border-color: var(--color-soft-violet);
+  color: var(--color-brand-text);
+}
+
+.krew-portfolio-add input[type='file'] {
+  display: none;
+}
+
+/* Read-only variant shown on the public crew profile page (CrewProfile.jsx)
+   - same grid and thumbnail shape, just without the add tile or remove
+   buttons, and a little larger since there's more room on that page. */
+.krew-portfolio-grid-display {
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
 }
 
 /* Availability */
