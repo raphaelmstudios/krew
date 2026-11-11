@@ -1,5 +1,5 @@
-// This script is intended to be run from the command line to reset the demo database to a clean state. 
-// It deletes all rows from every table in krew.db, effectively wiping out all user data, job listings, disputes, notifications, and transactions. The schema remains intact, but all data is removed.
+// This script is intended to be run from the command line to reset the demo database to a clean state.
+// It deletes all rows from every table in krew.db, effectively wiping out all user data, job listings, disputes, notifications, transactions, and crew portfolio photo records. The schema remains intact, but all data is removed. Photo files already uploaded to the server's uploads folder are not touched, only their database records go.
 
 const Database = require('better-sqlite3');
 const path = require('path');
@@ -15,10 +15,11 @@ if (!process.argv.includes(CONFIRM_FLAG)) {
 
 const db = new Database(path.join(__dirname, '..', 'krew.db'));
 
-// Deletes all rows from every table in the database. 
-// The schema remains intact, but all data is removed. 
+// Deletes all rows from every table in the database.
+// The schema remains intact, but all data is removed.
 // This is useful for resetting the demo environment to a clean state.
-const tables = ['notifications', 'disputes', 'job_applications', 'transactions', 'job_listings', 'sessions', 'users'];
+// portfolio_images has to be in this list - it references users, so leaving it out makes the delete fail with a foreign key error as soon as any crew member has uploaded a portfolio photo.
+const tables = ['notifications', 'disputes', 'job_applications', 'transactions', 'job_listings', 'portfolio_images', 'sessions', 'users'];
 for (const table of tables) {
   db.prepare(`DELETE FROM ${table}`).run();
 }
