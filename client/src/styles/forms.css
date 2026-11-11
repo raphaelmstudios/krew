@@ -8,12 +8,15 @@
   padding: 48px 24px 80px 24px;
 }
 
+/* Wordmark - also used as a clickable link, so no underline or inline gap */
 .krew-wordmark {
   font-size: 22px;
   font-weight: 800;
   letter-spacing: -0.02em;
   color: var(--color-text);
   margin-bottom: 40px;
+  text-decoration: none;
+  display: inline-block;
 }
 
 .krew-wordmark span {
@@ -212,6 +215,13 @@
 
 .krew-field-input.has-error {
   border-color: var(--color-danger);
+}
+
+/* Textarea variant of the field input (the crew dashboard's bio field) */
+.krew-field-textarea {
+  resize: vertical;
+  min-height: 72px;
+  line-height: 1.5;
 }
 
 /* Field input wrapper */
