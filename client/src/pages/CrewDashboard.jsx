@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
-import { User as UserIcon } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { User as UserIcon, X, Plus } from 'lucide-react';
 import JobCard from './JobCard.jsx';
 import NotificationBell from '../components/NotificationBell.jsx';
 import PilotSurveyBanner from '../components/PilotSurveyBanner.jsx';
 import InfoTooltip from '../components/InfoTooltip.jsx';
+
+const MAX_PORTFOLIO_IMAGES = 12;
 
 // The crew dashboard is the main interface for crew members to manage their job applications and availability status.
 // It has two main sections: the Open Jobs tab, where crew members can view and apply to open job listings, and the My Applications tab, where they can track the status of their applications.
@@ -52,8 +55,76 @@ export default function CrewDashboard({ user, onLogout }) {
   const [photoUploading, setPhotoUploading] = useState(false);
   const [professionalRole, setProfessionalRole] = useState(user.professional_role || '');
   const [skillsText, setSkillsText] = useState(user.skills || '');
+  const [yearsExperience, setYearsExperience] = useState(
+    user.years_experience === null || user.years_experience === undefined ? '' : String(user.years_experience)
+  );
+  const [bio, setBio] = useState(user.bio || '');
   const [profileBanner, setProfileBanner] = useState(null);
   const [profileSaving, setProfileSaving] = useState(false);
+
+  // Portfolio photos (redesign moodboard's Crew Profile page) - additive to
+  // the single profile_photo_path above, any number of work-sample images up
+  // to MAX_PORTFOLIO_IMAGES. There's no "my portfolio" endpoint of its own -
+  // the public /users/:id/public-profile bundle already includes it, and
+  // since it's public it works just as well fetched for one's own id here.
+  const [portfolio, setPortfolio] = useState(null);
+  const [portfolioUploading, setPortfolioUploading] = useState(false);
+  const [portfolioBanner, setPortfolioBanner] = useState(null);
+  const [deletingPortfolioId, setDeletingPortfolioId] = useState(null);
+
+  async function loadPortfolio() {
+    try {
+      const response = await fetch(`/api/users/${user.id}/public-profile`);
+      const data = await response.json();
+      if (response.ok) {
+        setPortfolio(data.portfolio);
+      }
+    } catch (err) {
+      // Silently leave the portfolio section empty - the rest of the dashboard still works.
+    }
+  }
+
+  async function handlePortfolioUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setPortfolioUploading(true);
+    setPortfolioBanner(null);
+    try {
+      const formData = new FormData();
+      formData.append('portfolio_photo', file);
+      const response = await fetch('/api/users/me/portfolio', { method: 'POST', body: formData });
+      const data = await response.json();
+      if (!response.ok) {
+        setPortfolioBanner({ type: 'error', text: data.error || 'Could not upload that photo.' });
+        return;
+      }
+      setPortfolio((current) => [...(current || []), { id: data.id, image_path: data.image_path }]);
+    } catch (err) {
+      setPortfolioBanner({ type: 'error', text: 'Could not reach the server.' });
+    } finally {
+      setPortfolioUploading(false);
+      e.target.value = '';
+    }
+  }
+
+  async function handlePortfolioDelete(imageId) {
+    setDeletingPortfolioId(imageId);
+    setPortfolioBanner(null);
+    try {
+      const response = await fetch(`/api/users/me/portfolio/${imageId}`, { method: 'DELETE' });
+      if (!response.ok) {
+        const data = await response.json();
+        setPortfolioBanner({ type: 'error', text: data.error || 'Could not remove that photo.' });
+        return;
+      }
+      setPortfolio((current) => current.filter((image) => image.id !== imageId));
+    } catch (err) {
+      setPortfolioBanner({ type: 'error', text: 'Could not reach the server.' });
+    } finally {
+      setDeletingPortfolioId(null);
+    }
+  }
 
   async function handlePhotoChange(e) {
     const file = e.target.files[0];
@@ -90,6 +161,8 @@ export default function CrewDashboard({ user, onLogout }) {
         body: JSON.stringify({
           professional_role: professionalRole,
           skills: skillsText.split(',').map((skill) => skill.trim()).filter(Boolean),
+          years_experience: yearsExperience === '' ? null : Number(yearsExperience),
+          bio,
         }),
       });
       const data = await response.json();
@@ -99,6 +172,8 @@ export default function CrewDashboard({ user, onLogout }) {
       }
       setProfessionalRole(data.professional_role || '');
       setSkillsText(data.skills.join(', '));
+      setYearsExperience(data.years_experience === null || data.years_experience === undefined ? '' : String(data.years_experience));
+      setBio(data.bio || '');
       setProfileBanner({ type: 'success', text: 'Profile saved.' });
     } catch (err) {
       setProfileBanner({ type: 'error', text: 'Could not reach the server.' });
@@ -110,6 +185,7 @@ export default function CrewDashboard({ user, onLogout }) {
   useEffect(() => {
     if (user.verification_status === 'approved') {
       loadOpenListings();
+      loadPortfolio();
     }
   }, []);
 
@@ -236,7 +312,8 @@ export default function CrewDashboard({ user, onLogout }) {
           <div className="krew-dash-profile-card">
             <h2 className="krew-dash-form-title">My profile</h2>
             <p className="krew-dash-availability-note" style={{ marginBottom: 18 }}>
-              This is what organizers see when they browse the public Hire Crew directory.
+              This is what organizers see when they browse the public Hire Crew directory.{' '}
+              <Link to={`/crew/${user.id}`} className="krew-dash-text-btn">View my public profile</Link>
             </p>
 
             {profileBanner && <div className={`krew-form-banner ${profileBanner.type}`}>{profileBanner.text}</div>}
@@ -281,10 +358,85 @@ export default function CrewDashboard({ user, onLogout }) {
                     placeholder="e.g. Mixology, Crowd Management, Setup"
                   />
                 </div>
+                <div className="krew-field">
+                  <label className="krew-field-label" htmlFor="years-experience">Years of experience</label>
+                  <input
+                    id="years-experience"
+                    type="number"
+                    min="0"
+                    max="80"
+                    className="krew-field-input"
+                    value={yearsExperience}
+                    onChange={(e) => setYearsExperience(e.target.value)}
+                    placeholder="e.g. 3"
+                  />
+                </div>
+                <div className="krew-field">
+                  <label className="krew-field-label" htmlFor="bio">
+                    Bio <span className="krew-dash-availability-note" style={{ display: 'inline', marginTop: 0 }}>(max 400 characters)</span>
+                  </label>
+                  <textarea
+                    id="bio"
+                    className="krew-field-input krew-field-textarea"
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    maxLength={400}
+                    rows={3}
+                    placeholder="A couple of sentences about the work you do and how you do it."
+                  />
+                </div>
                 <button type="submit" className="krew-button-primary krew-dash-post-btn" disabled={profileSaving}>
                   {profileSaving ? 'Saving…' : 'Save profile'}
                 </button>
               </form>
+            </div>
+
+            <div className="krew-dash-portfolio">
+              <h3 className="krew-dash-subtitle" style={{ marginBottom: 4 }}>Portfolio</h3>
+              <p className="krew-dash-availability-note" style={{ marginBottom: 14 }}>
+                Work samples shown on your public profile. {portfolio ? `${portfolio.length} of ${MAX_PORTFOLIO_IMAGES} photos.` : ''}
+              </p>
+
+              {portfolioBanner && <div className={`krew-form-banner ${portfolioBanner.type}`}>{portfolioBanner.text}</div>}
+
+              <div className="krew-portfolio-grid">
+                {portfolio && portfolio.map((image) => (
+                  <div className="krew-portfolio-thumb" key={image.id}>
+                    <img src={`/uploads/${image.image_path}`} alt="" />
+                    <button
+                      type="button"
+                      className="krew-portfolio-thumb-remove"
+                      onClick={() => handlePortfolioDelete(image.id)}
+                      disabled={deletingPortfolioId === image.id}
+                      aria-label="Remove this photo"
+                    >
+                      <X size={14} strokeWidth={2} />
+                    </button>
+                  </div>
+                ))}
+
+                {portfolio && portfolio.length < MAX_PORTFOLIO_IMAGES && (
+                  <label className="krew-portfolio-add" htmlFor="portfolio-photo-input">
+                    {portfolioUploading ? (
+                      <span className="krew-dash-loading-note" style={{ margin: 0 }}>Uploading…</span>
+                    ) : (
+                      <>
+                        <Plus size={20} strokeWidth={1.75} />
+                        <span>Add photo</span>
+                      </>
+                    )}
+                    <input
+                      id="portfolio-photo-input"
+                      type="file"
+                      accept="image/jpeg,image/png"
+                      onChange={handlePortfolioUpload}
+                      disabled={portfolioUploading}
+                    />
+                  </label>
+                )}
+              </div>
+
+              {portfolio === null && <div className="krew-dash-loading-note">Loading portfolio…</div>}
             </div>
 
             <div className="krew-dash-availability krew-dash-availability-inline">
