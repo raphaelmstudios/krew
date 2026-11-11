@@ -3,7 +3,7 @@ import PublicNav from '../components/PublicNav.jsx';
 
 // The homepage itself, which is a single-page scroll with multiple sections.
 // Each section has a label, a heading, and a body. Some sections have a grid
-// of cards or a split layout with two cards side by side. The hero section at the top has a large heading, a subheading, and two call-to-action buttons, along with an image on the right. 
+// of cards or a split layout with two cards side by side. The hero section at the top has a large heading, a subheading, and two call-to-action buttons, along with an abstract shape on the right (no real KREW event photo to use yet, so this is standing in until there is one).
 // The footer has links and copyright information.
 
 export default function Home() {
@@ -116,6 +116,7 @@ export default function Home() {
         <div className="krew-public-footer-inner">
           <span>© {new Date().getFullYear()} KREW</span>
           <div className="krew-public-footer-links">
+            <Link to="/faq">FAQ</Link>
             <Link to="/terms">Terms of Service</Link>
             <Link to="/privacy">Privacy Policy</Link>
           </div>

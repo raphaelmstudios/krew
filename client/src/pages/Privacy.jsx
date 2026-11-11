@@ -1,80 +1,86 @@
 import { Link } from 'react-router-dom';
 import PublicNav from '../components/PublicNav.jsx';
 
-// The Privacy Policy page is a public-facing page that explains what information KREW collects, what's shown publicly, and what stays private. 
-// The page also provides a link to the Terms of Service for further information.
+// The Terms of Service page is a public-facing page that outlines the rules and guidelines for using the KREW platform.
+// It includes sections on what KREW is and isn't, account verification, browsing without an account, acceptable use, and disclaimers about warranties and liabilities.
+// The page also provides a link to the Privacy Policy for further information.
 
-export default function Privacy() {
+export default function Terms() {
   return (
     <div className="krew-public-page">
       <PublicNav />
 
       <div className="krew-legal-wrap">
         <p className="krew-home-section-label">Legal</p>
-        <h1 className="krew-legal-title">Privacy Policy</h1>
+        <h1 className="krew-legal-title">Terms of Service</h1>
         <p className="krew-legal-updated">Last updated November 2026</p>
 
         <div className="krew-legal-body">
           <p>
-            This page explains what information KREW collects, what's shown publicly, and what stays private. KREW is
-            a student project, still being built, and this policy will be updated as it grows.
+            KREW is a student project built as part of an ALU Software Engineering course, connecting event and gig
+            organizers in Nairobi with bar staff, security, ushers, photographers, setup crews and other crew
+            members. These terms explain what you can expect when you use it. Because KREW is still being built, this
+            page will change as the product does.
           </p>
 
-          <h2>What we collect</h2>
+          <h2>What KREW is and isn't</h2>
           <p>
-            When you create an account: your name, phone number, and a password (stored as a hash, never in plain
-            text). When you verify your identity: a photo of your ID document and a selfie. If you're a crew member
-            and choose to fill them in: a profile photo, your professional role, and a list of skills. When you use
-            the job board: the listings you post or apply to, and, once a job is paid, each side's confirmation of
-            the amount and date.
+            KREW helps organizers find crew and helps crew find work, and keeps a record of who paid and got paid on
+            time. KREW does not process, hold, or transfer money. When an organizer and a crew member work together,
+            payment happens directly between them - by cash, mobile money, or however they agree. Afterwards, each
+            side confirms on KREW what was paid and when, and KREW uses that to calculate the completed-job counts and
+            on-time percentages shown on public profiles and listings. KREW is not a party to any payment, and isn't
+            responsible for a payment that doesn't happen as agreed - though a confirmed mismatch or a no-show is
+            exactly the kind of thing the reliability record is there to surface.
           </p>
 
-          <h2>What's public</h2>
+          <h2>Accounts and verification</h2>
           <p>
-            Anyone, including visitors without an account, can see: open job listings (title, category, location,
-            amount, due date, description, and the organizer's name); crew profiles on Hire Crew (name, profile
-            photo if you've added one, professional role, skills, and self-reported availability); and a reliability
-            summary for both organizers and crew members - how many jobs they've completed and, for organizers, what
-            percentage were paid on time. That summary is calculated from payment confirmations, not shown as raw
-            transaction data.
+            Organizers and crew members both create an account with a phone number and password, and upload an ID
+            document and a selfie as part of signing up. An admin reviews this before the account is approved -
+            posting a paid listing, applying to one, or being hired directly all require an approved account. You're
+            responsible for keeping your login details to yourself and for the accuracy of what you submit, including
+            your ID documents.
           </p>
 
-          <h2>What's private</h2>
+          <h2>Browsing without an account</h2>
           <p>
-            Your phone number, your password, and your ID document and selfie are never shown publicly. The ID
-            document and selfie are only ever visible to an admin reviewing your account for approval, and are stored
-            outside the app's public file directory so they can't be reached by URL. The specific amount you confirm
-            for a given job, and who you've applied to or been hired by, are also private - only the two people
-            involved in that job, and admins handling a dispute, can see them.
+            Anyone can browse open gigs on Find Work and crew profiles on Hire Crew without creating an account. You
+            only need to sign up when you want to actually apply, hire, or post a listing.
           </p>
 
-          <h2>How we use it</h2>
+          <h2>What you post</h2>
           <p>
-            To verify accounts before they can post, apply, or be hired. To show your public profile or listings to
-            the people you're trying to reach. To calculate and display the reliability stats described above. To
-            keep you signed in between visits. KREW doesn't sell your information or share it with anyone outside the
-            app.
+            Job listings, your professional role, your skills, and your profile photo (for crew members) are shown
+            publicly once you add them. Keep them accurate - a listing's title, category, location, amount and due
+            date are what crew members are applying to, and a crew profile's role and skills are what organizers are
+            hiring based on. Don't post anything false, misleading, or for work that isn't real.
           </p>
 
-          <h2>Your choices</h2>
+          <h2>Acceptable use</h2>
           <p>
-            Crew members can update or remove their profile photo, professional role, skills, and availability status
-            at any time from their dashboard. Since KREW doesn't yet have a self-service way to delete an account or
-            export your data, reach out directly if you need that done.
+            Use KREW to find and offer real event and gig work. Don't use it to defraud another user, misrepresent who
+            you are, post fake listings or fake completed work, or try to get around the verification process. An
+            admin can suspend or remove an account that does any of this.
           </p>
 
-          <h2>Children's privacy</h2>
-          <p>KREW is for people old enough to take on paid event and gig work, and isn't intended for children.</p>
-
-          <h2>Changes to this policy</h2>
+          <h2>No warranty</h2>
           <p>
-            This policy may change as KREW develops. The "last updated" date at the top of this page reflects the
+            KREW is provided as-is, as an in-progress student project. It doesn't come with a guarantee that it will
+            be available, error-free, or fit for any particular purpose, and KREW isn't liable for disputes between
+            organizers and crew members, including disputes about payment, no-shows, or the quality of work. Use your
+            own judgment when agreeing to and carrying out paid work with someone you meet through KREW.
+          </p>
+
+          <h2>Changes to these terms</h2>
+          <p>
+            These terms may change as KREW develops. The "last updated" date at the top of this page reflects the
             most recent version.
           </p>
         </div>
 
         <p className="krew-legal-footer-link">
-          See also KREW's <Link to="/terms">Terms of Service</Link>.
+          See also KREW's <Link to="/privacy">Privacy Policy</Link>.
         </p>
       </div>
 
@@ -82,6 +88,7 @@ export default function Privacy() {
         <div className="krew-public-footer-inner">
           <span>© {new Date().getFullYear()} KREW</span>
           <div className="krew-public-footer-links">
+            <Link to="/faq">FAQ</Link>
             <Link to="/terms">Terms of Service</Link>
             <Link to="/privacy">Privacy Policy</Link>
           </div>

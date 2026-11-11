@@ -2,15 +2,26 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, User as UserIcon } from 'lucide-react';
 import PublicNav from '../components/PublicNav.jsx';
+import InfoTooltip from '../components/InfoTooltip.jsx';
 
-// Formats the crew member's record for display in the directory. 
-// If they have no confirmed jobs, show a "New here" badge. Otherwise, show the number of completed jobs with proper pluralization.
+// Formats the crew member's record for display in the directory.
+// If they have no confirmed jobs, show a "New here" badge. Otherwise, show the number of completed jobs with proper pluralization. Either way it comes with a small info icon explaining what the badge means.
 function formatCrewRecord(crewMember) {
   if (!crewMember.confirmed_job_count) {
-    return <span className="krew-status-pill new">New here</span>;
+    return (
+      <>
+        <span className="krew-status-pill new">New here</span>
+        <InfoTooltip text="New here means this crew member hasn't completed a job on KREW yet - everyone starts without a track record, it isn't a red flag." />
+      </>
+    );
   }
   const jobWord = crewMember.confirmed_job_count === 1 ? 'job' : 'jobs';
-  return `${crewMember.confirmed_job_count} completed ${jobWord}`;
+  return (
+    <>
+      {crewMember.confirmed_job_count} completed {jobWord}
+      <InfoTooltip text="The number of jobs this crew member has completed and had payment confirmed on KREW." />
+    </>
+  );
 }
 
 // The Hire Crew page is a public-facing page that allows users to browse and search for crew members.
@@ -152,6 +163,7 @@ export default function HireCrew() {
         <div className="krew-public-footer-inner">
           <span>© {new Date().getFullYear()} KREW</span>
           <div className="krew-public-footer-links">
+            <Link to="/faq">FAQ</Link>
             <Link to="/terms">Terms of Service</Link>
             <Link to="/privacy">Privacy Policy</Link>
           </div>

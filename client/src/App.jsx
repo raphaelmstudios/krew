@@ -13,6 +13,7 @@ import HireCrew from './pages/HireCrew.jsx';
 import GigDetail from './pages/GigDetail.jsx';
 import Terms from './pages/Terms.jsx';
 import Privacy from './pages/Privacy.jsx';
+import Faq from './pages/Faq.jsx';
 import './styles/forms.css';
 import './styles/admin.css';
 import './styles/dashboard.css';
@@ -113,6 +114,7 @@ export default function App() {
 
       <Route path="/terms" element={<Terms />} />
       <Route path="/privacy" element={<Privacy />} />
+      <Route path="/faq" element={<Faq />} />
 
       <Route path="/" element={<Home />} />
       {/* No dedicated 404 page yet - an unrecognised path falls back to the

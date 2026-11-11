@@ -116,6 +116,17 @@ db.exec(`
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );`);
 
+// Pilot readiness (FR7.1): the SRS calls for a reminder to the organizer when a payment's
+// due date is within 24 hours. Without this column the reminder check (reminders.js) would
+// re-notify the same organizer about the same job every time it runs, rather than once -
+// it's set the moment a reminder is actually sent, and the check skips any row where it's
+// already filled in.
+try {
+  db.exec(`ALTER TABLE transactions ADD COLUMN due_reminder_sent_at TEXT;`);
+} catch (err) {
+  if (!err.message.includes('duplicate column name')) throw err;
+}
+
 // This query makes looking up either the jobs an organizer has posted or the jobs a crew member has accepted faster
 db.exec(`CREATE INDEX IF NOT EXISTS idx_transactions_organizer_id ON transactions(organizer_id);`);
 db.exec(`CREATE INDEX IF NOT EXISTS idx_transactions_crew_member_id ON transactions(crew_member_id);`);
@@ -196,5 +207,25 @@ db.exec(`CREATE INDEX IF NOT EXISTS idx_job_applications_crew_member_id ON job_a
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );`);
 
+//notifications
+// One row per notification. Every type here is created only by server code (never from
+// anything a user submits directly - type and message are always written by whichever
+// route triggered it, in createNotification()/notifyAdmins(), see notifications.js), so
+// unlike job_listings.category there's no need for a CHECK constraint against a fixed
+// list - it's just a tag the frontend could use to pick an icon by, not something that
+// changes what's allowed to happen. link is an optional client-side path (e.g.
+// '/dashboard') for where clicking the notification should take you; read_at stays NULL
+// until the person opens/dismisses it.
+db.exec(`
+    CREATE TABLE IF NOT EXISTS notifications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      type TEXT NOT NULL,
+      message TEXT NOT NULL,
+      link TEXT,
+      read_at TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );`);
+db.exec(`CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);`);
 
  }

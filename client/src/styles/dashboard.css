@@ -31,6 +31,48 @@
   padding: 36px 24px 80px 24px;
 }
 
+/* Mobile responsive */
+@media (max-width: 860px) {
+  .krew-dash-header {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 16px 20px;
+  }
+
+  .krew-dash-header-right {
+    gap: 12px;
+    /* When the right-hand block wraps onto its own line below the wordmark/title, a
+       single flex item on a line with justify-content: space-between lands at the start
+       of that line (there's nothing to "space between" it and) - margin-left: auto is
+       the actual fix, pushing it to the end of its own line regardless. Found this by
+       screenshotting at 360px: without it, the bell + notification panel ended up
+       anchored near the LEFT edge of the screen instead of under the bell. */
+    margin-left: auto;
+  }
+
+  /* .krew-notif-panel positions itself with `right: 0` against .krew-notif-wrapper (the
+     bell), not against this whole header-right block - and "Log out" sits to the bell's
+     right, so the bell was never actually the rightmost element. On desktop there's
+     enough spare width that the panel overflowing a bit past the bell's own right edge
+     still stays on screen; at 360-390px it doesn't, and the panel clipped off the left
+     edge of the viewport (found by screenshotting the open panel, not just the closed
+     bell). Reordering the bell after "Log out" makes it genuinely the rightmost element,
+     so right: 0 lines the panel up with the real edge of the content area. */
+  .krew-notif-wrapper {
+    order: 1;
+  }
+
+  .krew-dash-body {
+    padding: 24px 16px 60px 16px;
+  }
+
+  .krew-dash-tabs {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
 .krew-dash-title-row {
   display: flex;
   justify-content: space-between;
@@ -186,6 +228,30 @@
   justify-content: flex-end;
 }
 
+/* On a phone-width screen, a job card's amount/status/actions crammed into a narrow
+   right-hand column read worse than just stacking the whole card top to bottom - plenty of
+   vertical room on mobile, not much horizontal. .krew-job-card-confirmable already did
+   this (see below); this brings the plainer job-board/crew-directory cards in line with it
+   instead of leaving them squeezed into the old two-column layout. */
+@media (max-width: 860px) {
+  .krew-job-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .krew-job-card-side {
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .krew-job-card-actions {
+    justify-content: flex-start;
+  }
+}
+
 .krew-dash-text-btn {
   background: none;
   border: none;
@@ -218,6 +284,64 @@
   font-size: 13px;
   color: var(--color-text-soft);
   margin: 4px 0 0 0;
+}
+
+/* Pilot readiness: the survey banner shown to organizers/crew during the Sprint 4 pilot
+   (PilotSurveyBanner.jsx). Reuses the brand-tint tokens rather than the error/warning/success
+   ones in forms.css since this isn't a status message about something the user did - it's
+   just an informational nudge. */
+.krew-pilot-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--color-brand-bg);
+  color: var(--color-brand-text);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  font-size: 13.5px;
+}
+
+.krew-pilot-banner-text {
+  margin: 0;
+}
+
+.krew-pilot-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.krew-pilot-banner-link {
+  font-weight: 600;
+  color: inherit;
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
+.krew-pilot-banner-dismiss {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+  opacity: 0.7;
+}
+
+.krew-pilot-banner-dismiss:hover {
+  opacity: 1;
+}
+
+@media (max-width: 860px) {
+  .krew-pilot-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
 }
 
 /* Tabs on the crew dashboard. Same reasoning as the role toggle in
@@ -463,4 +587,146 @@
   align-items: center;
   gap: 14px;
   flex-shrink: 0;
+}
+
+/* Notification bell (NotificationBell.jsx) - dropped into the header of both dashboards
+   and Admin.jsx, so it lives here rather than in admin.css even though Admin uses it too. */
+.krew-notif-wrapper {
+  position: relative;
+}
+
+.krew-notif-bell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text-soft);
+  cursor: pointer;
+  padding: 0;
+}
+
+.krew-notif-bell:hover {
+  color: var(--color-text);
+  border-color: var(--color-text-soft);
+}
+
+.krew-notif-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--color-danger);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+}
+
+.krew-notif-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 320px;
+  max-width: calc(100vw - 48px);
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 32px rgba(33, 22, 43, 0.16);
+  z-index: 20;
+  overflow: hidden;
+}
+
+@media (max-width: 420px) {
+  .krew-notif-panel {
+    max-width: calc(100vw - 32px);
+  }
+}
+
+.krew-notif-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.krew-notif-empty {
+  padding: 28px 16px;
+  text-align: center;
+  color: var(--color-text-soft);
+  font-size: 13.5px;
+}
+
+.krew-notif-list {
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.krew-notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.krew-notif-item:last-child {
+  border-bottom: none;
+}
+
+.krew-notif-item:hover {
+  background: var(--color-surface);
+}
+
+.krew-notif-item.unread {
+  background: var(--color-brand-bg);
+}
+
+.krew-notif-item.unread:hover {
+  background: var(--color-brand-bg);
+  filter: brightness(0.97);
+}
+
+.krew-notif-dot {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-brand);
+  margin-top: 6px;
+}
+
+.krew-notif-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.krew-notif-item-message {
+  font-size: 13.5px;
+  color: var(--color-text);
+  line-height: 1.4;
+}
+
+.krew-notif-item-time {
+  font-size: 11.5px;
+  color: var(--color-text-faint);
 }

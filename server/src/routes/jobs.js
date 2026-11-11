@@ -5,6 +5,7 @@
 import express from 'express';
 import { db } from '../db.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
+import { createNotification, notifyAdmins } from '../notifications.js';
 
 export const jobsRouter = express.Router();
 
@@ -58,6 +59,13 @@ jobsRouter.post('/', requireRole('organizer'), (req, res) => {
        VALUES (?, ?, ?, ?, ?, 'pending')`
     )
     .run(organizer.id, crewMemberId, amountNumber, due_date, description);
+
+  createNotification(
+    crewMemberId,
+    'hired',
+    `${organizer.name} hired you directly for a new job.`,
+    '/dashboard'
+  );
 
   res.status(201).json({
     id: result.lastInsertRowid,
@@ -162,6 +170,32 @@ jobsRouter.post('/:id/confirm', requireAuth, (req, res) => {
     updated = db.prepare(`SELECT * FROM transactions WHERE id = ?`).get(transactionId);
   }
 
+  // Whichever side didn't just submit this confirmation is the one who needs to hear about
+  // it - the side that submitted it already sees the result directly in their own UI.
+  const otherPartyId = isOrganizer ? transaction.crew_member_id : transaction.organizer_id;
+  if (bothConfirmed && amountsMatch) {
+    createNotification(
+      otherPartyId,
+      'payment_confirmed',
+      `Payment of KES ${amountNumber.toLocaleString()} is now confirmed for your job with ${req.user.name}.`,
+      '/dashboard'
+    );
+  } else if (bothConfirmed && !amountsMatch) {
+    createNotification(
+      otherPartyId,
+      'payment_mismatch',
+      `The payment amounts you and ${req.user.name} confirmed don't match for this job - you may want to raise a dispute.`,
+      '/dashboard'
+    );
+  } else {
+    createNotification(
+      otherPartyId,
+      'payment_confirmed_pending',
+      `${req.user.name} confirmed their side of a payment. Confirm yours to complete it.`,
+      '/dashboard'
+    );
+  }
+
   res.json({
     id: updated.id,
     status: updated.status,
@@ -219,6 +253,20 @@ jobsRouter.post('/:id/dispute', requireAuth, (req, res) => {
     db.prepare(`UPDATE transactions SET status = 'disputed' WHERE id = ?`).run(transactionId);
   });
   raiseDispute();
+
+  const otherPartyId = isOrganizer ? transaction.crew_member_id : transaction.organizer_id;
+  const otherParty = db.prepare(`SELECT name FROM users WHERE id = ?`).get(otherPartyId);
+  createNotification(
+    otherPartyId,
+    'dispute_raised',
+    `${req.user.name} raised a dispute on your job: "${trimmedReason}"`,
+    '/dashboard'
+  );
+  notifyAdmins(
+    'dispute_raised',
+    `${req.user.name} raised a dispute against ${otherParty.name} on transaction #${transactionId}: "${trimmedReason}"`,
+    '/admin'
+  );
 
   res.status(201).json({ id: transactionId, status: 'disputed' });
 });

@@ -6,6 +6,7 @@ import express from 'express';
 import { db } from '../db.js';
 import { requireRole } from '../middleware/auth.js';
 import { computeOrganizerRecord, computeCrewRecord } from './users.js';
+import { createNotification } from '../notifications.js';
 
 export const listingsRouter = express.Router();
 
@@ -180,6 +181,13 @@ listingsRouter.post('/:id/accept', requireRole('organizer'), (req, res) => {
 
   const transactionId = acceptApplicant();
 
+  createNotification(
+    crewMemberId,
+    'application_accepted',
+    `Your application for "${listing.title || 'a job'}" was accepted - you're hired!`,
+    '/dashboard'
+  );
+
   res.status(201).json({
     transaction_id: transactionId,
     listing_id: listingId,
@@ -277,7 +285,7 @@ listingsRouter.post('/:id/apply', requireRole('crew_member'), (req, res) => {
     return res.status(403).json({ error: 'Your account needs to be approved before you can apply for jobs.' });
   }
 
-  const listing = db.prepare(`SELECT id, status FROM job_listings WHERE id = ?`).get(listingId);
+  const listing = db.prepare(`SELECT id, status, organizer_id, title FROM job_listings WHERE id = ?`).get(listingId);
   if (!listing) {
     return res.status(404).json({ error: 'That listing no longer exists.' });
   }
@@ -296,6 +304,13 @@ listingsRouter.post('/:id/apply', requireRole('crew_member'), (req, res) => {
     }
     throw err;
   }
+
+  createNotification(
+    listing.organizer_id,
+    'application_received',
+    `${crewMember.name} applied to your listing "${listing.title || 'your job listing'}".`,
+    '/dashboard'
+  );
 
   res.status(201).json({ listing_id: listingId, status: 'pending' });
 });
