@@ -1,9 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { ImagePlus } from 'lucide-react';
 
 // The fixed category list a listing can be filed under - mirrors
 // LISTING_CATEGORIES in server/src/routes/listings.js. Kept as its own constant
 // here (rather than fetched from the server) since it rarely changes and the
 // form needs it before the user does anything that would justify a request.
+const ALLOWED_PHOTO_TYPES = ['image/jpeg', 'image/png'];
+const MAX_PHOTO_SIZE = 5 * 1024 * 1024; // same 5MB limit the server enforces
+
 const LISTING_CATEGORIES = [
   'Bar Service',
   'Catering',
@@ -28,6 +32,37 @@ export default function PostListingForm({ onCreated, onCancel }) {
   const [description, setDescription] = useState('');
   const [banner, setBanner] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Optional listing photo - shown on Find Work's cards and the gig page. Uploaded right
+  // after the listing itself is created, since the upload route needs the new listing's id.
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
+
+  useEffect(() => {
+    if (!photoFile) {
+      setPhotoPreview(null);
+      return undefined;
+    }
+    const url = URL.createObjectURL(photoFile);
+    setPhotoPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [photoFile]);
+
+  function handlePhotoChange(e) {
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!ALLOWED_PHOTO_TYPES.includes(file.type)) {
+      setBanner({ type: 'error', text: 'Please choose a JPG or PNG photo.' });
+      return;
+    }
+    if (file.size > MAX_PHOTO_SIZE) {
+      setBanner({ type: 'error', text: 'The photo must be smaller than 5MB.' });
+      return;
+    }
+    setBanner(null);
+    setPhotoFile(file);
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -71,7 +106,21 @@ export default function PostListingForm({ onCreated, onCancel }) {
         return;
       }
 
-      onCreated();
+      // The listing exists now - if the photo upload fails, the listing still stands and
+      // the organizer can add the photo from the listing's card on their dashboard.
+      let photoFailed = false;
+      if (photoFile) {
+        try {
+          const formData = new FormData();
+          formData.append('listing_photo', photoFile);
+          const photoResponse = await fetch(`/api/job-listings/${data.id}/photo`, { method: 'POST', body: formData });
+          photoFailed = !photoResponse.ok;
+        } catch (err) {
+          photoFailed = true;
+        }
+      }
+
+      onCreated(photoFailed ? { photoFailed: true } : undefined);
     } catch (err) {
       // fetch itself throws when there's no network connection at all.
       setBanner({ type: 'error', text: 'Could not reach the server. Check your connection and try again.' });
@@ -160,6 +209,32 @@ export default function PostListingForm({ onCreated, onCancel }) {
             onChange={(e) => setDescription(e.target.value)}
             placeholder="e.g. Bar service for a 200-guest wedding, 6pm–midnight"
           />
+        </div>
+
+        <div className="krew-field">
+          <span className="krew-field-label">Listing photo (optional)</span>
+          <label className={`krew-upload-box krew-listing-upload ${photoFile ? 'has-file' : ''}`}>
+            {photoPreview ? (
+              <img src={photoPreview} alt="" className="krew-listing-upload-preview" />
+            ) : (
+              <span className="krew-upload-icon"><ImagePlus size={22} strokeWidth={1.5} /></span>
+            )}
+            <span className="krew-upload-hint">
+              {photoFile ? (
+                <>
+                  <span className="krew-upload-filename">{photoFile.name}</span> · Click to change
+                </>
+              ) : (
+                'Add a photo of the venue or the kind of work - JPG or PNG, up to 5MB'
+              )}
+            </span>
+            <input type="file" accept="image/jpeg,image/png" onChange={handlePhotoChange} disabled={submitting} />
+          </label>
+          {photoFile && (
+            <button type="button" className="krew-dash-text-btn" style={{ marginTop: 8 }} onClick={() => setPhotoFile(null)}>
+              Remove photo
+            </button>
+          )}
         </div>
 
         <div className="krew-dash-form-actions">

@@ -1,12 +1,15 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, SlidersHorizontal, LayoutGrid, List as ListIcon } from 'lucide-react';
+import { Search, MapPin, CalendarDays, ArrowRight, SlidersHorizontal, X } from 'lucide-react';
 import PublicNav from '../components/PublicNav.jsx';
 import PublicFooter from '../components/PublicFooter.jsx';
 import InfoTooltip from '../components/InfoTooltip.jsx';
+import ListingPhoto from '../components/ListingPhoto.jsx';
 
-// The public, editorial opportunity-discovery page.
-// Anyone can browse and search open listings without an account.
+// The public Find Work page, laid out like the moodboard's Find Work panel: a hero with a
+// big search bar, a filter sidebar (category, location, date, pay), category tabs with
+// counts above the results, and photo-led listing cards. Anyone can browse without an
+// account; applying happens on the gig page and still needs an approved crew account.
 const LISTING_CATEGORIES = [
   'Bar Service',
   'Catering',
@@ -16,6 +19,12 @@ const LISTING_CATEGORIES = [
   'Photography & Videography',
   'Sound & AV',
   'Other',
+];
+
+const DATE_OPTIONS = [
+  { value: 'any', label: 'Any time' },
+  { value: 'week', label: 'This week' },
+  { value: 'month', label: 'This month' },
 ];
 
 // Formats the organizer's record for display in the listing, with a small info icon explaining what it means.
@@ -37,27 +46,32 @@ function formatOrganizerRecord(record) {
   );
 }
 
-function truncate(text, max) {
-  if (!text || text.length <= max) return text;
-  return `${text.slice(0, max).trimEnd()}…`;
+function formatDate(value) {
+  return new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-// The Find Work page is a public-facing page that allows users to browse and search for open job listings.
-// It fetches the listings from the server, applies filters based on user input, and displays the results in either a list or grid view.
-// The page includes a search bar, category filter, location filter, and advanced filters for minimum/maximum amount and due date.
+// True if the due date falls within the next 7 / 30 days (today included).
+function withinDays(value, days) {
+  const due = new Date(value);
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(start);
+  end.setDate(end.getDate() + days);
+  return due >= start && due <= end;
+}
 
 export default function FindWork() {
   const [listings, setListings] = useState(null);
   const [error, setError] = useState(null);
 
   const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('');
-  const [location, setLocation] = useState('');
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [categories, setCategories] = useState([]); // empty = all
+  const [location, setLocation] = useState(''); // empty = any
+  const [dateRange, setDateRange] = useState('any');
   const [minAmount, setMinAmount] = useState('');
   const [maxAmount, setMaxAmount] = useState('');
-  const [dueBefore, setDueBefore] = useState('');
-  const [view, setView] = useState('list'); // list | grid
+  const [filtersOpen, setFiltersOpen] = useState(false); // phone only - the sidebar is always open on desktop
+  const resultsRef = useRef(null);
 
   useEffect(() => {
     fetch('/api/job-listings/public')
@@ -72,191 +86,273 @@ export default function FindWork() {
       .catch(() => setError('Could not reach the server.'));
   }, []);
 
-  const filtered = useMemo(() => {
+  // The location options come from the listings themselves (most common first), since
+  // location is free text an organizer types rather than a fixed list.
+  const locationOptions = useMemo(() => {
+    if (!listings) return [];
+    const counts = new Map();
+    listings.forEach((listing) => {
+      const name = (listing.location || '').trim();
+      if (name) counts.set(name, (counts.get(name) || 0) + 1);
+    });
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6).map(([name]) => name);
+  }, [listings]);
+
+  // Everything except the category filter - the tabs' counts are worked out from this, so
+  // each tab says how many gigs you'd see if you picked it.
+  const matchingExceptCategory = useMemo(() => {
     if (!listings) return null;
     const searchLower = search.trim().toLowerCase();
-
     return listings.filter((listing) => {
-      if (category && listing.category !== category) return false;
-      if (location.trim() && !(listing.location || '').toLowerCase().includes(location.trim().toLowerCase())) {
-        return false;
-      }
+      if (location && (listing.location || '').trim() !== location) return false;
+      if (dateRange === 'week' && !withinDays(listing.due_date, 7)) return false;
+      if (dateRange === 'month' && !withinDays(listing.due_date, 30)) return false;
       if (minAmount && Number(listing.amount) < Number(minAmount)) return false;
       if (maxAmount && Number(listing.amount) > Number(maxAmount)) return false;
-      if (dueBefore && new Date(listing.due_date) > new Date(dueBefore)) return false;
       if (searchLower) {
-        const haystack = `${listing.title || ''} ${listing.job_description || ''}`.toLowerCase();
+        const haystack = `${listing.title || ''} ${listing.job_description || ''} ${listing.category || ''} ${listing.location || ''}`.toLowerCase();
         if (!haystack.includes(searchLower)) return false;
       }
       return true;
     });
-  }, [listings, search, category, location, minAmount, maxAmount, dueBefore]);
+  }, [listings, search, location, dateRange, minAmount, maxAmount]);
+
+  const filtered = useMemo(() => {
+    if (!matchingExceptCategory) return null;
+    if (categories.length === 0) return matchingExceptCategory;
+    return matchingExceptCategory.filter((listing) => categories.includes(listing.category));
+  }, [matchingExceptCategory, categories]);
+
+  // Tabs: "All Gigs" plus every category that has at least one matching gig right now.
+  const tabs = useMemo(() => {
+    if (!matchingExceptCategory) return [];
+    return LISTING_CATEGORIES.map((name) => ({
+      name,
+      count: matchingExceptCategory.filter((listing) => listing.category === name).length,
+    })).filter((tab) => tab.count > 0);
+  }, [matchingExceptCategory]);
+
+  function toggleCategory(name) {
+    setCategories((current) => (current.includes(name) ? current.filter((c) => c !== name) : [...current, name]));
+  }
 
   function clearFilters() {
     setSearch('');
-    setCategory('');
+    setCategories([]);
     setLocation('');
+    setDateRange('any');
     setMinAmount('');
     setMaxAmount('');
-    setDueBefore('');
   }
 
-  const hasAdvancedFilters = minAmount || maxAmount || dueBefore;
+  function handleSearchSubmit(e) {
+    e.preventDefault();
+    resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  const activeFilterCount =
+    categories.length + (location ? 1 : 0) + (dateRange !== 'any' ? 1 : 0) + (minAmount || maxAmount ? 1 : 0);
 
   return (
     <div className="krew-public-page">
       <PublicNav />
 
-      <section className="krew-browse-hero">
-        <p className="krew-home-section-label">Find Work</p>
-        <h1>Open gigs across Nairobi, posted by real organizers.</h1>
-        <p className="krew-browse-hero-sub">
-          Every listing here is a real, open job - no placeholders, no filler. See the amount, the date and the
-          organizer's payment record before you apply.
-        </p>
+      <section className="krew-fw-hero">
+        <div className="krew-fw-hero-inner">
+          <div className="krew-fw-hero-copy">
+            <p className="krew-home-section-label">Open gigs in Nairobi</p>
+            <h1>Find Work</h1>
+            <p className="krew-fw-hero-sub">
+              Discover paid event work - with the organizer's real payment record on every listing.
+            </p>
+            <form className="krew-fw-search" onSubmit={handleSearchSubmit} role="search">
+              <Search size={19} strokeWidth={1.75} className="krew-fw-search-icon" aria-hidden="true" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search for gigs..."
+                aria-label="Search open gigs"
+              />
+              <button type="submit" className="krew-fw-search-btn" aria-label="Show results">
+                <Search size={18} strokeWidth={2} />
+              </button>
+            </form>
+          </div>
+        </div>
+        <div className="krew-fw-hero-visual" aria-hidden="true">
+          {/* Uses images/find-work/hero.jpg if it exists, otherwise falls back to the homepage's crew photo */}
+          <div
+            className="krew-photo-slot krew-fw-hero-photo"
+            style={{ backgroundImage: "url('/images/find-work/hero.jpg'), url('/images/home/crew-card.jpg')" }}
+          />
+          <span className="krew-shard krew-fw-hero-shard-1" />
+          <span className="krew-shard krew-fw-hero-shard-2" />
+        </div>
       </section>
 
-      <section className="krew-browse-toolbar">
-        <div className="krew-browse-search">
-          <Search size={17} strokeWidth={1.75} className="krew-browse-search-icon" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by title or description"
-            aria-label="Search open gigs"
-          />
-        </div>
-
-        <select
-          className="krew-field-input krew-browse-select"
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          aria-label="Filter by category"
-        >
-          <option value="">All categories</option>
-          {LISTING_CATEGORIES.map((option) => (
-            <option key={option} value={option}>{option}</option>
-          ))}
-        </select>
-
-        <input
-          type="text"
-          className="krew-field-input krew-browse-select"
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-          placeholder="Location"
-          aria-label="Filter by location"
-        />
-
+      <section className="krew-fw-body" ref={resultsRef}>
         <button
           type="button"
-          className="krew-browse-advanced-toggle"
-          onClick={() => setShowAdvanced((current) => !current)}
+          className="krew-fw-filters-toggle"
+          onClick={() => setFiltersOpen((current) => !current)}
+          aria-expanded={filtersOpen}
         >
-          <SlidersHorizontal size={15} strokeWidth={1.75} />
-          More filters{hasAdvancedFilters ? ' ·' : ''}
+          {filtersOpen ? <X size={16} strokeWidth={1.75} /> : <SlidersHorizontal size={16} strokeWidth={1.75} />}
+          Filters{activeFilterCount ? ` (${activeFilterCount})` : ''}
         </button>
 
-        <div className="krew-dash-tabs krew-browse-view-toggle">
-          <button
-            type="button"
-            className={`krew-dash-tab ${view === 'list' ? 'active' : ''}`}
-            onClick={() => setView('list')}
-            aria-label="List view"
-          >
-            <ListIcon size={15} strokeWidth={1.75} />
-          </button>
-          <button
-            type="button"
-            className={`krew-dash-tab ${view === 'grid' ? 'active' : ''}`}
-            onClick={() => setView('grid')}
-            aria-label="Grid view"
-          >
-            <LayoutGrid size={15} strokeWidth={1.75} />
-          </button>
-        </div>
-      </section>
-
-      {showAdvanced && (
-        <section className="krew-browse-advanced-panel">
-          <div className="krew-field">
-            <label className="krew-field-label" htmlFor="min-amount">Min amount (KES)</label>
-            <input
-              id="min-amount"
-              type="number"
-              min="0"
-              className="krew-field-input"
-              value={minAmount}
-              onChange={(e) => setMinAmount(e.target.value)}
-            />
+        <aside className={`krew-fw-filters ${filtersOpen ? 'open' : ''}`} aria-label="Filters">
+          <div className="krew-fw-filters-head">
+            <h2>Filters</h2>
+            {activeFilterCount > 0 && (
+              <button type="button" className="krew-dash-text-btn" onClick={clearFilters}>Clear all</button>
+            )}
           </div>
-          <div className="krew-field">
-            <label className="krew-field-label" htmlFor="max-amount">Max amount (KES)</label>
-            <input
-              id="max-amount"
-              type="number"
-              min="0"
-              className="krew-field-input"
-              value={maxAmount}
-              onChange={(e) => setMaxAmount(e.target.value)}
-            />
-          </div>
-          <div className="krew-field">
-            <label className="krew-field-label" htmlFor="due-before">Due before</label>
-            <input
-              id="due-before"
-              type="date"
-              className="krew-field-input"
-              value={dueBefore}
-              onChange={(e) => setDueBefore(e.target.value)}
-            />
-          </div>
-          <button type="button" className="krew-dash-text-btn" onClick={clearFilters}>Clear all filters</button>
-        </section>
-      )}
 
-      <section className="krew-browse-results">
-        {error && <div className="krew-form-banner error">{error}</div>}
-
-        {listings === null && !error && <div className="krew-dash-loading-note">Loading open gigs…</div>}
-
-        {filtered && filtered.length === 0 && (
-          <div className="krew-dash-empty">
-            <p>No open gigs match those filters right now.</p>
-            <button type="button" className="krew-button-secondary" onClick={clearFilters} style={{ width: 'auto' }}>
-              Clear filters
-            </button>
-          </div>
-        )}
-
-        {filtered && filtered.length > 0 && (
-          <div className={view === 'grid' ? 'krew-browse-grid' : 'krew-job-list'}>
-            {filtered.map((listing) => (
-              <Link to={`/gigs/${listing.id}`} className={`krew-job-card krew-browse-card ${view}`} key={listing.id}>
-                <div className="krew-job-card-main">
-                  <div className="krew-job-card-crew">{listing.title || 'Untitled listing'}</div>
-                  <div className="krew-job-card-meta">
-                    {listing.organizer_name} · {formatOrganizerRecord(listing.organizer_record)}
-                  </div>
-                  <div className="krew-job-card-meta">
-                    {listing.category}{listing.category && listing.location ? ' · ' : ''}{listing.location}
-                  </div>
-                  {listing.job_description && (
-                    <div className="krew-job-card-desc">{truncate(listing.job_description, 140)}</div>
-                  )}
-                  <div className="krew-job-card-meta">
-                    Due {new Date(listing.due_date).toLocaleDateString()}
-                  </div>
-                </div>
-                <div className="krew-job-card-side">
-                  <div className="krew-job-card-amount">KES {Number(listing.amount).toLocaleString()}</div>
-                  <span className="krew-button-primary krew-dash-post-btn krew-browse-card-cta">View &amp; Apply</span>
-                </div>
-              </Link>
+          <fieldset className="krew-fw-filter-group">
+            <legend>Category</legend>
+            {LISTING_CATEGORIES.map((name) => (
+              <label className="krew-fw-check" key={name}>
+                <input type="checkbox" checked={categories.includes(name)} onChange={() => toggleCategory(name)} />
+                <span className="krew-fw-check-box" aria-hidden="true" />
+                {name}
+              </label>
             ))}
-          </div>
-        )}
+          </fieldset>
+
+          <fieldset className="krew-fw-filter-group">
+            <legend>Location</legend>
+            <label className="krew-fw-check radio">
+              <input type="radio" name="fw-location" checked={location === ''} onChange={() => setLocation('')} />
+              <span className="krew-fw-check-box" aria-hidden="true" />
+              Any location
+            </label>
+            {locationOptions.map((name) => (
+              <label className="krew-fw-check radio" key={name}>
+                <input type="radio" name="fw-location" checked={location === name} onChange={() => setLocation(name)} />
+                <span className="krew-fw-check-box" aria-hidden="true" />
+                {name}
+              </label>
+            ))}
+          </fieldset>
+
+          <fieldset className="krew-fw-filter-group">
+            <legend>Due date</legend>
+            {DATE_OPTIONS.map((option) => (
+              <label className="krew-fw-check radio" key={option.value}>
+                <input
+                  type="radio"
+                  name="fw-date"
+                  checked={dateRange === option.value}
+                  onChange={() => setDateRange(option.value)}
+                />
+                <span className="krew-fw-check-box" aria-hidden="true" />
+                {option.label}
+              </label>
+            ))}
+          </fieldset>
+
+          <fieldset className="krew-fw-filter-group">
+            <legend>Pay (KES)</legend>
+            <div className="krew-fw-pay">
+              <input
+                type="number"
+                min="0"
+                className="krew-field-input"
+                value={minAmount}
+                onChange={(e) => setMinAmount(e.target.value)}
+                placeholder="Min"
+                aria-label="Minimum pay in KES"
+              />
+              <span aria-hidden="true">-</span>
+              <input
+                type="number"
+                min="0"
+                className="krew-field-input"
+                value={maxAmount}
+                onChange={(e) => setMaxAmount(e.target.value)}
+                placeholder="Max"
+                aria-label="Maximum pay in KES"
+              />
+            </div>
+          </fieldset>
+        </aside>
+
+        <div className="krew-fw-results">
+          {listings && (
+            <div className="krew-fw-tabs" role="tablist" aria-label="Categories">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={categories.length === 0}
+                className={`krew-fw-tab ${categories.length === 0 ? 'active' : ''}`}
+                onClick={() => setCategories([])}
+              >
+                All Gigs <span>({matchingExceptCategory.length})</span>
+              </button>
+              {tabs.map((tab) => {
+                const active = categories.length === 1 && categories[0] === tab.name;
+                return (
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    key={tab.name}
+                    className={`krew-fw-tab ${active ? 'active' : ''}`}
+                    onClick={() => setCategories([tab.name])}
+                  >
+                    {tab.name} <span>({tab.count})</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {error && <div className="krew-form-banner error">{error}</div>}
+
+          {listings === null && !error && <div className="krew-dash-loading-note">Loading open gigs…</div>}
+
+          {filtered && filtered.length === 0 && (
+            <div className="krew-dash-empty">
+              <p>{listings.length === 0 ? 'No open gigs right now - check back soon.' : 'No open gigs match those filters right now.'}</p>
+              {listings.length > 0 && (
+                <button type="button" className="krew-button-secondary krew-button-inline" onClick={clearFilters}>
+                  Clear filters
+                </button>
+              )}
+            </div>
+          )}
+
+          {filtered && filtered.length > 0 && (
+            <div className="krew-fw-list">
+              {filtered.map((listing) => (
+                <Link to={`/gigs/${listing.id}`} className="krew-fw-card" key={listing.id}>
+                  <ListingPhoto listing={listing} className="krew-fw-card-photo" />
+                  <div className="krew-fw-card-body">
+                    <div className="krew-fw-card-top">
+                      <h3>{listing.title || 'Untitled listing'}</h3>
+                      <div className="krew-fw-card-amount">KES {Number(listing.amount).toLocaleString()}</div>
+                    </div>
+                    <div className="krew-fw-card-meta">
+                      <span><MapPin size={14} strokeWidth={1.75} /> {listing.location}</span>
+                      <span><CalendarDays size={14} strokeWidth={1.75} /> Due {formatDate(listing.due_date)}</span>
+                    </div>
+                    <div className="krew-fw-card-org">
+                      {listing.organizer_name} · {formatOrganizerRecord(listing.organizer_record)}
+                    </div>
+                    <div className="krew-fw-card-bottom">
+                      {listing.category && <span className="krew-fw-tag">{listing.category}</span>}
+                      <span className="krew-button-primary krew-button-inline krew-fw-card-cta">
+                        Apply Now <ArrowRight size={15} strokeWidth={2} />
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
       </section>
 
       <PublicFooter />

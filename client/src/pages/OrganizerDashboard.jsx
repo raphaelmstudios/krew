@@ -8,6 +8,7 @@ import Logo from '../components/Logo.jsx';
 import ThemeToggle from '../components/ThemeToggle.jsx';
 import PilotSurveyBanner from '../components/PilotSurveyBanner.jsx';
 import InfoTooltip from '../components/InfoTooltip.jsx';
+import ListingPhoto from '../components/ListingPhoto.jsx';
 
 // The organizer dashboard is the main interface for organizers to manage their job postings and hire crew members directly.
 // It has two main sections: the Job Board, where organizers can post jobs and view applicants, and the Find Crew section, where organizers can browse approved crew members and hire them directly.
@@ -73,10 +74,43 @@ export default function OrganizerDashboard({ user, onLogout }) {
     }
   }
 
-  function handleListingCreated() {
+  function handleListingCreated(result) {
     setView('list');
     setListings(null);
+    setError(
+      result?.photoFailed
+        ? "Your job was posted, but the photo didn't upload. You can add it from the job's card below."
+        : null
+    );
     loadListings();
+  }
+
+  // Add or replace the photo on one of the organizer's own open listings (straight from its card).
+  const [photoUploadingId, setPhotoUploadingId] = useState(null);
+
+  async function handleListingPhotoChange(listingId, e) {
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    setPhotoUploadingId(listingId);
+    setError(null);
+    try {
+      const formData = new FormData();
+      formData.append('listing_photo', file);
+      const response = await fetch(`/api/job-listings/${listingId}/photo`, { method: 'POST', body: formData });
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.error || 'Could not upload that photo.');
+        return;
+      }
+      setListings((current) =>
+        current.map((listing) => (listing.id === listingId ? { ...listing, photo_path: data.photo_path } : listing))
+      );
+    } catch (err) {
+      setError('Could not reach the server.');
+    } finally {
+      setPhotoUploadingId(null);
+    }
   }
 
   async function handleCancel(listingId) {
@@ -221,7 +255,8 @@ export default function OrganizerDashboard({ user, onLogout }) {
                   {listings && listings.length > 0 && (
                     <div className="krew-job-list">
                       {listings.map((listing) => (
-                        <div className="krew-job-card" key={listing.id}>
+                        <div className="krew-job-card krew-dash-listing-card" key={listing.id}>
+                          <ListingPhoto listing={listing} className="krew-dash-listing-photo" />
                           <div className="krew-job-card-main">
                             <div className="krew-job-card-crew">{listing.title || 'Untitled listing'}</div>
                             <div className="krew-job-card-meta">
@@ -249,6 +284,15 @@ export default function OrganizerDashboard({ user, onLogout }) {
                                 >
                                   View applicants
                                 </button>
+                                <label className="krew-dash-text-btn krew-dash-photo-btn">
+                                  {photoUploadingId === listing.id ? 'Uploading…' : listing.photo_path ? 'Change photo' : 'Add photo'}
+                                  <input
+                                    type="file"
+                                    accept="image/jpeg,image/png"
+                                    onChange={(e) => handleListingPhotoChange(listing.id, e)}
+                                    disabled={photoUploadingId !== null}
+                                  />
+                                </label>
                                 <button type="button" className="krew-dash-text-btn danger" onClick={() => handleCancel(listing.id)}>
                                   Cancel
                                 </button>

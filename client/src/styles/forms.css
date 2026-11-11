@@ -473,3 +473,17 @@
   color: var(--color-brand-text);
   word-break: break-all;
 }
+/* Listing photo picker in the post-a-job form - shows a preview once a photo is chosen */
+.krew-listing-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.krew-listing-upload-preview {
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
