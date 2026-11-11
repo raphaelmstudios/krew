@@ -30,7 +30,7 @@
 }
 
 .krew-auth-visual {
-  flex: 1 1 42%;
+  flex: 1 1 46%;
   position: relative;
   overflow: hidden;
   background: var(--color-ink-plum);
@@ -76,44 +76,133 @@
   opacity: 0.12;
 }
 
+/* Photo behind the auth panel's shards - the plum shows through until the image loads */
+.krew-auth-photo {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center 30%;
+  background-repeat: no-repeat;
+}
+
+/* Solid plum wedge behind the logo + tagline so they stay readable over the photo */
+.krew-auth-scrim {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 42%;
+  background: var(--color-ink-plum);
+  clip-path: polygon(0 28%, 100% 0, 100% 100%, 0 100%);
+  opacity: 0.88;
+}
+
 .krew-auth-visual-content {
   position: relative;
   z-index: 1;
 }
 
-.krew-wordmark-on-dark {
-  color: var(--color-text-on-dark);
-  margin-bottom: 16px;
-}
-
-.krew-wordmark-on-dark span {
-  color: var(--color-soft-violet);
-}
-
 .krew-auth-visual-tagline {
   font-family: var(--font-display);
   font-style: italic;
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 500;
   color: var(--color-text-on-dark);
-  max-width: 320px;
+  max-width: 340px;
   margin: 0;
   line-height: 1.3;
 }
 
+/* Form side - logo + theme switch along the top, then a narrow left-aligned form column
+   centred in the remaining space, on a clean white panel */
 .krew-auth-form-panel {
-  flex: 1 1 58%;
+  flex: 1 1 54%;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  overflow-y: auto;
-  padding: 48px 24px 80px 24px;
+  padding: 36px 56px 56px 56px;
+  background: var(--color-surface-card);
 }
 
-/* Mobile wordmark */
-.krew-auth-mobile-wordmark {
-  display: none;
+.krew-auth-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.krew-auth-form-inner {
+  flex: 1;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 64px 0 24px 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Inside the auth form the headline, card and fields drop the boxed look for an open,
+   airier column - scoped here so dashboard forms that also use .krew-card keep their card */
+.krew-auth-form-panel .krew-headline-wrap {
+  max-width: none;
+  text-align: left;
+  margin-bottom: 40px;
+}
+
+.krew-auth-form-panel .krew-headline {
+  font-size: 36px;
+  line-height: 1.1;
+  margin-bottom: 12px;
+}
+
+.krew-auth-form-panel .krew-subhead {
+  font-size: 15.5px;
+}
+
+.krew-auth-form-panel .krew-card {
+  max-width: none;
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+}
+
+.krew-auth-form-panel .krew-field {
+  margin-bottom: 26px;
+}
+
+.krew-auth-form-panel .krew-field-label {
+  font-size: 14px;
+  color: var(--color-text);
+  margin-bottom: 10px;
+}
+
+.krew-auth-form-panel .krew-field-input {
+  padding-top: 15px;
+  padding-bottom: 15px;
+  background: var(--color-surface-card);
+}
+
+.krew-auth-form-panel .krew-role-toggle {
+  margin-bottom: 32px;
+}
+
+.krew-auth-form-panel .krew-button-primary {
+  margin-top: 14px;
+  padding: 17px 0;
+}
+
+.krew-auth-form-panel .krew-fine-print {
+  margin-top: 28px;
+  font-size: 13.5px;
+}
+
+/* Photo side - stays in view while a long form (registration) scrolls */
+.krew-auth-visual {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  align-self: flex-start;
 }
 
 @media (max-width: 860px) {
@@ -121,8 +210,17 @@
     display: none;
   }
 
-  .krew-auth-mobile-wordmark {
-    display: block;
+  .krew-auth-form-panel {
+    padding: 20px 20px 40px 20px;
+  }
+
+  .krew-auth-form-inner {
+    padding-top: 40px;
+    justify-content: flex-start;
+  }
+
+  .krew-auth-form-panel .krew-headline {
+    font-size: 30px;
   }
 }
 

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import PublicNav from '../components/PublicNav.jsx';
+import PublicFooter from '../components/PublicFooter.jsx';
 
 // This page provides answers to frequently asked questions about KREW, including explanations of terms like "New here", "on time" percentage, "completed jobs", and "verified". 
 // It also explains how payment confirmation works, how to file a dispute, and what information is visible to other users. 
@@ -80,16 +81,7 @@ export default function Faq() {
         </p>
       </div>
 
-      <footer className="krew-public-footer">
-        <div className="krew-public-footer-inner">
-          <span>© {new Date().getFullYear()} KREW</span>
-          <div className="krew-public-footer-links">
-            <Link to="/faq">FAQ</Link>
-            <Link to="/terms">Terms of Service</Link>
-            <Link to="/privacy">Privacy Policy</Link>
-          </div>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

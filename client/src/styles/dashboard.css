@@ -386,10 +386,11 @@
   flex: 1;
 }
 
+/* Outlined secondary button - the moodboard's "Hire Crew ->" / identity's "Learn More ->" */
 .krew-button-secondary {
   background: none;
-  border: 1px solid var(--color-border);
-  color: var(--color-text-soft);
+  border: 1.5px solid var(--color-text);
+  color: var(--color-text);
   padding: 13px 20px;
   border-radius: var(--radius-md);
   font-size: 15px;
@@ -400,8 +401,8 @@
 }
 
 .krew-button-secondary:hover:not(:disabled) {
-  border-color: var(--color-text-soft);
-  color: var(--color-text);
+  border-color: var(--color-brand-text);
+  color: var(--color-brand-text);
 }
 
 .krew-button-secondary:disabled {

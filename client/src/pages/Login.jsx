@@ -94,7 +94,7 @@ export default function Login({ onLoggedIn, heading = 'Log in', subhead = '', sh
 
         {showSignupLink && (
           <div className="krew-fine-print">
-            Don't have an account? <Link to="/">Sign up</Link>
+            Don't have an account? <Link to="/register">Sign up</Link>
           </div>
         )}
       </div>

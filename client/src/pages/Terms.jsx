@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import PublicNav from '../components/PublicNav.jsx';
+import PublicFooter from '../components/PublicFooter.jsx';
 
 // The Terms of Service page is a public-facing page that outlines the rules and guidelines for using the KREW platform. 
 // It includes sections on what KREW is and isn't, account verification, browsing without an account, acceptable use, and disclaimers about warranties and liabilities. 
@@ -84,15 +85,7 @@ export default function Terms() {
         </p>
       </div>
 
-      <footer className="krew-public-footer">
-        <div className="krew-public-footer-inner">
-          <span>© {new Date().getFullYear()} KREW</span>
-          <div className="krew-public-footer-links">
-            <Link to="/terms">Terms of Service</Link>
-            <Link to="/privacy">Privacy Policy</Link>
-          </div>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

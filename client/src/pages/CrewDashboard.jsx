@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { User as UserIcon, X, Plus } from 'lucide-react';
 import JobCard from './JobCard.jsx';
 import NotificationBell from '../components/NotificationBell.jsx';
+import Logo from '../components/Logo.jsx';
+import ThemeToggle from '../components/ThemeToggle.jsx';
 import PilotSurveyBanner from '../components/PilotSurveyBanner.jsx';
 import InfoTooltip from '../components/InfoTooltip.jsx';
 
@@ -290,11 +292,10 @@ export default function CrewDashboard({ user, onLogout }) {
   return (
     <div className="krew-dash-page">
       <header className="krew-dash-header">
-        <div className="krew-wordmark">
-          KRE<span>W</span>
-        </div>
+        <Logo />
         <div className="krew-dash-header-right">
           <span className="krew-dash-greeting">Hi, {user.name}</span>
+          <ThemeToggle />
           <NotificationBell />
           <button type="button" className="krew-admin-logout" onClick={onLogout}>
             Log out

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { User as UserIcon } from 'lucide-react';
 import PublicNav from '../components/PublicNav.jsx';
+import PublicFooter from '../components/PublicFooter.jsx';
 import InfoTooltip from '../components/InfoTooltip.jsx';
 
 // A crew member's public profile (redesign moodboard panel 5, "Crew Profile"): portrait, role, skills, self-reported years of experience, a short bio, their real completed-jobs record, and a gallery of portfolio photos. 
@@ -170,16 +171,7 @@ export default function CrewProfile() {
         )}
       </div>
 
-      <footer className="krew-public-footer">
-        <div className="krew-public-footer-inner">
-          <span>© {new Date().getFullYear()} KREW</span>
-          <div className="krew-public-footer-links">
-            <Link to="/faq">FAQ</Link>
-            <Link to="/terms">Terms of Service</Link>
-            <Link to="/privacy">Privacy Policy</Link>
-          </div>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

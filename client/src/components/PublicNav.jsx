@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
+import Logo from './Logo.jsx';
+import ThemeToggle from './ThemeToggle.jsx';
 
 // The list of links in the public navigation bar. 
 // Each link has a label and either an href (for scrolling to a section of the homepage) or a to (for navigating to another page). 
@@ -76,9 +78,7 @@ export default function PublicNav() {
   return (
     <header className="krew-public-nav">
       <div className="krew-public-nav-inner">
-        <Link to="/" className="krew-wordmark krew-public-nav-wordmark" onClick={() => setMobileOpen(false)}>
-          KRE<span>W</span>
-        </Link>
+        <Logo className="krew-public-nav-logo" onClick={() => setMobileOpen(false)} />
 
         <nav
           className="krew-public-nav-links"
@@ -115,6 +115,7 @@ export default function PublicNav() {
         </nav>
 
         <div className="krew-public-nav-actions">
+          <ThemeToggle />
           {session ? (
             <>
               <Link to={dashboardPath} className="krew-button-secondary krew-public-nav-btn">Dashboard</Link>
@@ -124,6 +125,8 @@ export default function PublicNav() {
             <Link to="/login" className="krew-button-primary krew-public-nav-btn">Sign in</Link>
           )}
         </div>
+
+        <ThemeToggle className="krew-public-nav-theme-mobile" />
 
         <button
           type="button"

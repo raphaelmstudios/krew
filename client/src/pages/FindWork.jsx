@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, SlidersHorizontal, LayoutGrid, List as ListIcon } from 'lucide-react';
 import PublicNav from '../components/PublicNav.jsx';
+import PublicFooter from '../components/PublicFooter.jsx';
 import InfoTooltip from '../components/InfoTooltip.jsx';
 
 // The public, editorial opportunity-discovery page.
@@ -258,16 +259,7 @@ export default function FindWork() {
         )}
       </section>
 
-      <footer className="krew-public-footer">
-        <div className="krew-public-footer-inner">
-          <span>© {new Date().getFullYear()} KREW</span>
-          <div className="krew-public-footer-links">
-            <Link to="/faq">FAQ</Link>
-            <Link to="/terms">Terms of Service</Link>
-            <Link to="/privacy">Privacy Policy</Link>
-          </div>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

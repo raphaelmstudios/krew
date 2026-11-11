@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import NotificationBell from '../components/NotificationBell.jsx';
+import ThemeToggle from '../components/ThemeToggle.jsx';
 
 //Admin screen - two tabs: pending account approvals, and dispute resolution.
 //NOTE: this screen used to have no login checks; anyone with the /admin URL could open it
@@ -120,6 +121,7 @@ export default function Admin({ onLogout }) {
           </p>
         </div>
         <div className="krew-dash-header-right">
+          <ThemeToggle />
           <NotificationBell />
           {onLogout && <button type="button" className="krew-admin-logout" onClick={onLogout}>Log out</button>}
         </div>

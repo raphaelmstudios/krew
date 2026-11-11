@@ -42,6 +42,11 @@ Brand colors are fixed and should not be altered. */
   /* Brand text color */
   --color-brand-text: var(--color-electric-violet);
 
+  /* Plum brand panels (footer, reputation band, crew sign-up card) and empty photo slots.
+     In dark mode the page itself is plum, so these drop a shade darker / lighter to stay visible. */
+  --color-panel: var(--color-ink-plum);
+  --color-photo-empty: var(--color-ink-plum);
+
   /* Status colors (the only badges anywhere in KREW - transaction status
      pills, nothing else). Slightly darker than the brand swatches you'd
      reach for by eye, because the lighter, friendlier-looking green and
@@ -111,6 +116,8 @@ Brand colors are fixed and should not be altered. */
     --color-text-faint: #8C7D97;
 
     --color-brand-text: var(--color-soft-violet);
+    --color-panel: var(--color-surface-sunken);
+    --color-photo-empty: var(--color-surface-selected);
 
     --color-success: #3DDB9A;
     --color-success-bg: #16332A;
@@ -139,6 +146,8 @@ Brand colors are fixed and should not be altered. */
   --color-text-faint: #8C7D97;
 
   --color-brand-text: var(--color-soft-violet);
+  --color-panel: var(--color-surface-sunken);
+  --color-photo-empty: var(--color-surface-selected);
 
   --color-success: #3DDB9A;
   --color-success-bg: #16332A;
@@ -198,6 +207,83 @@ button {
    like "Create your account" or "Pending Approvals" stays in Plus Jakarta
    Sans; something that's genuinely an editorial moment (a homepage hero, a
    dashboard greeting) opts into var(--font-display) itself instead. */
+
+/* Logo (Logo.jsx) - two images, CSS shows the right one for the theme: the dark-ink logo on
+   light pages, the light logo in dark mode. A logo forced to tone="light" only has the one image. */
+.krew-logo {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  line-height: 0;
+}
+
+.krew-logo img {
+  display: block;
+  height: 28px;
+  width: auto;
+}
+
+.krew-logo-mark img {
+  height: 32px;
+}
+
+.krew-logo .krew-logo-for-dark {
+  display: none;
+}
+
+:root[data-theme='dark'] .krew-logo .krew-logo-for-light {
+  display: none;
+}
+
+:root[data-theme='dark'] .krew-logo .krew-logo-for-dark {
+  display: block;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .krew-logo .krew-logo-for-light {
+    display: none;
+  }
+
+  :root:not([data-theme='light']) .krew-logo .krew-logo-for-dark {
+    display: block;
+  }
+}
+
+/* Light/dark switch (ThemeToggle.jsx) */
+.krew-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: none;
+  color: var(--color-text-soft);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease);
+}
+
+.krew-theme-toggle:hover {
+  color: var(--color-text);
+  border-color: var(--color-text-soft);
+}
+
+/* Button with an arrow icon (the moodboard's "Find Work ->" buttons) - sits on top of
+   .krew-button-primary or .krew-button-secondary, sizing it to its content. */
+.krew-button-primary.krew-button-inline,
+.krew-button-secondary.krew-button-inline {
+  width: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 22px;
+  margin-top: 0;
+  text-decoration: none;
+  font-size: 15px;
+}
 
 /* Onboarding tooltip (InfoTooltip.jsx) - the small (i) icon next to "New
    here", completed-job counts, and on-time percentages. Global here since
