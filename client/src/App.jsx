@@ -11,6 +11,7 @@ import Home from './pages/Home.jsx';
 import FindWork from './pages/FindWork.jsx';
 import HireCrew from './pages/HireCrew.jsx';
 import GigDetail from './pages/GigDetail.jsx';
+import CrewProfile from './pages/CrewProfile.jsx';
 import Terms from './pages/Terms.jsx';
 import Privacy from './pages/Privacy.jsx';
 import Faq from './pages/Faq.jsx';
@@ -111,6 +112,8 @@ export default function App() {
       <Route path="/hire-crew" element={<HireCrew />} />
 
       <Route path="/gigs/:id" element={<GigDetail />} />
+
+      <Route path="/crew/:id" element={<CrewProfile />} />
 
       <Route path="/terms" element={<Terms />} />
       <Route path="/privacy" element={<Privacy />} />
