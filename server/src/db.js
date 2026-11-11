@@ -79,6 +79,26 @@ try {
   if (!err.message.includes('duplicate column name')) throw err;
 }
 
+// Redesign: the moodboard's Crew Profile page shows an "Experience" stat (e.g.
+// "3+ Years"). Same self-reported spirit as professional_role/skills above - no
+// vetted way to verify how long someone's actually been doing this work, so this
+// is just what the crew member says, stored as a plain integer and formatted on
+// the frontend.
+try {
+  db.exec(`ALTER TABLE users ADD COLUMN years_experience INTEGER;`);
+} catch (err) {
+  if (!err.message.includes('duplicate column name')) throw err;
+}
+
+// Redesign: the moodboard's Crew Profile page also shows a short self-written bio
+// ("I capture stories through a lens...") - same self-reported spirit as everything
+// else here, just free text instead of a fixed field.
+try {
+  db.exec(`ALTER TABLE users ADD COLUMN bio TEXT;`);
+} catch (err) {
+  if (!err.message.includes('duplicate column name')) throw err;
+}
+
 //sessions
 // One row per logged-in device. The token is a long random string, stored in an
 // httpOnly cookie so JavaScript on the page can never read it, only the browser
@@ -227,5 +247,21 @@ db.exec(`
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );`);
 db.exec(`CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);`);
+
+//portfolio_images
+// Work-sample photos a crew member uploads to show off on their public profile
+// (redesign moodboard's Crew Profile page, panel 5) - unlike profile_photo_path
+// above, which is a single photo, a crew member can have any number of these.
+// Only crew members ever get rows here; nothing in the UI lets an organizer or
+// admin add one. image_path follows the same save-to-disk-not-the-database
+// pattern as profile_photo_path and the id_document/selfie uploads.
+db.exec(`
+    CREATE TABLE IF NOT EXISTS portfolio_images (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      image_path TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );`);
+db.exec(`CREATE INDEX IF NOT EXISTS idx_portfolio_images_user_id ON portfolio_images(user_id);`);
 
  }
