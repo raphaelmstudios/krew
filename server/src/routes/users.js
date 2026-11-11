@@ -15,6 +15,7 @@ const AVAILABILITY_VALUES = ['available', 'working'];
 const MAX_PROFESSIONAL_ROLE_LENGTH = 60;
 const MAX_SKILLS = 8;
 const MAX_SKILL_LENGTH = 30;
+const MAX_BIO_LENGTH = 400;
 
 // Profile photos (shown publicly on the crew directory) are a separate, later upload
 // from the private id_document_path/selfie_path pair collected at signup - those two
@@ -50,6 +51,35 @@ const uploadPhoto = multer({
   },
   limits: { fileSize: MAX_PHOTO_SIZE },
 }).single('profile_photo');
+
+// Portfolio photos (redesign moodboard's Crew Profile page) - unlike the single
+// profile photo above, a crew member can add several of these over time, so this
+// is its own upload/directory rather than reusing profile_photo_path. Same
+// never-trust-the-browser-filename and outside-the-public-upload-root reasoning
+// as the profile photo upload.
+const PORTFOLIO_PHOTOS_DIR = path.join(PHOTO_UPLOAD_ROOT, 'portfolio-photos');
+fs.mkdirSync(PORTFOLIO_PHOTOS_DIR, { recursive: true });
+const MAX_PORTFOLIO_IMAGES = 12;
+
+const portfolioStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, PORTFOLIO_PHOTOS_DIR),
+  filename: (req, file, cb) => {
+    const safeExt = path.extname(file.originalname).toLowerCase().replace(/[^a-z0-9.]/g, '');
+    cb(null, `user-${req.user.id}-portfolio-${Date.now()}${safeExt}`);
+  },
+});
+
+const uploadPortfolioImage = multer({
+  storage: portfolioStorage,
+  fileFilter: (req, file, cb) => {
+    if (!ALLOWED_PHOTO_TYPES.includes(file.mimetype)) {
+      cb(new Error('UNSUPPORTED_FILE_TYPE'));
+      return;
+    }
+    cb(null, true);
+  },
+  limits: { fileSize: MAX_PHOTO_SIZE },
+}).single('portfolio_photo');
 
 // Splits the comma-separated skills column back into an array for the frontend - the
 // reverse of the .join(',') done in POST /me/profile above.
@@ -117,11 +147,16 @@ usersRouter.post('/me/availability', requireRole('crew_member'), (req, res) => {
 // comma-separated string, since this is only ever read back out for display on the
 // public Hire Crew directory, never filtered or searched against in SQL.
 usersRouter.post('/me/profile', requireRole('crew_member'), (req, res) => {
-  const { professional_role, skills } = req.body;
+  const { professional_role, skills, years_experience, bio } = req.body;
 
   const trimmedRole = typeof professional_role === 'string' ? professional_role.trim() : '';
   if (trimmedRole.length > MAX_PROFESSIONAL_ROLE_LENGTH) {
     return res.status(400).json({ error: `Professional role must be ${MAX_PROFESSIONAL_ROLE_LENGTH} characters or fewer.` });
+  }
+
+  const trimmedBio = typeof bio === 'string' ? bio.trim() : '';
+  if (trimmedBio.length > MAX_BIO_LENGTH) {
+    return res.status(400).json({ error: `Bio must be ${MAX_BIO_LENGTH} characters or fewer.` });
   }
 
   const skillsArray = Array.isArray(skills) ? skills : [];
@@ -136,11 +171,86 @@ usersRouter.post('/me/profile', requireRole('crew_member'), (req, res) => {
     return res.status(400).json({ error: `Each skill must be ${MAX_SKILL_LENGTH} characters or fewer.` });
   }
 
+  // Self-reported, same as role/skills - optional, and cleared by sending an empty
+  // value rather than forcing everyone to have an opinion about it.
+  let yearsValue = null;
+  if (years_experience !== undefined && years_experience !== null && years_experience !== '') {
+    const parsedYears = Number(years_experience);
+    if (!Number.isInteger(parsedYears) || parsedYears < 0 || parsedYears > 80) {
+      return res.status(400).json({ error: 'Years of experience must be a whole number between 0 and 80.' });
+    }
+    yearsValue = parsedYears;
+  }
+
   const skillsValue = cleanedSkills.length > 0 ? cleanedSkills.join(',') : null;
   const roleValue = trimmedRole || null;
+  const bioValue = trimmedBio || null;
 
-  db.prepare(`UPDATE users SET professional_role = ?, skills = ? WHERE id = ?`).run(roleValue, skillsValue, req.user.id);
-  res.json({ professional_role: roleValue, skills: cleanedSkills });
+  db.prepare(`UPDATE users SET professional_role = ?, skills = ?, years_experience = ?, bio = ? WHERE id = ?`).run(
+    roleValue,
+    skillsValue,
+    yearsValue,
+    bioValue,
+    req.user.id
+  );
+  res.json({ professional_role: roleValue, skills: cleanedSkills, years_experience: yearsValue, bio: bioValue });
+});
+
+// Adds one new portfolio photo to the logged-in crew member's gallery (redesign
+// moodboard's Crew Profile page). Unlike POST /me/photo above, this never replaces
+// an existing file - it's additive, up to MAX_PORTFOLIO_IMAGES, so a crew member
+// builds up a gallery over time rather than only ever having one shot.
+usersRouter.post('/me/portfolio', requireRole('crew_member'), (req, res) => {
+  const { count } = db
+    .prepare(`SELECT COUNT(*) AS count FROM portfolio_images WHERE user_id = ?`)
+    .get(req.user.id);
+  if (count >= MAX_PORTFOLIO_IMAGES) {
+    return res.status(400).json({ error: `You can have at most ${MAX_PORTFOLIO_IMAGES} portfolio photos. Remove one first.` });
+  }
+
+  uploadPortfolioImage(req, res, (uploadErr) => {
+    if (uploadErr) {
+      if (uploadErr.message === 'UNSUPPORTED_FILE_TYPE') {
+        return res.status(400).json({ error: 'Please upload a JPG or PNG file.' });
+      }
+      if (uploadErr.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: 'Your photo must be smaller than 5MB.' });
+      }
+      console.error('Portfolio photo upload failed:', uploadErr);
+      return res.status(500).json({ error: 'Something went wrong. Please try again later.' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'Choose a photo to upload.' });
+    }
+
+    const relativePath = path.join('portfolio-photos', req.file.filename);
+    const { lastInsertRowid } = db
+      .prepare(`INSERT INTO portfolio_images (user_id, image_path) VALUES (?, ?)`)
+      .run(req.user.id, relativePath);
+
+    res.status(201).json({ id: lastInsertRowid, image_path: relativePath });
+  });
+});
+
+// Removes one of the logged-in crew member's own portfolio photos. Scoped by
+// user_id in the WHERE clause itself (same pattern as notifications' mark-read
+// route) rather than checked separately, so there's no way to delete someone
+// else's photo by guessing an id.
+usersRouter.delete('/me/portfolio/:id', requireRole('crew_member'), (req, res) => {
+  const imageId = Number(req.params.id);
+  const image = db
+    .prepare(`SELECT image_path FROM portfolio_images WHERE id = ? AND user_id = ?`)
+    .get(imageId, req.user.id);
+
+  if (!image) {
+    return res.status(404).json({ error: 'No portfolio photo found with that id.' });
+  }
+
+  db.prepare(`DELETE FROM portfolio_images WHERE id = ? AND user_id = ?`).run(imageId, req.user.id);
+  fs.unlink(path.join(PHOTO_UPLOAD_ROOT, image.image_path), () => {});
+
+  res.json({ ok: true });
 });
 
 // Any logged-in user can upload their own profile photo - the thing shown publicly on
@@ -271,4 +381,38 @@ usersRouter.get('/:id/crew-record', requireAuth, (req, res) => {
   }
 
   res.json(computeCrewRecord(crewMemberId));
+});
+
+// The public Crew Profile page (redesign moodboard panel 5) - everything that page
+// needs in one call rather than three separate fetches. Public and unauthenticated,
+// same reasoning as GET /crew-directory/public: no phone number, and only approved
+// crew members show up at all (an unapproved account has no public page to link to
+// in the first place). Portfolio photos come back oldest-first, so a crew member's
+// gallery reads in the order they added things rather than jumping around on every
+// new upload.
+usersRouter.get('/:id/public-profile', (req, res) => {
+  const crewMemberId = Number(req.params.id);
+
+  const crewMember = db
+    .prepare(
+      `SELECT id, name, profile_photo_path, availability_status, professional_role, skills, years_experience, bio
+       FROM users
+       WHERE id = ? AND role = 'crew_member' AND verification_status = 'approved'`
+    )
+    .get(crewMemberId);
+  if (!crewMember) {
+    return res.status(404).json({ error: 'No crew member found with that id.' });
+  }
+
+  const portfolio = db
+    .prepare(`SELECT id, image_path FROM portfolio_images WHERE user_id = ? ORDER BY created_at ASC`)
+    .all(crewMemberId);
+
+  const { skills, ...rest } = crewMember;
+  res.json({
+    ...rest,
+    skills: splitSkills(skills),
+    portfolio,
+    ...computeCrewRecord(crewMemberId),
+  });
 });
