@@ -51,9 +51,13 @@ app.use('/api/notifications', notificationsRouter);
 
 // Profile photos (routes/users.js) are the one upload meant to be seen by anyone, so
 // they get their own public static route - unlike the id_document/selfie uploads from
-// signup, which stay private and have no route serving them at all.
+// signup, which stay private and have no route serving them at all. Portfolio photos
+// (also routes/users.js, redesign moodboard's Crew Profile page) are the same deal -
+// meant to be seen by anyone who visits that crew member's public profile.
 const profilePhotosPath = path.join(__dirname, '..', 'uploads', 'profile-photos');
 app.use('/uploads/profile-photos', express.static(profilePhotosPath));
+const portfolioPhotosPath = path.join(__dirname, '..', 'uploads', 'portfolio-photos');
+app.use('/uploads/portfolio-photos', express.static(portfolioPhotosPath));
 
 const clientDistPath = path.join(__dirname, '..', '..', 'client', 'dist');
 app.use(express.static(clientDistPath));
