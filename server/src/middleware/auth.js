@@ -29,7 +29,7 @@ export function requireAuth(req, res, next) {
   const user = db
     .prepare(
       `SELECT id, name, phone, role, verification_status, availability_status,
-              profile_photo_path, professional_role, skills
+              profile_photo_path, professional_role, skills, years_experience, bio
        FROM users WHERE id = ?`
     )
     .get(session.user_id);
