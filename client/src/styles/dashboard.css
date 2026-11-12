@@ -55,7 +55,7 @@
   }
 
  
-  .krew-notif-wrapper {
+  .krew-dash-header-right .krew-notif-wrapper {
     order: 1;
   }
 
@@ -2901,5 +2901,69 @@ body.krew-modal-open {
   .krew-adm-outcomes,
   .krew-adm-analytics {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ===================================================================== */
+/* Mobile pass - dashboards and admin                                    */
+/* ===================================================================== */
+@media (max-width: 860px) {
+  /* Plum hero cards: a shorter photo strip so the numbers stay near the top */
+  .krew-db-upcoming-photo {
+    aspect-ratio: 2 / 1;
+  }
+
+  /* Gig lists (Find Gigs, My Gigs): compact rows - thumbnail beside the details - instead of
+     a full-width placeholder photo per gig */
+  .krew-db-gig {
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 14px;
+    align-items: start;
+  }
+
+  .krew-db-gig-photo {
+    aspect-ratio: 1;
+  }
+
+  .krew-db-gig-photo .krew-listing-photo-icon {
+    width: 42%;
+  }
+
+  .krew-db-gig-title {
+    font-size: 16px;
+  }
+
+  .krew-db-gig-side {
+    grid-column: 1 / -1;
+  }
+
+  /* Application rows: the status sits under the details so titles aren't cut off */
+  .krew-db-row {
+    grid-template-columns: 48px minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .krew-db-row .krew-status-pill {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .krew-db-row-main strong {
+    white-space: normal;
+  }
+
+  /* Payment record: a narrower number column so the labels line up and don't wrap early */
+  .krew-db-stats li {
+    grid-template-columns: 24px 84px minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .krew-db-stats strong {
+    font-size: 20px;
+  }
+
+  /* Forms inside the shell: a little less padding so fields get the width */
+  .krew-shell-content .krew-dash-form-card {
+    padding: 22px 18px;
   }
 }

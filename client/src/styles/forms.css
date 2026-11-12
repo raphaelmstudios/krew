@@ -258,7 +258,7 @@
 .krew-role-toggle {
   display: flex;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-md);
   padding: 4px;
   margin-bottom: 26px;
 }
@@ -267,7 +267,7 @@
   flex: 1;
   text-align: center;
   padding: 11px 0;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-sm);
   font-size: 14px;
   font-weight: 600;
   color: var(--color-text-soft);
@@ -486,4 +486,16 @@
   max-height: 180px;
   object-fit: cover;
   border-radius: var(--radius-sm);
+}
+
+/* ===================================================================== */
+/* Mobile pass                                                           */
+/* ===================================================================== */
+@media (max-width: 860px) {
+  /* iPhones zoom the whole page into any field under 16px when it's tapped */
+  .krew-field-input,
+  select.krew-field-input,
+  textarea.krew-field-input {
+    font-size: 16px;
+  }
 }

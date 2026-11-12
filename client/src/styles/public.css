@@ -2727,3 +2727,38 @@
     font-size: 27px;
   }
 }
+
+/* ===================================================================== */
+/* Mobile pass                                                           */
+/* ===================================================================== */
+@media (max-width: 860px) {
+  /* Home: the account buttons span the card so long labels stay on one line */
+  .krew-home-cta-body {
+    padding: 26px 22px 28px 22px;
+  }
+
+  .krew-home-cta-actions .krew-button-primary.krew-button-inline {
+    width: 100%;
+    justify-content: center;
+    white-space: nowrap;
+  }
+
+  /* Find Work: Apply Now always sits on the right, even when a long category tag pushes it down a line */
+  .krew-fw-card-cta {
+    margin-left: auto;
+  }
+
+  /* Gig detail: photo first, then pay + apply, then the tabs - same order you'd read it on desktop */
+  .krew-gd-main {
+    display: contents;
+  }
+
+  .krew-gd-photo {
+    order: -2;
+  }
+
+  /* Crew cards (Hire Crew, More crew on KREW): a wider, shorter photo on a single column */
+  .krew-hc-grid .krew-hc-card-photo {
+    aspect-ratio: 16 / 10;
+  }
+}
