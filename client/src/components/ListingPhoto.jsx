@@ -13,6 +13,11 @@ const CATEGORY_ICONS = {
   Other: Sparkles,
 };
 
+// The icon for a listing category (also used for the rows of a crew member's work history).
+export function categoryIcon(category) {
+  return CATEGORY_ICONS[category] || Sparkles;
+}
+
 // A listing's photo (uploaded by its organizer), or a branded placeholder - plum panel,
 // violet shards and the category's icon - when there isn't one.
 export default function ListingPhoto({ listing, className = '' }) {

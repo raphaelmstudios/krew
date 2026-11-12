@@ -1,31 +1,20 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Search, User as UserIcon } from 'lucide-react';
+import { Search } from 'lucide-react';
 import PublicNav from '../components/PublicNav.jsx';
 import PublicFooter from '../components/PublicFooter.jsx';
-import InfoTooltip from '../components/InfoTooltip.jsx';
+import CrewCard from '../components/CrewCard.jsx';
 
-// Formats the crew member's record for display in the directory.
-// If they have no confirmed jobs, show a "New here" badge. Otherwise, show the number of completed jobs with proper pluralization. Either way it comes with a small info icon explaining what the badge means.
-function formatCrewRecord(crewMember) {
-  if (!crewMember.confirmed_job_count) {
-    return (
-      <>
-        <span className="krew-status-pill new">New here</span>
-        <InfoTooltip text="New here means this crew member hasn't completed a job on KREW yet - everyone starts without a track record, it isn't a red flag." />
-      </>
-    );
-  }
-  const jobWord = crewMember.confirmed_job_count === 1 ? 'job' : 'jobs';
-  return (
-    <>
-      {crewMember.confirmed_job_count} completed {jobWord}
-      <InfoTooltip text="The number of jobs this crew member has completed and had payment confirmed on KREW." />
-    </>
-  );
-}
+// The public Hire Crew page, laid out like the moodboard's Hire Crew panel: a hero with the
+// headline, a search bar and a portrait photo on the right, then a grid of photo-led crew
+// cards. Every profile here was set up by the crew member themselves - no filler bios, no
+// invented reviews - and the completed-jobs count comes from confirmed payments.
 
-// The Hire Crew page is a public-facing page that allows users to browse and search for crew members.
+const AVAILABILITY_TABS = [
+  { value: '', label: 'Everyone' },
+  { value: 'available', label: 'Available now' },
+  { value: 'working', label: 'Currently working' },
+];
+
 export default function HireCrew() {
   const [crewMembers, setCrewMembers] = useState(null);
   const [error, setError] = useState(null);
@@ -46,19 +35,27 @@ export default function HireCrew() {
       .catch(() => setError('Could not reach the server.'));
   }, []);
 
-  const filtered = useMemo(() => {
+  // Search applies first, so each availability tab can show how many people it would leave.
+  const matchingSearch = useMemo(() => {
     if (!crewMembers) return null;
     const searchLower = search.trim().toLowerCase();
-
+    if (!searchLower) return crewMembers;
     return crewMembers.filter((crewMember) => {
-      if (availability && crewMember.availability_status !== availability) return false;
-      if (searchLower) {
-        const haystack = `${crewMember.name} ${crewMember.professional_role || ''} ${crewMember.skills.join(' ')}`.toLowerCase();
-        if (!haystack.includes(searchLower)) return false;
-      }
-      return true;
+      const haystack = `${crewMember.name} ${crewMember.professional_role || ''} ${crewMember.skills.join(' ')}`.toLowerCase();
+      return haystack.includes(searchLower);
     });
-  }, [crewMembers, search, availability]);
+  }, [crewMembers, search]);
+
+  const filtered = useMemo(() => {
+    if (!matchingSearch) return null;
+    if (!availability) return matchingSearch;
+    return matchingSearch.filter((crewMember) => crewMember.availability_status === availability);
+  }, [matchingSearch, availability]);
+
+  function countFor(value) {
+    if (!matchingSearch) return 0;
+    return value ? matchingSearch.filter((crewMember) => crewMember.availability_status === value).length : matchingSearch.length;
+  }
 
   function clearFilters() {
     setSearch('');
@@ -69,92 +66,76 @@ export default function HireCrew() {
     <div className="krew-public-page">
       <PublicNav />
 
-      <section className="krew-browse-hero">
-        <p className="krew-home-section-label">Hire Crew</p>
-        <h1>Nairobi's event crew, with a real track record.</h1>
-        <p className="krew-browse-hero-sub">
-          Every person here set up their own profile - no filler bios, no invented reviews. See their role, their
-          skills and how many jobs they've actually completed and gotten paid for before you reach out.
-        </p>
-      </section>
-
-      <section className="krew-browse-toolbar">
-        <div className="krew-browse-search">
-          <Search size={17} strokeWidth={1.75} className="krew-browse-search-icon" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name, role or skill"
-            aria-label="Search crew members"
-          />
+      <section className="krew-hc-hero">
+        <div className="krew-hc-hero-inner">
+          <div className="krew-hc-hero-copy">
+            <p className="krew-home-section-label">Nairobi's event crew</p>
+            <h1>
+              Hire the right <em>crew for your next project.</em>
+            </h1>
+            <p className="krew-hc-hero-sub">
+              Explore talented professionals across Nairobi - each with a real record of completed, paid jobs.
+            </p>
+            <div className="krew-hc-search">
+              <Search size={19} strokeWidth={1.75} className="krew-hc-search-icon" aria-hidden="true" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by skill or role..."
+                aria-label="Search crew members by name, role or skill"
+              />
+            </div>
+          </div>
         </div>
-
-        <select
-          className="krew-field-input krew-browse-select"
-          value={availability}
-          onChange={(e) => setAvailability(e.target.value)}
-          aria-label="Filter by availability"
-        >
-          <option value="">Any availability</option>
-          <option value="available">Available</option>
-          <option value="working">Currently working</option>
-        </select>
-
-        {(search || availability) && (
-          <button type="button" className="krew-dash-text-btn" onClick={clearFilters}>Clear filters</button>
-        )}
+        <div className="krew-hc-hero-visual" aria-hidden="true">
+          {/* Uses images/hire-crew/hero.jpg if it exists, otherwise falls back to the homepage's organizer photo */}
+          <div
+            className="krew-photo-slot krew-hc-hero-photo"
+            style={{ backgroundImage: "url('/images/hire-crew/hero.jpg'), url('/images/home/organizer-card.jpg')" }}
+          />
+          <span className="krew-shard krew-hc-hero-shard-1" />
+          <span className="krew-shard krew-hc-hero-shard-2" />
+        </div>
       </section>
 
-      <section className="krew-browse-results">
+      <section className="krew-hc-body">
+        {crewMembers && (
+          <div className="krew-fw-tabs" role="tablist" aria-label="Availability">
+            {AVAILABILITY_TABS.map((tab) => (
+              <button
+                type="button"
+                role="tab"
+                key={tab.value || 'all'}
+                aria-selected={availability === tab.value}
+                className={`krew-fw-tab ${availability === tab.value ? 'active' : ''}`}
+                onClick={() => setAvailability(tab.value)}
+              >
+                {tab.label} <span>({countFor(tab.value)})</span>
+              </button>
+            ))}
+          </div>
+        )}
+
         {error && <div className="krew-form-banner error">{error}</div>}
 
         {crewMembers === null && !error && <div className="krew-dash-loading-note">Loading crew members…</div>}
 
         {filtered && filtered.length === 0 && (
           <div className="krew-dash-empty">
-            <p>No crew members match those filters right now.</p>
-            <button type="button" className="krew-button-secondary" onClick={clearFilters} style={{ width: 'auto' }}>
-              Clear filters
-            </button>
+            <p>{crewMembers.length === 0 ? 'No crew members are listed yet - check back soon.' : 'No crew members match that search right now.'}</p>
+            {crewMembers.length > 0 && (
+              <button type="button" className="krew-button-secondary krew-button-inline" onClick={clearFilters}>
+                Clear search
+              </button>
+            )}
           </div>
         )}
 
         {filtered && filtered.length > 0 && (
-          <div className="krew-crew-grid">
+          <div className="krew-hc-grid">
             {filtered.map((crewMember) => (
-              <Link to={`/crew/${crewMember.id}`} className="krew-crew-card" key={crewMember.id}>
-                <div className="krew-crew-card-portrait">
-                  {crewMember.profile_photo_path ? (
-                    <img src={`/uploads/${crewMember.profile_photo_path}`} alt="" />
-                  ) : (
-                    <div className="krew-crew-card-portrait-placeholder">
-                      <UserIcon size={32} strokeWidth={1.5} />
-                    </div>
-                  )}
-                  <span className={`krew-status-pill ${crewMember.availability_status === 'available' ? 'confirmed' : 'pending'} krew-crew-card-availability`}>
-                    {crewMember.availability_status === 'available' ? 'Available' : 'Currently working'}
-                  </span>
-                </div>
-                <div className="krew-crew-card-body">
-                  <div className="krew-crew-card-name">{crewMember.name}</div>
-                  {crewMember.professional_role && (
-                    <div className="krew-crew-card-role">{crewMember.professional_role}</div>
-                  )}
-                  {crewMember.skills.length > 0 && (
-                    <div className="krew-crew-card-skills">
-                      {crewMember.skills.slice(0, 4).map((skill) => (
-                        <span className="krew-crew-skill-chip" key={skill}>{skill}</span>
-                      ))}
-                      {crewMember.skills.length > 4 && (
-                        <span className="krew-crew-skill-chip more">+{crewMember.skills.length - 4}</span>
-                      )}
-                    </div>
-                  )}
-                  <div className="krew-crew-card-record">{formatCrewRecord(crewMember)}</div>
-                </div>
-                <span className="krew-button-secondary krew-crew-card-cta">View profile</span>
-              </Link>
+              <CrewCard crewMember={crewMember} key={crewMember.id} />
             ))}
           </div>
         )}

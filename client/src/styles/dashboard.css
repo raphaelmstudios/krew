@@ -566,12 +566,6 @@
   display: none;
 }
 
-/* Read-only variant shown on the public crew profile page (CrewProfile.jsx)
-   - same grid and thumbnail shape, just without the add tile or remove
-   buttons, and a little larger since there's more room on that page. */
-.krew-portfolio-grid-display {
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-}
 
 /* Availability */
 .krew-dash-availability {

@@ -829,86 +829,6 @@
   }
 }
 
-/* ---------------------------------------------------------------------- */
-/* Find Work / Hire Crew (brief sections 7.3-7.4) - shared browse layout   */
-/* ---------------------------------------------------------------------- */
-
-.krew-browse-hero {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 48px 24px 32px 24px;
-}
-
-.krew-browse-hero h1 {
-  font-family: var(--font-display);
-  font-size: 34px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  margin: 0 0 12px 0;
-  max-width: 680px;
-}
-
-.krew-browse-hero-sub {
-  font-size: 15px;
-  line-height: 1.6;
-  color: var(--color-text-soft);
-  max-width: 560px;
-  margin: 0;
-}
-
-.krew-browse-toolbar {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 0 24px 16px 24px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.krew-browse-search {
-  position: relative;
-  flex: 1 1 240px;
-  min-width: 200px;
-}
-
-.krew-browse-search-icon {
-  position: absolute;
-  left: 13px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--color-text-faint);
-  pointer-events: none;
-}
-
-.krew-browse-search input {
-  width: 100%;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 11px 14px 11px 38px;
-  font-size: 14px;
-  font-family: inherit;
-  color: var(--color-text);
-  background: var(--color-surface-card);
-}
-
-.krew-browse-search input:focus {
-  outline: 2px solid var(--color-brand);
-  outline-offset: 1px;
-}
-
-.krew-browse-select {
-  flex: 0 1 180px;
-  min-width: 140px;
-  padding: 10px 14px;
-}
-
-.krew-browse-results {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 8px 24px 64px 24px;
-}
-
 /* Listing photo (ListingPhoto.jsx) - the organizer's uploaded photo, or a plum placeholder
    with the shards and the category's icon when there isn't one */
 .krew-listing-photo {
@@ -1451,93 +1371,303 @@
   }
 }
 
-/* Hire Crew's portrait-led directory (brief section 7.4). A deliberately
-   different shape from .krew-browse-grid's job cards: the photo leads here,
-   same way it would on a profile-first marketplace, rather than being
-   secondary to an amount and a due date. */
-.krew-crew-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 16px;
+/* Hire Crew hero - headline with the italic violet second half, search bar, and a portrait
+   photo cut on the diagonal on the right */
+.krew-hc-hero {
+  position: relative;
+  overflow: hidden;
+  min-height: 440px;
+  display: flex;
+  align-items: center;
 }
 
-.krew-crew-card {
+.krew-hc-hero-inner {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 64px 32px;
+}
+
+.krew-hc-hero-copy {
+  max-width: 540px;
+}
+
+.krew-hc-hero-copy h1 {
+  font-family: var(--font-display);
+  font-size: 54px;
+  line-height: 1.04;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0 0 16px 0;
+}
+
+.krew-hc-hero-copy h1 em {
+  font-style: italic;
+  color: var(--color-brand-text);
+}
+
+.krew-hc-hero-sub {
+  font-size: 16.5px;
+  line-height: 1.6;
+  color: var(--color-text-soft);
+  margin: 0 0 28px 0;
+  max-width: 430px;
+}
+
+.krew-hc-search {
+  position: relative;
+  max-width: 480px;
+}
+
+.krew-hc-search-icon {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-faint);
+  pointer-events: none;
+}
+
+.krew-hc-search input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-card);
+  box-shadow: var(--shadow-md);
+  padding: 17px 18px 17px 50px;
+  font-size: 15.5px;
+  font-family: inherit;
+  color: var(--color-text);
+  outline: none;
+}
+
+.krew-hc-search input:focus {
+  border-color: var(--color-soft-violet);
+}
+
+.krew-hc-hero-visual {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 46%;
+  clip-path: polygon(20% 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.krew-hc-hero-photo {
+  position: absolute;
+  inset: 0;
+  background-position: 70% 30%;
+}
+
+.krew-hc-hero-shard-1 {
+  left: 0;
+  bottom: 0;
+  width: 42%;
+  height: 70%;
+  background: var(--color-electric-violet);
+  clip-path: polygon(0 100%, 55% 0, 100% 0, 45% 100%);
+  opacity: 0.75;
+}
+
+.krew-hc-hero-shard-2 {
+  left: 30%;
+  bottom: 0;
+  width: 26%;
+  height: 38%;
+  background: var(--color-soft-violet);
+  clip-path: polygon(0 100%, 60% 0, 100% 0, 40% 100%);
+  opacity: 0.5;
+}
+
+/* Crew grid + cards - photo on top, then name, role, skills, record and the View Profile button */
+.krew-hc-body {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 32px 80px 32px;
+}
+
+.krew-hc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 22px;
+}
+
+.krew-hc-card {
+  display: flex;
+  flex-direction: column;
   background: var(--color-surface-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
+  overflow: hidden;
   text-decoration: none;
   color: inherit;
-  transition: border-color var(--motion-fast) var(--motion-ease), box-shadow var(--motion-fast) var(--motion-ease);
+  transition: border-color var(--motion-fast) var(--motion-ease), box-shadow var(--motion-base) var(--motion-ease), transform var(--motion-base) var(--motion-ease);
 }
 
-.krew-crew-card:hover {
+.krew-hc-card:hover {
   border-color: var(--color-soft-violet);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-3px);
 }
 
-.krew-crew-card-portrait {
+.krew-hc-card-media {
   position: relative;
+}
+
+.krew-hc-card-photo {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 5 / 4;
+  background: var(--color-photo-empty);
+}
+
+.krew-hc-card-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 25%;
+  display: block;
+  transition: transform var(--motion-slow) var(--motion-ease);
+}
+
+.krew-hc-card:hover .krew-hc-card-photo img {
+  transform: scale(1.04);
+}
+
+.krew-hc-card-photo.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-ink-plum);
+}
+
+.krew-hc-card-shard {
+  left: 0;
+  bottom: 0;
+  width: 60%;
+  height: 100%;
+  background: var(--color-electric-violet);
+  clip-path: polygon(0 100%, 60% 0, 90% 0, 30% 100%);
+  opacity: 0.5;
+}
+
+.krew-hc-card-initials {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-display);
+  font-size: 46px;
+  font-weight: 600;
+  color: var(--color-lavender-mist);
+  letter-spacing: 0.02em;
+}
+
+/* Availability tag over the photo - a dot plus the status on a dark translucent chip */
+.krew-hc-availability {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  background: rgba(33, 22, 43, 0.72);
+  color: var(--color-warm-ivory);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.krew-hc-availability::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #3DDB9A;
+}
+
+.krew-hc-availability.working::before {
+  background: #E8A93D;
+}
+
+.krew-hc-card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 20px 20px 20px;
+}
+
+.krew-hc-card-body h3 {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.krew-hc-card-role {
+  font-size: 13.5px;
+  color: var(--color-text-soft);
+  margin: 0;
+}
+
+.krew-hc-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.krew-hc-card-record {
+  font-size: 12.5px;
+  color: var(--color-text-faint);
+  margin-top: 4px;
+}
+
+.krew-hc-card-cta.krew-button-inline {
+  align-self: flex-start;
+  margin-top: auto;
+  padding: 10px 18px;
+  font-size: 14px;
+}
+
+.krew-hc-card-record {
   margin-bottom: 14px;
 }
 
-.krew-crew-card-portrait img {
-  width: 96px;
-  height: 96px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 1px solid var(--color-border);
+@media (max-width: 860px) {
+  .krew-hc-hero {
+    flex-direction: column;
+    align-items: stretch;
+    min-height: 0;
+  }
+
+  .krew-hc-hero-inner {
+    padding: 40px 20px 28px 20px;
+  }
+
+  .krew-hc-hero-copy h1 {
+    font-size: 38px;
+  }
+
+  .krew-hc-hero-visual {
+    position: relative;
+    width: 100%;
+    height: 220px;
+    clip-path: polygon(12% 0, 100% 0, 100% 100%, 0 100%);
+  }
+
+  .krew-hc-body {
+    padding: 24px 20px 56px 20px;
+  }
+
+  .krew-hc-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
-.krew-crew-card-portrait-placeholder {
-  width: 96px;
-  height: 96px;
-  border-radius: 50%;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-text-faint);
-}
-
-/* A small status pill tucked under the portrait rather than stacked inline
-   with the name - keeps the name the clear visual anchor of the card. */
-.krew-crew-card-availability {
-  position: absolute;
-  bottom: -6px;
-  left: 50%;
-  transform: translateX(-50%);
-  white-space: nowrap;
-}
-
-.krew-crew-card-body {
-  width: 100%;
-  margin-top: 10px;
-}
-
-.krew-crew-card-name {
-  font-weight: 700;
-  font-size: 16px;
-}
-
-.krew-crew-card-role {
-  color: var(--color-text-soft);
-  font-size: 13px;
-  margin-top: 2px;
-}
-
-.krew-crew-card-skills {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px;
-  margin-top: 12px;
-}
 
 /* A compact rounded-rect tag, not a pill - the brief's "no pill buttons"
    rule is about buttons/CTAs reading as gimmicky, not every small rounded
@@ -1555,20 +1685,6 @@
 
 .krew-crew-skill-chip.more {
   color: var(--color-text-faint);
-}
-
-.krew-crew-card-record {
-  font-size: 12.5px;
-  color: var(--color-text-faint);
-  margin-top: 10px;
-}
-
-.krew-crew-card-cta {
-  width: auto;
-  display: inline-block;
-  padding: 8px 18px;
-  font-size: 13px;
-  margin-top: 16px;
 }
 
 /* Gig detail (brief section 7.5) - the editorial page Find Work's cards
@@ -1702,109 +1818,624 @@
   display: inline-block;
 }
 
-/* Crew profile (redesign moodboard panel 5) - a portrait-and-stats header
-   followed by an About section and a portfolio gallery, read the same way
-   a resume or portfolio site would be: one person, read top to bottom,
-   rather than a grid of many like Hire Crew's directory. */
-.krew-crew-profile-wrap {
-  max-width: 880px;
+/* Crew profile - full-screen: a full-width cover hero with the name and headline stats, a tall
+   portrait card overlapping the hero with the About card under it, Highlights + Skills on the
+   right, then the portfolio row and "More crew" across the page */
+.krew-cp-status {
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 32px 24px 64px 24px;
+  padding: 32px 32px 80px 32px;
 }
 
-.krew-crew-profile-header {
+.krew-cp-hero {
+  position: relative;
+  overflow: hidden;
+  min-height: 440px;
   display: flex;
-  gap: 28px;
-  align-items: flex-start;
-  margin-bottom: 32px;
+  align-items: flex-end;
+  background-color: var(--color-ink-plum);
+  background-size: cover;
+  background-position: center 35%;
+  color: var(--color-text-on-dark);
 }
 
-.krew-crew-profile-portrait {
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
+/* Flat plum wash over the cover photo so the white text stays readable - a single colour, not a gradient */
+.krew-cp-hero-tint {
+  position: absolute;
+  inset: 0;
+  background: var(--color-ink-plum);
+  opacity: 0.62;
+}
+
+.krew-cp-hero.empty .krew-cp-hero-tint {
+  opacity: 0;
+}
+
+.krew-cp-hero-shard-1 {
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 30%;
+  background: var(--color-electric-violet);
+  clip-path: polygon(62% 0, 100% 0, 100% 100%, 18% 100%);
+  opacity: 0.6;
+}
+
+.krew-cp-hero-shard-2 {
+  right: 0;
+  bottom: 0;
+  width: 18%;
+  height: 55%;
+  background: var(--color-soft-violet);
+  clip-path: polygon(70% 0, 100% 0, 100% 100%, 0 100%);
+  opacity: 0.45;
+}
+
+.krew-cp-hero-inner {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 48px 32px 44px 32px;
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 48px;
+}
+
+.krew-cp-back {
+  display: inline-flex;
   align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: rgba(243, 240, 233, 0.78);
+  text-decoration: none;
+  margin-bottom: 28px;
+}
+
+.krew-cp-back:hover {
+  color: var(--color-warm-ivory);
+}
+
+.krew-cp-hero-copy h1 {
+  font-family: var(--font-display);
+  font-size: 64px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0 0 10px 0;
+  color: var(--color-warm-ivory);
+}
+
+.krew-cp-hero-role {
+  font-size: 18px;
+  color: rgba(243, 240, 233, 0.85);
+  margin: 0 0 18px 0;
+}
+
+.krew-cp-hero-stats {
+  list-style: none;
+  margin: 0 0 26px 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(243, 240, 233, 0.8);
+}
+
+.krew-cp-hero-stats li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.krew-cp-hero-stats li.available::before,
+.krew-cp-hero-stats li.working::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #3DDB9A;
+}
+
+.krew-cp-hero-stats li.working::before {
+  background: #E8A93D;
+}
+
+.krew-cp-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
   gap: 10px;
 }
 
-.krew-crew-profile-portrait img {
-  width: 128px;
-  height: 128px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 1px solid var(--color-border);
+.krew-cp-hero-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 18px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid rgba(243, 240, 233, 0.45);
+  background: rgba(33, 22, 43, 0.35);
+  color: var(--color-warm-ivory);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease);
 }
 
-.krew-crew-profile-portrait-placeholder {
-  width: 128px;
-  height: 128px;
-  border-radius: 50%;
-  background: var(--color-surface-card);
-  border: 1px solid var(--color-border);
+.krew-cp-hero-btn:hover {
+  border-color: var(--color-warm-ivory);
+  background: rgba(33, 22, 43, 0.55);
+}
+
+.krew-cp-hero-btn.primary {
+  background: var(--color-warm-ivory);
+  border-color: var(--color-warm-ivory);
+  color: var(--color-ink-plum);
+}
+
+.krew-cp-hero-btn.primary:hover {
+  background: #FFFFFF;
+}
+
+/* Body - the portrait column pulls up over the hero */
+.krew-cp-body {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 32px;
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 48px;
+  align-items: start;
+}
+
+.krew-cp-side {
+  position: relative;
+  z-index: 3;
+  margin-top: -300px;
+}
+
+.krew-cp-portrait {
+  aspect-ratio: 4 / 5;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  border: 5px solid var(--color-surface-card);
+  background: var(--color-ink-plum);
+  box-shadow: var(--shadow-lg);
+}
+
+.krew-cp-portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 25%;
+  display: block;
+}
+
+.krew-cp-portrait-empty {
+  position: relative;
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-text-faint);
 }
 
-.krew-crew-profile-info h1 {
+.krew-cp-portrait-shard {
+  left: 0;
+  bottom: 0;
+  width: 70%;
+  height: 100%;
+  background: var(--color-electric-violet);
+  clip-path: polygon(0 100%, 60% 0, 90% 0, 30% 100%);
+  opacity: 0.5;
+}
+
+.krew-cp-portrait-empty span:last-child {
+  position: relative;
   font-family: var(--font-display);
-  font-size: 32px;
-  margin: 0 0 4px 0;
+  font-size: 72px;
+  font-weight: 600;
+  color: var(--color-lavender-mist);
 }
 
-.krew-crew-profile-role {
+.krew-cp-about {
+  margin-top: 20px;
+  padding: 24px;
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.krew-cp-about h2,
+.krew-cp-section-title {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin: 0 0 14px 0;
+  color: var(--color-text);
+}
+
+.krew-cp-about p {
+  font-size: 15px;
+  line-height: 1.75;
   color: var(--color-text-soft);
-  font-size: 16px;
+  white-space: pre-wrap;
   margin: 0;
 }
 
-.krew-crew-profile-stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 18px;
-  margin-top: 14px;
+.krew-cp-about-skills-title {
+  margin-top: 22px !important;
 }
 
-.krew-crew-profile-stat {
+.krew-cp-about p.empty,
+.krew-cp-empty {
+  color: var(--color-text-faint);
+  font-style: italic;
+  font-size: 14px;
+  margin: 0;
+}
+
+.krew-cp-main {
+  padding-top: 40px;
+}
+
+.krew-cp-availability {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 14px;
+  gap: 7px;
+}
+
+.krew-cp-availability::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-success);
+}
+
+.krew-cp-availability.working::before {
+  background: var(--color-warning);
+}
+
+.krew-cp-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.krew-cp-skill {
+  padding: 7px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-brand-bg);
+  color: var(--color-electric-violet);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+:root[data-theme='dark'] .krew-cp-skill {
+  background: var(--color-surface-selected);
+  color: var(--color-soft-violet);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .krew-cp-skill {
+    background: var(--color-surface-selected);
+    color: var(--color-soft-violet);
+  }
+}
+
+/* Main column blocks - Portfolio and Verified work history - each with a title row */
+.krew-cp-block + .krew-cp-block {
+  margin-top: 44px;
+}
+
+.krew-cp-block-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.krew-cp-block-head .krew-cp-section-title {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+}
+
+.krew-cp-block-note {
+  font-size: 13px;
+  color: var(--color-text-faint);
+}
+
+/* Verified work history - one row per confirmed job, in the style of the reference's track list */
+.krew-cp-history {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.krew-cp-history-row {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 18px;
+  padding: 14px 18px;
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: border-color var(--motion-fast) var(--motion-ease);
+}
+
+.krew-cp-history-row:hover {
+  border-color: var(--color-soft-violet);
+}
+
+/* Bare line icon - no tile or shaded background behind it, just the stroke in the brand colour */
+.krew-cp-history-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-brand-text);
+}
+
+.krew-cp-history-title {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.krew-cp-history-title strong {
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.krew-cp-history-title span {
+  font-size: 13px;
+  color: var(--color-text-faint);
+}
+
+.krew-cp-history-date {
+  font-size: 13.5px;
+  font-weight: 600;
   color: var(--color-text-soft);
+  white-space: nowrap;
 }
 
-.krew-crew-profile-bio {
-  margin-bottom: 32px;
+/* Bare green check + text, no shaded chip behind it */
+.krew-cp-history-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-success);
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
-.krew-crew-profile-bio h2,
-.krew-crew-profile-portfolio h2 {
-  font-size: 18px;
-  margin-bottom: 10px;
+/* More crew - full page width at the bottom */
+.krew-cp-more {
+  max-width: 1200px;
+  margin: 72px auto 0 auto;
+  padding: 0 32px 88px 32px;
 }
 
-.krew-crew-profile-bio p {
-  color: var(--color-text-soft);
-  line-height: 1.7;
-  white-space: pre-wrap;
+.krew-cp-more .krew-cp-block-head {
+  margin-bottom: 18px;
+}
+
+.krew-cp-view-all {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.krew-cp-portfolio-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.krew-cp-thumb {
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  aspect-ratio: 1;
+  background: var(--color-photo-empty);
+  cursor: zoom-in;
+  box-shadow: var(--shadow-sm);
+}
+
+.krew-cp-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform var(--motion-slow) var(--motion-ease);
+}
+
+.krew-cp-thumb:hover img {
+  transform: scale(1.06);
+}
+
+.krew-cp-thumb:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+/* Full-size portfolio viewer */
+.krew-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(20, 12, 27, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 72px;
+}
+
+.krew-lightbox-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+
+.krew-lightbox-close,
+.krew-lightbox-nav {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(243, 240, 233, 0.12);
+  color: var(--color-warm-ivory);
+  cursor: pointer;
+  transition: background-color var(--motion-fast) var(--motion-ease);
+}
+
+.krew-lightbox-close:hover,
+.krew-lightbox-nav:hover {
+  background: rgba(243, 240, 233, 0.24);
+}
+
+.krew-lightbox-close {
+  top: 18px;
+  right: 18px;
+  width: 44px;
+  height: 44px;
+}
+
+.krew-lightbox-nav {
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+}
+
+.krew-lightbox-nav.prev {
+  left: 14px;
+}
+
+.krew-lightbox-nav.next {
+  right: 14px;
+}
+
+.krew-lightbox-count {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(243, 240, 233, 0.75);
+  font-size: 13px;
+}
+
+@media (max-width: 1000px) {
+  .krew-cp-hero-inner,
+  .krew-cp-body {
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 32px;
+  }
+
+  .krew-cp-side {
+    margin-top: -240px;
+  }
+
+  .krew-cp-history-row {
+    grid-template-columns: 30px minmax(0, 1fr) auto;
+  }
+
+  .krew-cp-history-badge {
+    grid-column: 2 / -1;
+    justify-self: start;
+  }
 }
 
 @media (max-width: 860px) {
-  .krew-crew-profile-header {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
+  .krew-cp-hero {
+    min-height: 0;
   }
 
-  .krew-crew-profile-stats {
-    justify-content: center;
+  .krew-cp-hero-inner,
+  .krew-cp-body {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    padding-left: 20px;
+    padding-right: 20px;
   }
 
-  .krew-crew-profile-info .krew-crew-card-skills {
-    justify-content: center !important;
+  .krew-cp-hero-inner {
+    padding-top: 28px;
+    padding-bottom: 96px;
   }
 
+  .krew-cp-hero-spacer {
+    display: none;
+  }
+
+  .krew-cp-hero-copy h1 {
+    font-size: 40px;
+  }
+
+  .krew-cp-side {
+    margin-top: -72px;
+  }
+
+  .krew-cp-portrait {
+    width: 170px;
+  }
+
+  .krew-cp-main {
+    padding-top: 32px;
+  }
+
+  .krew-cp-history-title strong {
+    white-space: normal;
+  }
+
+  .krew-cp-more {
+    margin-top: 48px;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .krew-cp-portfolio-grid {
+    gap: 8px;
+  }
+
+  .krew-lightbox {
+    padding: 64px 12px;
+  }
+
+  .krew-lightbox-nav {
+    top: auto;
+    bottom: 12px;
+    transform: none;
+  }
+}
+
+@media (max-width: 860px) {
   .krew-gig-layout {
     grid-template-columns: 1fr;
   }
