@@ -138,7 +138,9 @@ export default function CrewProfile() {
       <div className="krew-public-page">
         <PublicNav />
         <div className="krew-cp-status">
-          <Link to="/hire-crew" className="krew-gig-back-link">&larr; Back to Hire Crew</Link>
+          <Link to="/hire-crew" className="krew-gig-back-link">
+            <ArrowLeft size={16} strokeWidth={1.75} aria-hidden="true" /> Back to Hire Crew
+          </Link>
           {error && <div className="krew-form-banner error">{error}</div>}
           {notFound && (
             <div className="krew-dash-empty">

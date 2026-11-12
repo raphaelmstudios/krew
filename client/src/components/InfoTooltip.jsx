@@ -35,7 +35,7 @@ export default function InfoTooltip({ text }) {
         aria-expanded={open}
         aria-label="What does this mean?"
       >
-        <Info size={13} />
+        <Info size={15} strokeWidth={1.6} />
       </button>
       {open && (
         <span className="krew-info-tooltip-popover" role="tooltip">

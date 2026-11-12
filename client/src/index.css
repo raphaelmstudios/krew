@@ -299,21 +299,25 @@ button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 17px;
-  height: 17px;
-  border-radius: 50%;
   border: none;
-  background: var(--color-surface-sunken);
-  color: var(--color-text-soft);
+  background: none;
+  color: var(--color-text-faint);
   cursor: pointer;
-  padding: 0;
+  padding: 1px;
   flex-shrink: 0;
+  transition: color var(--motion-fast) var(--motion-ease);
 }
 
+/* Bare line icon - no filled circle behind it (same rule as every other icon) */
 .krew-info-tooltip-trigger:hover,
 .krew-info-tooltip-trigger[aria-expanded='true'] {
-  background: var(--color-brand);
-  color: var(--color-text-on-brand);
+  color: var(--color-brand-text);
+}
+
+.krew-info-tooltip-trigger:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+  border-radius: 50%;
 }
 
 .krew-info-tooltip-popover {

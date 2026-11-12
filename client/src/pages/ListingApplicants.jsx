@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { formatCrewRecord } from './OrganizerDashboard.jsx';
+import { initials } from '../components/CrewCard.jsx';
 
 // A page for viewing the applicants to a specific job listing.
 // The organizer can see the list of applicants, their application status, and the date they applied.
@@ -8,6 +11,19 @@ import { formatCrewRecord } from './OrganizerDashboard.jsx';
 // Each applicant also comes with their completed jobs count (see formatCrewRecord in
 // OrganizerDashboard.jsx), so the organizer has something to go on before picking who to
 // accept - the same number the crew directory shows for a direct hire.
+// The rows match Find Crew's (photo or initials, role, record), with a View profile link so the
+// organizer can check someone's portfolio and work history before accepting them.
+
+const STATUS_LABELS = { accepted: 'Accepted', declined: 'Not selected' };
+
+function formatDate(value) {
+  return new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+// Application timestamps are SQLite UTC values without a timezone marker.
+function formatServerDay(value) {
+  return new Date(`${value.replace(' ', 'T')}Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
 
 export default function ListingApplicants({ listing, onBack, onAccepted }) {
   const [applicants, setApplicants] = useState(null); // null = still loading
@@ -56,18 +72,15 @@ export default function ListingApplicants({ listing, onBack, onAccepted }) {
 
   return (
     <div>
-      <button type="button" className="krew-dash-back-link" onClick={onBack}>
-        ← Back to your jobs
+      <button type="button" className="krew-db-back" onClick={onBack}>
+        <ArrowLeft size={16} strokeWidth={1.75} aria-hidden="true" /> Back to My Gigs
       </button>
 
-      <div className="krew-dash-title-row">
-        <div>
-          <h1 className="krew-dash-title">Applicants</h1>
-          <p className="krew-dash-listing-summary">
-            KES {Number(listing.amount).toLocaleString()} · Due {new Date(listing.due_date).toLocaleDateString()}
-            {listing.job_description ? ` · ${listing.job_description}` : ''}
-          </p>
-        </div>
+      <div className="krew-db-head">
+        <h1>Applicants</h1>
+        <p>
+          {listing.title || 'Untitled listing'} · KES {Number(listing.amount).toLocaleString()} · Due {formatDate(listing.due_date)}
+        </p>
       </div>
 
       {error && <div className="krew-form-banner error">{error}</div>}
@@ -81,33 +94,45 @@ export default function ListingApplicants({ listing, onBack, onAccepted }) {
       )}
 
       {applicants && applicants.length > 0 && (
-        <div className="krew-job-list">
+        <ul className="krew-db-crew">
           {applicants.map((applicant) => (
-            <div className="krew-job-card" key={applicant.application_id}>
-              <div className="krew-job-card-main">
-                <div className="krew-job-card-crew">{applicant.crew_member_name}</div>
-                <div className="krew-job-card-meta">{formatCrewRecord(applicant)}</div>
-                <div className="krew-job-card-meta">
-                  Applied {new Date(applicant.created_at).toLocaleDateString()}
-                </div>
+            <li className="krew-db-crew-row" key={applicant.application_id}>
+              <span className="krew-db-crew-avatar">
+                {applicant.profile_photo_path ? (
+                  <img src={`/uploads/${applicant.profile_photo_path}`} alt="" />
+                ) : (
+                  <span aria-hidden="true">{initials(applicant.crew_member_name)}</span>
+                )}
+              </span>
+              <div className="krew-db-crew-main">
+                <strong>{applicant.crew_member_name}</strong>
+                <span>
+                  {applicant.professional_role || 'Event crew'}
+                  {applicant.years_experience ? ` · ${applicant.years_experience}+ yrs` : ''} · Applied{' '}
+                  {formatServerDay(applicant.created_at)}
+                </span>
+                <span className="krew-db-crew-record">{formatCrewRecord(applicant)}</span>
               </div>
-              <div className="krew-job-card-side">
+              <div className="krew-db-crew-actions">
+                <Link to={`/crew/${applicant.crew_member_id}`} className="krew-dash-text-btn">
+                  View profile
+                </Link>
                 {applicant.status === 'pending' ? (
                   <button
                     type="button"
-                    className="krew-button-primary krew-dash-post-btn"
+                    className="krew-button-primary krew-button-inline krew-db-small-btn"
                     disabled={acceptingId !== null}
                     onClick={() => handleAccept(applicant.crew_member_id)}
                   >
                     {acceptingId === applicant.crew_member_id ? 'Accepting…' : 'Accept'}
                   </button>
                 ) : (
-                  <span className={`krew-status-pill ${applicant.status}`}>{applicant.status}</span>
+                  <span className={`krew-status-pill ${applicant.status}`}>{STATUS_LABELS[applicant.status] || applicant.status}</span>
                 )}
               </div>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </div>
   );

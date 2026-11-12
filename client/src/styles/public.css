@@ -2051,7 +2051,9 @@
 
 /* Plain back link - still used by the Crew Profile loading / not-found state */
 .krew-gig-back-link {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   color: var(--color-text-soft);
   text-decoration: none;
   font-size: 14px;

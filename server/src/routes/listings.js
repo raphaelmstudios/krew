@@ -195,7 +195,8 @@ listingsRouter.get('/:id/applicants', requireRole('organizer'), (req, res) => {
   const applicants = db
     .prepare(
       `SELECT a.id AS application_id, a.status, a.created_at,
-              u.id AS crew_member_id, u.name AS crew_member_name
+              u.id AS crew_member_id, u.name AS crew_member_name,
+              u.profile_photo_path, u.professional_role, u.years_experience
        FROM job_applications a
        JOIN users u ON u.id = a.crew_member_id
        WHERE a.listing_id = ?

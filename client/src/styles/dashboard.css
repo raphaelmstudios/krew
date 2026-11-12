@@ -310,10 +310,10 @@
 }
 
 .krew-pilot-banner-dismiss {
+  display: inline-flex;
   background: none;
   border: none;
   color: inherit;
-  font-size: 20px;
   line-height: 1;
   cursor: pointer;
   padding: 0 2px;
@@ -784,7 +784,54 @@
   height: 7px;
   border-radius: 50%;
   background: var(--color-brand);
-  margin-top: 6px;
+  margin: 6px 0 0 auto;
+}
+
+/* Bare type icon at the start of each notification - brand-coloured while unread */
+.krew-notif-item-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--color-text-faint);
+}
+
+.krew-notif-item.unread .krew-notif-item-icon {
+  color: var(--color-brand-text);
+}
+
+/* Back link at the top of a sub-view inside the dashboard shell (e.g. a gig's applicants) */
+.krew-db-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 18px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-soft);
+  cursor: pointer;
+}
+
+.krew-db-back:hover {
+  color: var(--color-text);
+}
+
+/* The unread tint is lavender in light mode; on plum it washed out, so dark mode uses the
+   sunken surface instead (same fix as the pilot banner). */
+:root[data-theme='dark'] .krew-notif-item.unread,
+:root[data-theme='dark'] .krew-notif-item.unread:hover {
+  background: var(--color-surface-sunken);
+  filter: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .krew-notif-item.unread,
+  :root:not([data-theme='light']) .krew-notif-item.unread:hover {
+    background: var(--color-surface-sunken);
+    filter: none;
+  }
 }
 
 .krew-notif-item-text {

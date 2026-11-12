@@ -7,19 +7,16 @@ import {
   Users,
   Wallet,
   ArrowRight,
-  FileText,
   BadgeCheck,
   Clock,
   Timer,
-  Scale,
-  Bell,
-  UserRoundCheck,
 } from 'lucide-react';
 import PostListingForm from './PostListingForm.jsx';
 import ListingApplicants from './ListingApplicants.jsx';
 import HireForm from './HireForm.jsx';
 import JobCard from './JobCard.jsx';
 import DashboardShell from '../components/DashboardShell.jsx';
+import { notificationIcon } from '../components/NotificationBell.jsx';
 import PilotSurveyBanner from '../components/PilotSurveyBanner.jsx';
 import InfoTooltip from '../components/InfoTooltip.jsx';
 import ListingPhoto from '../components/ListingPhoto.jsx';
@@ -77,15 +74,6 @@ function timeAgo(value) {
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours}h ago`;
   return `${Math.floor(hours / 24)}d ago`;
-}
-
-function activityIcon(type) {
-  if (type.startsWith('application')) return FileText;
-  if (type === 'hired') return UserRoundCheck;
-  if (type.startsWith('dispute')) return Scale;
-  if (type === 'payment_due_reminder') return Clock;
-  if (type.startsWith('payment')) return Wallet;
-  return Bell;
 }
 
 export default function OrganizerDashboard({ user, onLogout }) {
@@ -327,7 +315,7 @@ export default function OrganizerDashboard({ user, onLogout }) {
               {activity && activity.length > 0 && (
                 <ul className="krew-db-activity">
                   {activity.slice(0, 5).map((item) => {
-                    const Icon = activityIcon(item.type);
+                    const Icon = notificationIcon(item.type);
                     return (
                       <li key={item.id} className={item.read_at ? '' : 'unread'}>
                         <Icon size={20} strokeWidth={1.4} aria-hidden="true" />

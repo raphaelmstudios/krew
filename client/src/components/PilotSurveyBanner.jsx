@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { X } from 'lucide-react';
 
 // This banner is shown to users during the pilot phase of KREW, encouraging them to take a survey about their experience. 
 // It is dismissible, and the dismissal state is stored in localStorage so that it persists across page reloads and sessions in the same browser.
@@ -39,7 +40,7 @@ export default function PilotSurveyBanner() {
           Take the survey
         </a>
         <button type="button" className="krew-pilot-banner-dismiss" onClick={handleDismiss} aria-label="Dismiss">
-          &times;
+          <X size={18} strokeWidth={1.75} aria-hidden="true" />
         </button>
       </div>
     </div>
