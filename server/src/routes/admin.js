@@ -4,9 +4,14 @@
 // Task d1-7 locked this down - every route below requires a logged-in admin session now.
 
 import express from 'express';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { db } from '../db.js';
 import { requireAdmin } from '../middleware/auth.js';
 import { createNotification } from '../notifications.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const adminRouter = express.Router();
 
@@ -67,7 +72,7 @@ adminRouter.get('/disputes', (req, res) => {
     .prepare(
         `SELECT d.id, d.reason, d.details, d.status, d.resolution_notes, d.resolved_at, d.created_at,
                 d.transaction_id, d.raised_by, raiser.name AS raised_by_name, raiser.role AS raised_by_role,
-                t.amount, t.due_date, t.job_description,
+                t.amount, t.due_date, t.job_description, l.title, l.category,
                 t.organizer_id, org.name AS organizer_name,
                 t.crew_member_id, crew.name AS crew_member_name,
                 t.organizer_confirmed_at, t.organizer_confirmed_amount,
@@ -77,6 +82,7 @@ adminRouter.get('/disputes', (req, res) => {
          JOIN users raiser ON raiser.id = d.raised_by
          JOIN users org ON org.id = t.organizer_id
          JOIN users crew ON crew.id = t.crew_member_id
+         LEFT JOIN job_listings l ON l.id = t.listing_id
          ORDER BY CASE d.status WHEN 'open' THEN 0 ELSE 1 END, d.created_at ASC`
     )
     .all();
@@ -172,4 +178,75 @@ adminRouter.post('/disputes/:id/resolve', (req, res) => {
     createNotification(resolvedTransaction.crew_member_id, 'dispute_resolved', resolutionMessage, '/dashboard');
 
     res.json({ id: disputeId, status: 'resolved', outcome });
+});
+
+// Lets an admin actually look at the ID document and selfie a pending account uploaded,
+// so an approval is a real check rather than a guess. Admin-only (requireAdmin above) and
+// never cached - these files stay off the public /uploads routes on purpose (see index.js).
+// Paths are stored relative to server/uploads; on Windows they're saved with backslashes,
+// so they're normalised first, and anything that would resolve outside the uploads folder
+// is refused.
+const UPLOAD_ROOT = path.join(__dirname, '..', '..', 'uploads');
+
+adminRouter.get('/users/:id/files/:kind', (req, res) => {
+    const userId = Number(req.params.id);
+    const column = req.params.kind === 'id' ? 'id_document_path' : req.params.kind === 'selfie' ? 'selfie_path' : null;
+    if (!Number.isInteger(userId) || userId <= 0 || !column) {
+        return res.status(400).json({ error: 'Invalid request' });
+    }
+
+    const user = db.prepare(`SELECT ${column} AS file_path FROM users WHERE id = ?`).get(userId);
+    if (!user || !user.file_path) {
+        return res.status(404).json({ error: 'No file uploaded for this account.' });
+    }
+
+    const fullPath = path.resolve(UPLOAD_ROOT, user.file_path.replace(/\\/g, '/'));
+    if (!fullPath.startsWith(path.resolve(UPLOAD_ROOT) + path.sep) || !fs.existsSync(fullPath)) {
+        return res.status(404).json({ error: 'That file could not be found.' });
+    }
+
+    res.set('Cache-Control', 'no-store');
+    res.sendFile(fullPath);
+});
+
+// The numbers behind the admin Overview and Analytics screens. Every figure is a straight
+// count (or sum) over the live tables - nothing estimated or projected. "Payment volume"
+// only adds up jobs both sides confirmed (or an admin settled), using the agreed amount,
+// since that's the only money KREW can actually vouch for.
+adminRouter.get('/stats', (req, res) => {
+    const count = (sql, ...params) => db.prepare(sql).get(...params).n;
+
+    res.json({
+        users: {
+            pending: count(`SELECT COUNT(*) AS n FROM users WHERE verification_status = 'pending'`),
+            crew: count(`SELECT COUNT(*) AS n FROM users WHERE role = 'crew_member' AND verification_status = 'approved'`),
+            organizers: count(`SELECT COUNT(*) AS n FROM users WHERE role = 'organizer' AND verification_status = 'approved'`),
+            rejected: count(`SELECT COUNT(*) AS n FROM users WHERE verification_status = 'rejected'`),
+            joined_last_7_days: count(
+                `SELECT COUNT(*) AS n FROM users WHERE role != 'admin' AND created_at >= datetime('now', '-7 days')`
+            ),
+        },
+        listings: {
+            open: count(`SELECT COUNT(*) AS n FROM job_listings WHERE status = 'open'`),
+            filled: count(`SELECT COUNT(*) AS n FROM job_listings WHERE status = 'filled'`),
+            cancelled: count(`SELECT COUNT(*) AS n FROM job_listings WHERE status = 'cancelled'`),
+            applications: count(`SELECT COUNT(*) AS n FROM job_applications`),
+        },
+        jobs: {
+            total: count(`SELECT COUNT(*) AS n FROM transactions`),
+            pending: count(`SELECT COUNT(*) AS n FROM transactions WHERE status = 'pending'`),
+            confirmed: count(`SELECT COUNT(*) AS n FROM transactions WHERE status = 'confirmed'`),
+            disputed: count(`SELECT COUNT(*) AS n FROM transactions WHERE status = 'disputed'`),
+            confirmed_volume: db
+                .prepare(
+                    `SELECT COALESCE(SUM(COALESCE(organizer_confirmed_amount, amount)), 0) AS total
+                     FROM transactions WHERE status = 'confirmed'`
+                )
+                .get().total,
+        },
+        disputes: {
+            open: count(`SELECT COUNT(*) AS n FROM disputes WHERE status = 'open'`),
+            resolved: count(`SELECT COUNT(*) AS n FROM disputes WHERE status = 'resolved'`),
+        },
+    });
 });

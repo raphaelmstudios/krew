@@ -82,6 +82,7 @@ jobsRouter.post('/', requireRole('organizer'), (req, res) => {
 // Admins don't have jobs of their own, so they get an empty list.
 // The jobs are returned in descending order of creation date, so the most recent jobs appear first.
 // Each job also includes both sides' payment confirmation details (date confirmed and amount confirmed), if either side has submitted one yet.
+// Jobs that came from an open listing also carry that listing's title, category, location and photo (null for direct hires).
 jobsRouter.get('/mine', requireAuth, (req, res) => {
   const { id, role } = req.user;
 
@@ -91,9 +92,11 @@ jobsRouter.get('/mine', requireAuth, (req, res) => {
         `SELECT t.id, t.amount, t.due_date, t.job_description, t.status, t.created_at,
                 t.organizer_confirmed_at, t.organizer_confirmed_amount,
                 t.crew_confirmed_at, t.crew_confirmed_amount,
-                cm.id AS crew_member_id, cm.name AS crew_member_name
+                cm.id AS crew_member_id, cm.name AS crew_member_name,
+                l.title, l.category, l.location, l.photo_path
          FROM transactions t
          JOIN users cm ON cm.id = t.crew_member_id
+         LEFT JOIN job_listings l ON l.id = t.listing_id
          WHERE t.organizer_id = ?
          ORDER BY t.created_at DESC`
       )
@@ -107,9 +110,11 @@ jobsRouter.get('/mine', requireAuth, (req, res) => {
         `SELECT t.id, t.amount, t.due_date, t.job_description, t.status, t.created_at,
                 t.organizer_confirmed_at, t.organizer_confirmed_amount,
                 t.crew_confirmed_at, t.crew_confirmed_amount,
-                org.id AS organizer_id, org.name AS organizer_name
+                org.id AS organizer_id, org.name AS organizer_name,
+                l.title, l.category, l.location, l.photo_path
          FROM transactions t
          JOIN users org ON org.id = t.organizer_id
+         LEFT JOIN job_listings l ON l.id = t.listing_id
          WHERE t.crew_member_id = ?
          ORDER BY t.created_at DESC`
       )

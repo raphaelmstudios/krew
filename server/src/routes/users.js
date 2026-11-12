@@ -92,7 +92,7 @@ function splitSkills(skills) {
 usersRouter.get('/crew-directory', requireRole('organizer'), (req, res) => {
   const crewMembers = db
     .prepare(
-      `SELECT id, name, availability_status, professional_role, skills
+      `SELECT id, name, availability_status, professional_role, skills, profile_photo_path, years_experience
        FROM users
        WHERE role = 'crew_member' AND verification_status = 'approved'
        ORDER BY name ASC`
