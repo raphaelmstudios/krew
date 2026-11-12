@@ -104,7 +104,7 @@ export default function JobCard({ job, viewerRole, onConfirmed }) {
         setMomentJob({ ...job, ...data });
       }
       onConfirmed();
-    } catch (err) {
+    } catch {
       // fetch itself throws when there's no network connection at all.
       setBanner({ type: 'error', text: 'Could not reach the server. Check your connection and try again.' });
     } finally {
@@ -141,7 +141,7 @@ export default function JobCard({ job, viewerRole, onConfirmed }) {
       setDisputing(false);
       setDisputeReason('');
       onConfirmed();
-    } catch (err) {
+    } catch {
       setDisputeBanner({ type: 'error', text: 'Could not reach the server. Check your connection and try again.' });
     } finally {
       setDisputeSubmitting(false);

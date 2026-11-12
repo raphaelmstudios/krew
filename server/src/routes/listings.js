@@ -6,11 +6,13 @@ import express from 'express';
 import multer from 'multer';
 import path from 'node:path';
 import fs from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import { db } from '../db.js';
 import { requireRole } from '../middleware/auth.js';
 import { computeOrganizerRecord, computeCrewRecord } from './users.js';
 import { createNotification } from '../notifications.js';
+import { extensionFor, verifySavedFiles } from '../uploadSafety.js';
+import { text, LIMITS } from '../security.js';
+import { UPLOAD_ROOT } from '../paths.js';
 
 export const listingsRouter = express.Router();
 
@@ -31,8 +33,7 @@ export const LISTING_CATEGORIES = [
 // Listing photos - one per listing, uploaded by its organizer after the listing is
 // created (so the main create route can stay plain JSON). Saved to uploads/listing-photos
 // and served publicly (see index.js), same pattern and limits as profile photos.
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const UPLOAD_ROOT = path.join(__dirname, '..', '..', 'uploads');
+// UPLOAD_ROOT comes from paths.js (UPLOADS_DIR environment variable, or server/uploads).
 const LISTING_PHOTOS_DIR = path.join(UPLOAD_ROOT, 'listing-photos');
 fs.mkdirSync(LISTING_PHOTOS_DIR, { recursive: true });
 
@@ -44,8 +45,7 @@ const uploadListingPhoto = multer({
     destination: (req, file, cb) => cb(null, LISTING_PHOTOS_DIR),
     filename: (req, file, cb) => {
       // Never trust the browser's filename - build our own from the listing id and the time.
-      const safeExt = path.extname(file.originalname).toLowerCase().replace(/[^a-z0-9.]/g, '');
-      cb(null, `listing-${Number(req.params.id)}-${Date.now()}${safeExt}`);
+      cb(null, `listing-${Number(req.params.id)}-${Date.now()}${extensionFor(file.mimetype)}`);
     },
   }),
   fileFilter: (req, file, cb) => {
@@ -79,32 +79,47 @@ listingsRouter.post('/', requireRole('organizer'), (req, res) => {
   if (!Number.isFinite(amountNumber) || amountNumber <= 0) {
     return res.status(400).json({ error: 'Enter an amount greater than zero.' });
   }
+  if (amountNumber > LIMITS.maxAmount) {
+    return res.status(400).json({ error: `The amount can't be more than KES ${LIMITS.maxAmount.toLocaleString()}.` });
+  }
 
-  if (!due_date || Number.isNaN(Date.parse(due_date))) {
+  if (typeof due_date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(due_date) || Number.isNaN(Date.parse(due_date))) {
     return res.status(400).json({ error: 'Enter a valid due date.' });
   }
   if (startOfDay(due_date) < startOfDay(new Date())) {
     return res.status(400).json({ error: 'Due date cannot be in the past.' });
   }
 
-  if (!title || !title.trim()) {
+  const cleanTitle = text(title, LIMITS.title);
+  if (cleanTitle === null) {
+    return res.status(400).json({ error: `Keep the title to ${LIMITS.title} characters or fewer.` });
+  }
+  if (!cleanTitle) {
     return res.status(400).json({ error: 'Give the job a short title.' });
   }
   if (!category || !LISTING_CATEGORIES.includes(category)) {
     return res.status(400).json({ error: `Category must be one of: ${LISTING_CATEGORIES.join(', ')}.` });
   }
-  if (!location || !location.trim()) {
+  const cleanLocation = text(location, LIMITS.location);
+  if (cleanLocation === null) {
+    return res.status(400).json({ error: `Keep the location to ${LIMITS.location} characters or fewer.` });
+  }
+  if (!cleanLocation) {
     return res.status(400).json({ error: 'Enter where the job is located.' });
   }
 
-  const description = job_description && job_description.trim() ? job_description.trim() : null;
+  const cleanDescription = text(job_description, LIMITS.description);
+  if (cleanDescription === null) {
+    return res.status(400).json({ error: `Keep the description to ${LIMITS.description} characters or fewer.` });
+  }
+  const description = cleanDescription || null;
 
   const result = db
     .prepare(
       `INSERT INTO job_listings (organizer_id, amount, due_date, job_description, title, category, location, status)
        VALUES (?, ?, ?, ?, ?, ?, ?, 'open')`
     )
-    .run(organizer.id, amountNumber, due_date, description, title.trim(), category, location.trim());
+    .run(organizer.id, amountNumber, due_date, description, cleanTitle, category, cleanLocation);
 
   res.status(201).json({
     id: result.lastInsertRowid,
@@ -112,9 +127,9 @@ listingsRouter.post('/', requireRole('organizer'), (req, res) => {
     amount: amountNumber,
     due_date,
     job_description: description,
-    title: title.trim(),
+    title: cleanTitle,
     category,
-    location: location.trim(),
+    location: cleanLocation,
     status: 'open',
   });
 });
@@ -144,6 +159,9 @@ listingsRouter.post('/:id/photo', requireRole('organizer'), (req, res) => {
     }
     if (!req.file) {
       return res.status(400).json({ error: 'Choose a photo to upload.' });
+    }
+    if (!verifySavedFiles([req.file])) {
+      return res.status(400).json({ error: "That file isn't a real JPG or PNG photo." });
     }
 
     const relativePath = `listing-photos/${req.file.filename}`;
@@ -257,7 +275,7 @@ listingsRouter.post('/:id/accept', requireRole('organizer'), (req, res) => {
     crewMemberId,
     'application_accepted',
     `Your application for "${listing.title || 'a job'}" was accepted - you're hired!`,
-    '/dashboard'
+    '/dashboard?section=jobs'
   );
 
   res.status(201).json({
@@ -381,7 +399,7 @@ listingsRouter.post('/:id/apply', requireRole('crew_member'), (req, res) => {
     listing.organizer_id,
     'application_received',
     `${crewMember.name} applied to your listing "${listing.title || 'your job listing'}".`,
-    '/dashboard'
+    '/dashboard?section=gigs'
   );
 
   res.status(201).json({ listing_id: listingId, status: 'pending' });

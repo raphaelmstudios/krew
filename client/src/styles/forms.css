@@ -1,28 +1,5 @@
 /* Auth page styles */
 
-.krew-auth-page {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 48px 24px 80px 24px;
-}
-
-/* Wordmark - also used as a clickable link, so no underline or inline gap */
-.krew-wordmark {
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: var(--color-text);
-  margin-bottom: 40px;
-  text-decoration: none;
-  display: inline-block;
-}
-
-.krew-wordmark span {
-  color: var(--color-brand-text);
-}
-
 /* Auth split layout */
 .krew-auth-split {
   min-height: 100vh;
@@ -64,16 +41,6 @@
   background: var(--color-soft-violet);
   clip-path: polygon(30% 100%, 100% 20%, 100% 100%);
   opacity: 0.5;
-}
-
-.krew-auth-shape-3 {
-  width: 60%;
-  height: 30%;
-  top: 8%;
-  right: -10%;
-  background: var(--color-lavender-mist);
-  clip-path: polygon(40% 0, 100% 0, 70% 100%, 0 100%);
-  opacity: 0.12;
 }
 
 /* Photo behind the auth panel's shards - the plum shows through until the image loads */
@@ -498,4 +465,56 @@
   textarea.krew-field-input {
     font-size: 16px;
   }
+}
+
+/* Password reset (ForgotPassword.jsx, ResetPassword.jsx) and the "Forgot password?" link on Login */
+.krew-field-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.krew-forgot-link {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-brand-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.krew-forgot-link:hover {
+  color: var(--color-text);
+}
+
+.krew-reset-sent {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.krew-reset-sent svg {
+  color: var(--color-brand-text);
+}
+
+.krew-reset-sent p {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--color-text-soft);
+}
+
+.krew-reset-sent p strong {
+  color: var(--color-text);
+}
+
+.krew-reset-link {
+  text-decoration: none;
+  text-align: center;
+}
+
+.krew-reset-code-input {
+  letter-spacing: 0.12em;
+  font-weight: 600;
 }

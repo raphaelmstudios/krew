@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, CircleHelp, LogOut } from 'lucide-react';
+import { Menu, X, CircleHelp, LogOut, KeyRound } from 'lucide-react';
 import Logo from './Logo.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 import NotificationBell from './NotificationBell.jsx';
+import ChangePasswordDialog from './ChangePasswordDialog.jsx';
 
 function initials(name) {
   return (name || '')
@@ -21,6 +22,7 @@ function initials(name) {
 // in from the left behind a menu button.
 export default function DashboardShell({ user, navItems, active, onNavigate, onLogout, children }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
 
   // Close the phone menu with Esc.
   useEffect(() => {
@@ -71,6 +73,17 @@ export default function DashboardShell({ user, navItems, active, onNavigate, onL
               <small>Read the FAQ</small>
             </span>
           </Link>
+          <button
+            type="button"
+            className="krew-shell-logout"
+            onClick={() => {
+              setMenuOpen(false);
+              setChangingPassword(true);
+            }}
+          >
+            <KeyRound size={20} strokeWidth={1.5} aria-hidden="true" />
+            Change password
+          </button>
           <button type="button" className="krew-shell-logout" onClick={onLogout}>
             <LogOut size={20} strokeWidth={1.5} aria-hidden="true" />
             Log out
@@ -100,6 +113,7 @@ export default function DashboardShell({ user, navItems, active, onNavigate, onL
         </header>
 
         <main className="krew-shell-content">{children}</main>
+        {changingPassword && <ChangePasswordDialog onClose={() => setChangingPassword(false)} />}
       </div>
     </div>
   );

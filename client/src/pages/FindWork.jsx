@@ -5,6 +5,9 @@ import PublicNav from '../components/PublicNav.jsx';
 import PublicFooter from '../components/PublicFooter.jsx';
 import InfoTooltip from '../components/InfoTooltip.jsx';
 import ListingPhoto from '../components/ListingPhoto.jsx';
+import usePageMeta from '../usePageMeta.js';
+import { PAGE_META } from '../pageMeta.js';
+import SkeletonCards from '../components/SkeletonCards.jsx';
 
 // The public Find Work page, laid out like the moodboard's Find Work panel: a hero with a
 // big search bar, a filter sidebar (category, location, date, pay), category tabs with
@@ -61,6 +64,7 @@ function withinDays(value, days) {
 }
 
 export default function FindWork() {
+  usePageMeta(PAGE_META['/find-work']);
   const [listings, setListings] = useState(null);
   const [error, setError] = useState(null);
 
@@ -181,10 +185,10 @@ export default function FindWork() {
           </div>
         </div>
         <div className="krew-fw-hero-visual" aria-hidden="true">
-          {/* Uses images/find-work/hero.jpg if it exists, otherwise falls back to the homepage's crew photo */}
+          {/* Borrows the homepage's crew photo until Find Work gets its own (save it as images/find-work/hero.webp and point this at it) */}
           <div
             className="krew-photo-slot krew-fw-hero-photo"
-            style={{ backgroundImage: "url('/images/find-work/hero.jpg'), url('/images/home/crew-card.jpg')" }}
+            style={{ backgroundImage: "url('/images/home/crew-card.webp')" }}
           />
           <span className="krew-shard krew-fw-hero-shard-1" />
           <span className="krew-shard krew-fw-hero-shard-2" />
@@ -311,15 +315,19 @@ export default function FindWork() {
 
           {error && <div className="krew-form-banner error">{error}</div>}
 
-          {listings === null && !error && <div className="krew-dash-loading-note">Loading open gigs…</div>}
+          {listings === null && !error && <SkeletonCards count={3} label="Loading open gigs…" />}
 
           {filtered && filtered.length === 0 && (
             <div className="krew-dash-empty">
               <p>{listings.length === 0 ? 'No open gigs right now - check back soon.' : 'No open gigs match those filters right now.'}</p>
-              {listings.length > 0 && (
+              {listings.length > 0 ? (
                 <button type="button" className="krew-button-secondary krew-button-inline" onClick={clearFilters}>
                   Clear filters
                 </button>
+              ) : (
+                <Link to="/register" className="krew-button-primary krew-button-inline">
+                  Create a crew profile so organizers can find you
+                </Link>
               )}
             </div>
           )}

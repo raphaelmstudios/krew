@@ -1,8 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import PublicNav from '../components/PublicNav.jsx';
 import PublicFooter from '../components/PublicFooter.jsx';
 import CrewCard from '../components/CrewCard.jsx';
+import usePageMeta from '../usePageMeta.js';
+import { PAGE_META } from '../pageMeta.js';
+import SkeletonCards from '../components/SkeletonCards.jsx';
 
 // The public Hire Crew page, laid out like the moodboard's Hire Crew panel: a hero with the
 // headline, a search bar and a portrait photo on the right, then a grid of photo-led crew
@@ -16,6 +20,7 @@ const AVAILABILITY_TABS = [
 ];
 
 export default function HireCrew() {
+  usePageMeta(PAGE_META['/hire-crew']);
   const [crewMembers, setCrewMembers] = useState(null);
   const [error, setError] = useState(null);
 
@@ -89,10 +94,10 @@ export default function HireCrew() {
           </div>
         </div>
         <div className="krew-hc-hero-visual" aria-hidden="true">
-          {/* Uses images/hire-crew/hero.jpg if it exists, otherwise falls back to the homepage's organizer photo */}
+          {/* Borrows the homepage's organizer photo until Hire Crew gets its own (save it as images/hire-crew/hero.webp and point this at it) */}
           <div
             className="krew-photo-slot krew-hc-hero-photo"
-            style={{ backgroundImage: "url('/images/hire-crew/hero.jpg'), url('/images/home/organizer-card.jpg')" }}
+            style={{ backgroundImage: "url('/images/home/organizer-card.webp')" }}
           />
           <span className="krew-shard krew-hc-hero-shard-1" />
           <span className="krew-shard krew-hc-hero-shard-2" />
@@ -119,15 +124,19 @@ export default function HireCrew() {
 
         {error && <div className="krew-form-banner error">{error}</div>}
 
-        {crewMembers === null && !error && <div className="krew-dash-loading-note">Loading crew members…</div>}
+        {crewMembers === null && !error && <SkeletonCards count={3} label="Loading crew members…" variant="grid" />}
 
         {filtered && filtered.length === 0 && (
           <div className="krew-dash-empty">
             <p>{crewMembers.length === 0 ? 'No crew members are listed yet - check back soon.' : 'No crew members match that search right now.'}</p>
-            {crewMembers.length > 0 && (
+            {crewMembers.length > 0 ? (
               <button type="button" className="krew-button-secondary krew-button-inline" onClick={clearFilters}>
                 Clear search
               </button>
+            ) : (
+              <Link to="/dashboard?section=post" className="krew-button-primary krew-button-inline">
+                Post a gig and let crew apply
+              </Link>
             )}
           </div>
         )}

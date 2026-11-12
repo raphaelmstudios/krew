@@ -21,15 +21,17 @@ export default function RoleGate({ role, loginHeading, loginSubhead, forbiddenMe
 
   async function checkSession() {
     try {
-      const response = await fetch('/api/auth/me');
-      if (!response.ok) {
+      // /api/auth/session answers 200 with user: null when nobody is logged in, so a
+      // logged-out visit doesn't show up as an error in the browser console.
+      const response = await fetch('/api/auth/session');
+      const loggedInUser = response.ok ? (await response.json()).user : null;
+      if (!loggedInUser) {
         setStatus('loggedOut');
         return;
       }
-      const loggedInUser = await response.json();
       setUser(loggedInUser);
       setStatus(allowedRoles.includes(loggedInUser.role) ? 'ready' : 'forbidden');
-    } catch (err) {
+    } catch {
       setStatus('loggedOut');
     }
   }
@@ -42,8 +44,8 @@ export default function RoleGate({ role, loginHeading, loginSubhead, forbiddenMe
 
   if (status === 'checking') {
     return (
-      <div className="krew-admin-empty" style={{ maxWidth: 480, margin: '80px auto' }}>
-        Checking your session…
+      <div style={{ maxWidth: 480, margin: '80px auto', textAlign: 'center' }}>
+        <span className="krew-dash-loading-note" role="status">Checking your session…</span>
       </div>
     );
   }

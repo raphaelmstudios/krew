@@ -29,7 +29,7 @@ export default function ThemeToggle({ className = '' }) {
     document.documentElement.dataset.theme = next;
     try {
       localStorage.setItem(STORAGE_KEY, next);
-    } catch (err) {
+    } catch {
       // Storage blocked (private window etc.) - the switch still works for this visit.
     }
     setTheme(next);

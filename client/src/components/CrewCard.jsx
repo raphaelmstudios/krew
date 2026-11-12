@@ -38,7 +38,7 @@ function CrewPortrait({ crewMember }) {
   if (crewMember.profile_photo_path) {
     return (
       <div className="krew-hc-card-photo">
-        <img src={`/uploads/${crewMember.profile_photo_path}`} alt="" loading="lazy" />
+        <img src={`/uploads/${crewMember.profile_photo_path}`} alt="" loading="lazy" decoding="async" />
       </div>
     );
   }

@@ -4,10 +4,11 @@
 import express from 'express';
 import multer from 'multer';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
 import { db } from '../db.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
+import { extensionFor, verifySavedFiles } from '../uploadSafety.js';
+import { UPLOAD_ROOT } from '../paths.js';
 
 export const usersRouter = express.Router();
 
@@ -23,8 +24,7 @@ const WORK_HISTORY_LIMIT = 10; // most recent confirmed jobs shown on a public c
 // are never shown to anyone but an admin, this one is meant to be seen. Same
 // save-to-disk-not-the-database pattern as routes/documents.js: files live outside
 // client/server so the web server never serves them directly by accident.
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const PHOTO_UPLOAD_ROOT = path.join(__dirname, '..', '..', 'uploads');
+const PHOTO_UPLOAD_ROOT = UPLOAD_ROOT; // from paths.js (UPLOADS_DIR, or server/uploads)
 const PROFILE_PHOTOS_DIR = path.join(PHOTO_UPLOAD_ROOT, 'profile-photos');
 fs.mkdirSync(PROFILE_PHOTOS_DIR, { recursive: true });
 
@@ -35,9 +35,9 @@ const photoStorage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, PROFILE_PHOTOS_DIR),
   filename: (req, file, cb) => {
     // Never trust the filename the browser sends - build our own from the logged-in
-    // user's id and the current time instead.
-    const safeExt = path.extname(file.originalname).toLowerCase().replace(/[^a-z0-9.]/g, '');
-    cb(null, `user-${req.user.id}-profile-photo-${Date.now()}${safeExt}`);
+    // user's id and the current time instead, with the extension taken from the accepted
+    // file type (uploadSafety.js).
+    cb(null, `user-${req.user.id}-profile-photo-${Date.now()}${extensionFor(file.mimetype)}`);
   },
 });
 
@@ -65,8 +65,7 @@ const MAX_PORTFOLIO_IMAGES = 12;
 const portfolioStorage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, PORTFOLIO_PHOTOS_DIR),
   filename: (req, file, cb) => {
-    const safeExt = path.extname(file.originalname).toLowerCase().replace(/[^a-z0-9.]/g, '');
-    cb(null, `user-${req.user.id}-portfolio-${Date.now()}${safeExt}`);
+    cb(null, `user-${req.user.id}-portfolio-${Date.now()}${extensionFor(file.mimetype)}`);
   },
 });
 
@@ -224,8 +223,11 @@ usersRouter.post('/me/portfolio', requireRole('crew_member'), (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: 'Choose a photo to upload.' });
     }
+    if (!verifySavedFiles([req.file])) {
+      return res.status(400).json({ error: "That file isn't a real JPG or PNG photo." });
+    }
 
-    const relativePath = path.join('portfolio-photos', req.file.filename);
+    const relativePath = `portfolio-photos/${req.file.filename}`;
     const { lastInsertRowid } = db
       .prepare(`INSERT INTO portfolio_images (user_id, image_path) VALUES (?, ?)`)
       .run(req.user.id, relativePath);
@@ -275,8 +277,11 @@ usersRouter.post('/me/photo', requireAuth, (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: 'Choose a photo to upload.' });
     }
+    if (!verifySavedFiles([req.file])) {
+      return res.status(400).json({ error: "That file isn't a real JPG or PNG photo." });
+    }
 
-    const relativePath = path.join('profile-photos', req.file.filename);
+    const relativePath = `profile-photos/${req.file.filename}`;
 
     // If they already had a photo, swap it out and delete the old file so we don't
     // leave orphaned uploads behind every time someone updates their photo.
@@ -416,8 +421,7 @@ usersRouter.get('/:id/public-profile', (req, res) => {
   const workHistory = db
     .prepare(
       `SELECT t.id, l.title, l.category,
-              COALESCE(t.daraja_confirmed_at, MAX(t.organizer_confirmed_at, t.crew_confirmed_at),
-                       t.organizer_confirmed_at, t.crew_confirmed_at, t.due_date) AS confirmed_on
+              COALESCE(t.completed_at, t.due_date) AS confirmed_on
        FROM transactions t
        LEFT JOIN job_listings l ON l.id = t.listing_id
        WHERE t.crew_member_id = ? AND t.status = 'confirmed'

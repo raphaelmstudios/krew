@@ -1,98 +1,6 @@
 /* Dashboard Styles */
 
-.krew-dash-page {
-  min-height: 100vh;
-}
-
-.krew-dash-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 24px;
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface-card);
-}
-
-.krew-dash-header-right {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-}
-
-.krew-dash-greeting {
-  font-size: 13.5px;
-  color: var(--color-text-soft);
-  font-weight: 600;
-}
-
-.krew-dash-body {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 36px 24px 80px 24px;
-}
-
-/* Mobile pass (Day 3 checklist): .krew-dash-header had no flex-wrap, so on a phone-width
-   screen the bell + "Log out" on the right were pushed straight past the edge of the
-   viewport instead of wrapping - a real clipping bug, not just a cosmetic squeeze, found
-   by actually screenshotting these pages at 390px rather than assuming the existing flex
-   layout would hold up. */
-@media (max-width: 860px) {
-  .krew-dash-header {
-    flex-wrap: wrap;
-    gap: 10px;
-    padding: 16px 20px;
-  }
-
-  .krew-dash-header-right {
-    gap: 12px;
-    /* When the right-hand block wraps onto its own line below the wordmark/title, a
-       single flex item on a line with justify-content: space-between lands at the start
-       of that line (there's nothing to "space between" it and) - margin-left: auto is
-       the actual fix, pushing it to the end of its own line regardless. Found this by
-       screenshotting at 360px: without it, the bell + notification panel ended up
-       anchored near the LEFT edge of the screen instead of under the bell. */
-    margin-left: auto;
-  }
-
- 
-  .krew-dash-header-right .krew-notif-wrapper {
-    order: 1;
-  }
-
-  .krew-dash-body {
-    padding: 24px 16px 60px 16px;
-  }
-
-  .krew-dash-tabs {
-    max-width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-}
-
-.krew-dash-title-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-}
-
-.krew-dash-title {
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  margin: 0;
-}
-
-/* Post button on the dashboard */
-.krew-dash-post-btn {
-  width: auto;
-  padding: 11px 22px;
-  margin-top: 0;
-}
-
+/* Loading note (the spinner in front of it lives in index.css) */
 .krew-dash-loading-note {
   font-size: 13.5px;
   color: var(--color-text-soft);
@@ -118,51 +26,6 @@
   flex-direction: column;
   gap: 12px;
 }
-
-.krew-job-card {
-  background: var(--color-surface-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 18px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-}
-
-.krew-job-card-main {
-  min-width: 0;
-}
-
-.krew-job-card-crew {
-  font-size: 15px;
-  font-weight: 700;
-  margin-bottom: 4px;
-}
-
-.krew-job-card-desc {
-  font-size: 13.5px;
-  color: var(--color-text-soft);
-  margin-bottom: 6px;
-  line-height: 1.4;
-}
-
-.krew-job-card-meta {
-  font-size: 12.5px;
-  color: var(--color-text-faint);
-}
-
-.krew-job-card-side {
-  flex-shrink: 0;
-  text-align: right;
-}
-
-.krew-job-card-amount {
-  font-size: 15px;
-  font-weight: 700;
-  margin-bottom: 6px;
-}
-
 
 .krew-status-pill {
   display: inline-block;
@@ -206,38 +69,10 @@
   color: var(--color-text-soft);
 }
 
-
 .krew-status-pill.new {
   background: var(--color-brand-bg);
   color: var(--color-ink-plum);
   text-transform: none;
-}
-
-.krew-job-card-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 8px;
-  justify-content: flex-end;
-}
-
-
-@media (max-width: 860px) {
-  .krew-job-card {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .krew-job-card-side {
-    text-align: left;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-
-  .krew-job-card-actions {
-    justify-content: flex-start;
-  }
 }
 
 .krew-dash-text-btn {
@@ -254,24 +89,6 @@
 
 .krew-dash-text-btn.danger {
   color: var(--color-danger);
-}
-
-.krew-dash-back-link {
-  background: none;
-  border: none;
-  padding: 0;
-  margin-bottom: 18px;
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--color-text-soft);
-  cursor: pointer;
-  font-family: inherit;
-}
-
-.krew-dash-listing-summary {
-  font-size: 13px;
-  color: var(--color-text-soft);
-  margin: 4px 0 0 0;
 }
 
 /* Pilot readiness: the survey banner shown to organizers/crew during the Sprint 4 pilot
@@ -336,33 +153,6 @@
    forms.css - rounded, but to the controlled scale, not a 999px pill,
    since these ARE buttons (each one is a click target that switches
    tabs). */
-.krew-dash-tabs {
-  display: flex;
-  gap: 4px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  padding: 4px;
-  margin-bottom: 24px;
-  width: fit-content;
-}
-
-.krew-dash-tab {
-  padding: 9px 20px;
-  border-radius: var(--radius-lg);
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--color-text-soft);
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
-}
-
-.krew-dash-tab.active {
-  background: var(--color-brand);
-  color: var(--color-text-on-brand);
-}
 
 .krew-dash-form-card {
   max-width: 100%;
@@ -413,13 +203,6 @@
 /* My profile card (crew self-service: photo, professional role, skills,
    availability) - everything an organizer sees about a crew member on the
    public Hire Crew directory, editable in one place. */
-.krew-dash-profile-card {
-  background: var(--color-surface-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 24px 28px;
-  margin-bottom: 24px;
-}
 
 .krew-dash-profile-top {
   display: flex;
@@ -487,11 +270,6 @@
    Profile page). A plain grid of square thumbnails, each with a small
    remove button in the corner, plus one more tile that's the upload
    control itself rather than a separate button elsewhere on the page. */
-.krew-dash-portfolio {
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px solid var(--color-border);
-}
 
 .krew-portfolio-grid {
   display: grid;
@@ -566,29 +344,7 @@
   display: none;
 }
 
-
 /* Availability */
-.krew-dash-availability {
-  background: var(--color-surface-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 16px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-}
-
-/* Nested inside .krew-dash-profile-card above, rather than its own standalone
-   card at the top of the dashboard - no outer border/margin needed there, a
-   plain divider reads better as "part of the same profile". */
-.krew-dash-availability-inline {
-  background: var(--color-surface);
-  margin: 20px 0 0 0;
-  border-radius: var(--radius-md);
-}
 
 .krew-dash-availability-note {
   display: block;
@@ -598,70 +354,6 @@
 }
 
 /* Directory hires */
-.krew-dash-directory-hires {
-  margin-top: 36px;
-}
-
-.krew-dash-subtitle {
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  margin: 0 0 14px 0;
-}
-
-/* Confirmable job cards */
-.krew-job-card-confirmable {
-  flex-direction: column;
-  align-items: stretch;
-}
-
-.krew-job-card-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-}
-
-.krew-confirmation-block {
-  border-top: 1px solid var(--color-border);
-  padding-top: 14px;
-  margin-top: 14px;
-}
-
-.krew-confirmation-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  font-size: 13px;
-  color: var(--color-text-soft);
-  padding: 4px 0;
-}
-
-.krew-confirmation-form {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 10px;
-  flex-wrap: wrap;
-}
-
-.krew-confirmation-form .krew-field-input {
-  flex: 1;
-  min-width: 140px;
-}
-
-.krew-confirmation-form .krew-form-banner {
-  flex: 1 0 100%;
-  margin: 0 0 4px 0;
-}
-
-.krew-confirmation-form-actions {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex-shrink: 0;
-}
 
 /* Notification bell (NotificationBell.jsx) - dropped into the header of both dashboards
    and Admin.jsx, so it lives here rather than in admin.css even though Admin uses it too. */
@@ -853,16 +545,6 @@
 }
 /* Organizer's own listing cards - the listing photo (or its placeholder) on the left, and
    the "Add photo / Change photo" control styled as a text button over a hidden file input */
-.krew-dash-listing-card {
-  align-items: center;
-}
-
-.krew-dash-listing-photo {
-  flex-shrink: 0;
-  width: 104px;
-  aspect-ratio: 4 / 3;
-  border-radius: var(--radius-md);
-}
 
 .krew-dash-photo-btn {
   cursor: pointer;
@@ -870,13 +552,6 @@
 
 .krew-dash-photo-btn input[type='file'] {
   display: none;
-}
-
-@media (max-width: 860px) {
-  .krew-dash-listing-photo {
-    width: 100%;
-    aspect-ratio: 16 / 9;
-  }
 }
 
 /* ===================================================================== */
@@ -2966,4 +2641,78 @@ body.krew-modal-open {
   .krew-shell-content .krew-dash-form-card {
     padding: 22px 18px;
   }
+}
+
+/* Pending account that hasn't uploaded its ID yet - the one thing left to do */
+.krew-db-verify {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 24px;
+  padding: 22px 24px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-card);
+}
+
+.krew-db-verify p {
+  margin: 0;
+  max-width: 520px;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--color-text-soft);
+}
+
+.krew-db-verify p strong {
+  color: var(--color-text);
+}
+
+.krew-db-verify a {
+  text-decoration: none;
+}
+
+/* Password reset queue (Admin.jsx, section "resets") */
+.krew-adm-call {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-brand-text);
+  text-decoration: none;
+}
+
+.krew-adm-call:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.krew-adm-code {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  border: 1.5px dashed var(--color-brand-text);
+}
+
+.krew-adm-code span,
+.krew-adm-code small {
+  font-size: 11.5px;
+  color: var(--color-text-soft);
+}
+
+.krew-adm-code span {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.krew-adm-code strong {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 20px;
+  letter-spacing: 0.08em;
 }

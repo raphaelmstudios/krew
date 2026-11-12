@@ -72,7 +72,7 @@ export default function Register({ onRegistered }) {
       }
 
       setCreatedUser(data);
-    } catch (err) {
+    } catch {
       // fetch itself throws when there's no network connection at all.
       setBanner({ type: 'error', text: 'Could not reach the server. Check your connection and try again.' });
     } finally {

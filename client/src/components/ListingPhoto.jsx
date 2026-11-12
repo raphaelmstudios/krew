@@ -24,7 +24,7 @@ export default function ListingPhoto({ listing, className = '' }) {
   if (listing.photo_path) {
     return (
       <div className={`krew-listing-photo ${className}`}>
-        <img src={`/uploads/${listing.photo_path}`} alt="" loading="lazy" />
+        <img src={`/uploads/${listing.photo_path}`} alt="" loading="lazy" decoding="async" />
       </div>
     );
   }

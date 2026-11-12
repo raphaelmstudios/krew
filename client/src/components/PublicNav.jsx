@@ -24,10 +24,10 @@ export default function PublicNav() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/auth/me')
+    fetch('/api/auth/session')
       .then((response) => (response.ok ? response.json() : null))
       .then((data) => {
-        if (!cancelled) setSession(data);
+        if (!cancelled) setSession(data?.user ?? null);
       })
       .catch(() => {
         if (!cancelled) setSession(null);
@@ -101,7 +101,7 @@ export default function PublicNav() {
             ) : (
               <a
                 key={link.label}
-                href={link.href}
+                href={`/${link.href}`}
                 className="krew-public-nav-link"
                 onClick={(e) => handleSectionLink(e, link.href)}
                 onMouseEnter={(e) => moveHighlightTo(e.currentTarget)}
@@ -148,7 +148,7 @@ export default function PublicNav() {
             ) : (
               <a
                 key={link.label}
-                href={link.href}
+                href={`/${link.href}`}
                 className="krew-public-nav-mobile-link"
                 onClick={(e) => handleSectionLink(e, link.href)}
               >

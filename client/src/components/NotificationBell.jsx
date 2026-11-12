@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, FileText, UserRoundCheck, Scale, Clock, Wallet, BadgeCheck } from 'lucide-react';
+import { Bell, FileText, UserRoundCheck, Scale, Clock, Wallet, BadgeCheck, KeyRound } from 'lucide-react';
 
 // Parse a date string from the server (assumed to be in UTC) into a JavaScript Date object.
 // The server sends dates in the format "YYYY-MM-DD HH:MM:SS", which is not directly parseable by Date.parse() in all browsers, so we replace the space with 'T' and append 'Z' to indicate UTC.
@@ -29,6 +29,7 @@ export function notificationIcon(type = '') {
   if (type === 'payment_due_reminder') return Clock;
   if (type.startsWith('payment')) return Wallet;
   if (type === 'account_approved') return BadgeCheck;
+  if (type.startsWith('password')) return KeyRound;
   return Bell;
 }
 
@@ -66,7 +67,7 @@ export default function NotificationBell() {
       if (!response.ok) return; // not logged in, or a blip - just skip this poll
       const data = await response.json();
       setNotifications(data);
-    } catch (err) {
+    } catch {
       // Network error or server down - just skip this poll, the next one will try again.
     }
   }
@@ -79,7 +80,7 @@ export default function NotificationBell() {
       );
       try {
         await fetch(`/api/notifications/${notification.id}/read`, { method: 'POST' });
-      } catch (err) {
+      } catch {
         // Network error or server down - the next poll will correct the read_at state, so we don't need to do anything here.
       }
     }
@@ -90,7 +91,7 @@ export default function NotificationBell() {
     setNotifications((current) => current.map((n) => ({ ...n, read_at: n.read_at || new Date().toISOString() })));
     try {
       await fetch('/api/notifications/read-all', { method: 'POST' });
-    } catch (err) {
+    } catch {
         // Network error or server down - the next poll will correct the read_at state, so we don't need to do anything here.
     }
   }

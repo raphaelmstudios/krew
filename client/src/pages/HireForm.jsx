@@ -45,7 +45,7 @@ export default function HireForm({ crewMember, onCreated, onCancel }) {
       }
 
       onCreated();
-    } catch (err) {
+    } catch {
       // fetch itself throws when there's no network connection at all.
       setBanner({ type: 'error', text: 'Could not reach the server. Check your connection and try again.' });
     } finally {

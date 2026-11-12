@@ -1,6 +1,12 @@
 // This script is intended to be run from the command line to reset the demo database to a clean state.
 // It deletes all rows from every table in krew.db, effectively wiping out all user data, job listings, disputes, notifications, transactions, and crew portfolio photo records. The schema remains intact, but all data is removed. Photo files already uploaded to the server's uploads folder are not touched, only their database records go.
 
+// Safety: refuses to run on the live server. Wiping every row is a demo/testing tool - never something to run against the live site.
+if (process.env.NODE_ENV === 'production') {
+  console.error('Refusing to run: NODE_ENV is production.');
+  process.exit(1);
+}
+
 const Database = require('better-sqlite3');
 const path = require('path');
 
@@ -13,13 +19,13 @@ if (!process.argv.includes(CONFIRM_FLAG)) {
   process.exit(0);
 }
 
-const db = new Database(path.join(__dirname, '..', 'krew.db'));
+const db = new Database(process.env.DATABASE_PATH || path.join(__dirname, '..', 'krew.db'));
 
 // Deletes all rows from every table in the database.
 // The schema remains intact, but all data is removed.
 // This is useful for resetting the demo environment to a clean state.
 // portfolio_images has to be in this list - it references users, so leaving it out makes the delete fail with a foreign key error as soon as any crew member has uploaded a portfolio photo.
-const tables = ['notifications', 'disputes', 'job_applications', 'transactions', 'job_listings', 'portfolio_images', 'sessions', 'users'];
+const tables = ['notifications', 'disputes', 'job_applications', 'transactions', 'job_listings', 'portfolio_images', 'password_resets', 'sessions', 'users'];
 for (const table of tables) {
   db.prepare(`DELETE FROM ${table}`).run();
 }

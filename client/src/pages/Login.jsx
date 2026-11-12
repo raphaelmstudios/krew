@@ -30,7 +30,7 @@ export default function Login({ onLoggedIn, heading = 'Log in', subhead = '', sh
       }
 
       onLoggedIn(data);
-    } catch (err) {
+    } catch {
       // fetch itself throws when there's no network connection at all.
       setBanner({ type: 'error', text: 'Could not reach the server. Check your connection and try again.' });
     } finally {
@@ -65,7 +65,10 @@ export default function Login({ onLoggedIn, heading = 'Log in', subhead = '', sh
           </div>
 
           <div className="krew-field">
-            <label className="krew-field-label" htmlFor="login-password">Password</label>
+            <div className="krew-field-label-row">
+              <label className="krew-field-label" htmlFor="login-password">Password</label>
+              <Link to="/forgot-password" className="krew-forgot-link">Forgot password?</Link>
+            </div>
             <div className="krew-field-input-wrap has-toggle">
               <span className="krew-field-input-icon" aria-hidden="true"><Lock size={17} strokeWidth={1.75} /></span>
               <input

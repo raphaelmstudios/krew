@@ -1,8 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ArrowRight, HandCoins, Fingerprint, ScrollText } from 'lucide-react';
 import PublicNav from '../components/PublicNav.jsx';
 import PublicFooter from '../components/PublicFooter.jsx';
+import usePageMeta from '../usePageMeta.js';
+import { PAGE_META } from '../pageMeta.js';
 
 // The homepage itself, which is a single-page scroll with multiple sections, laid out to match
 // the moodboard's Homepage panel: the hero with a photo cut on a diagonal on the right, "The
@@ -16,18 +18,44 @@ import PublicFooter from '../components/PublicFooter.jsx';
 // when the slot crops it - e.g. the portrait-shaped "people" slots only show a slice of a
 // landscape photo, so the focus is pushed toward where the person actually is.
 const PHOTOS = {
-  hero: { src: '/images/home/hero.jpg', focus: '30% 20%' },
-  people1: { src: '/images/home/people-1.jpg', focus: '90% center' },
-  people2: { src: '/images/home/people-2.jpg', focus: '85% center' },
-  crewCard: { src: '/images/home/crew-card.jpg', focus: 'center 62%' },
-  organizerCard: { src: '/images/home/organizer-card.jpg', focus: 'center 30%' },
+  hero: { src: '/images/home/hero.webp', focus: '30% 20%' },
+  people1: { src: '/images/home/people-1.webp', focus: '90% center' },
+  people2: { src: '/images/home/people-2.webp', focus: '85% center' },
+  crewCard: { src: '/images/home/crew-card.webp', focus: 'center 62%' },
+  organizerCard: { src: '/images/home/organizer-card.webp', focus: 'center 30%' },
 };
 
-function PhotoSlot({ photo, className = '', label }) {
+// Photos below the fold are only fetched when they're about to scroll into view (300px
+// early) - the hero passes eager so it starts loading straight away. Until then the slot
+// shows its plum background, same as when a photo is missing.
+function PhotoSlot({ photo, className = '', label, eager = false }) {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(eager);
+
+  useEffect(() => {
+    if (visible || !ref.current) return undefined;
+    if (typeof IntersectionObserver === 'undefined') {
+      setVisible(true);
+      return undefined;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '300px' }
+    );
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [visible]);
+
   return (
     <div
+      ref={ref}
       className={`krew-photo-slot ${className}`}
-      style={{ backgroundImage: `url('${photo.src}')`, backgroundPosition: photo.focus }}
+      style={{ backgroundImage: visible ? `url('${photo.src}')` : undefined, backgroundPosition: photo.focus }}
       role="img"
       aria-label={label}
     />
@@ -35,6 +63,7 @@ function PhotoSlot({ photo, className = '', label }) {
 }
 
 export default function Home() {
+  usePageMeta(PAGE_META['/']);
   const location = useLocation();
 
   // Coming from another page's "About" / "How It Works" nav link lands on /#about etc. -
@@ -71,7 +100,7 @@ export default function Home() {
         </div>
 
         <div className="krew-hero-visual">
-          <PhotoSlot photo={PHOTOS.hero} className="krew-hero-photo" label="Musicians performing on stage" />
+          <PhotoSlot photo={PHOTOS.hero} className="krew-hero-photo" label="Musicians performing on stage" eager />
           <span className="krew-shard krew-hero-shard-1" aria-hidden="true" />
           <span className="krew-shard krew-hero-shard-2" aria-hidden="true" />
           <span className="krew-shard krew-hero-shard-3" aria-hidden="true" />

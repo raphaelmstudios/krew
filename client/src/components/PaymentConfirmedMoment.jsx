@@ -17,7 +17,7 @@ const RECENT_DAYS = 14; // older confirmations never pop up on their own
 function readSeen() {
   try {
     return JSON.parse(localStorage.getItem(SEEN_KEY) || '[]');
-  } catch (err) {
+  } catch {
     return [];
   }
 }
@@ -28,7 +28,7 @@ export function markConfirmationSeen(jobId) {
     if (!seen.includes(jobId)) {
       localStorage.setItem(SEEN_KEY, JSON.stringify([...seen, jobId].slice(-200)));
     }
-  } catch (err) {
+  } catch {
     // Storage blocked - nothing to do.
   }
 }
@@ -37,8 +37,9 @@ function parseServerDate(value) {
   return value ? new Date(`${value.replace(' ', 'T')}Z`) : null;
 }
 
-// When the job became confirmed: whichever side confirmed last.
+// When the job became confirmed: the server's completed_at, or (for older data) whichever side confirmed last.
 export function confirmedOn(job) {
+  if (job.completed_at) return parseServerDate(job.completed_at);
   const dates = [parseServerDate(job.organizer_confirmed_at), parseServerDate(job.crew_confirmed_at)].filter(Boolean);
   return dates.length ? new Date(Math.max(...dates)) : null;
 }
@@ -90,9 +91,9 @@ export default function PaymentConfirmedMoment({ job, viewerRole, onClose }) {
   // Crew get a link to their public profile, where this job now shows in their work history.
   useEffect(() => {
     if (isOrganizer) return;
-    fetch('/api/auth/me')
+    fetch('/api/auth/session')
       .then((response) => (response.ok ? response.json() : null))
-      .then((data) => setMyId(data?.user?.id ?? data?.id ?? null))
+      .then((data) => setMyId(data?.user?.id ?? null))
       .catch(() => {});
   }, []);
 

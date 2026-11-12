@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -18,6 +18,8 @@ import JobCard from './JobCard.jsx';
 import DashboardShell from '../components/DashboardShell.jsx';
 import { notificationIcon } from '../components/NotificationBell.jsx';
 import PilotSurveyBanner from '../components/PilotSurveyBanner.jsx';
+import usePageMeta from '../usePageMeta.js';
+import { PAGE_META, sectionTitle } from '../pageMeta.js';
 import InfoTooltip from '../components/InfoTooltip.jsx';
 import ListingPhoto from '../components/ListingPhoto.jsx';
 import { initials } from '../components/CrewCard.jsx';
@@ -80,6 +82,7 @@ export default function OrganizerDashboard({ user, onLogout }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const requested = searchParams.get('section');
   const section = SECTIONS.some((item) => item.key === requested) ? requested : 'overview';
+  usePageMeta({ title: sectionTitle(SECTIONS.find((item) => item.key === section).label), description: PAGE_META['/dashboard'].description });
 
   const [listings, setListings] = useState(null); // null = still loading
   const [selectedListing, setSelectedListing] = useState(null); // set = showing that listing's applicants
@@ -104,24 +107,37 @@ export default function OrganizerDashboard({ user, onLogout }) {
     }
   }, []);
 
+  // Each section's data is reloaded whenever that section is opened - from the sidebar, or
+  // from a notification link that lands on ?section=... directly - since applicants, payment
+  // confirmations and crew availability can all change while another section is open.
+  // The first render is skipped because the mount effect above already loaded everything.
+  const [refreshTick, setRefreshTick] = useState(0);
+  const firstSectionLoad = useRef(true);
+  useEffect(() => {
+    if (firstSectionLoad.current) {
+      firstSectionLoad.current = false;
+      return;
+    }
+    if (!approved) return;
+    if (section === 'overview') {
+      loadListings();
+      loadJobs();
+      loadActivity();
+      loadRecord();
+    }
+    if (section === 'gigs') loadListings();
+    if (section === 'payments') loadJobs();
+    if (section === 'crew') loadCrewDirectory();
+  }, [section, refreshTick]);
+
   function goTo(nextSection) {
     setError(null);
     setNotice(null);
     setSelectedListing(null);
     setSelectedCrewMember(null);
     setSearchParams(nextSection === 'overview' ? {} : { section: nextSection });
+    setRefreshTick((tick) => tick + 1);
     window.scrollTo(0, 0);
-    // Reloaded every time - applicants, payment confirmations and crew availability can all
-    // change while another section is open.
-    if (nextSection === 'overview') {
-      loadListings();
-      loadJobs();
-      loadActivity();
-      loadRecord();
-    }
-    if (nextSection === 'gigs') loadListings();
-    if (nextSection === 'payments') loadJobs();
-    if (nextSection === 'crew') loadCrewDirectory();
   }
 
   async function loadListings() {
@@ -133,7 +149,7 @@ export default function OrganizerDashboard({ user, onLogout }) {
         return;
       }
       setListings(data);
-    } catch (err) {
+    } catch {
       setError('Could not reach the server.');
     }
   }
@@ -143,7 +159,7 @@ export default function OrganizerDashboard({ user, onLogout }) {
       const response = await fetch('/api/jobs/mine');
       const data = await response.json();
       if (response.ok) setJobs(data);
-    } catch (err) {
+    } catch {
       // The rest of the dashboard still works without this.
     }
   }
@@ -153,7 +169,7 @@ export default function OrganizerDashboard({ user, onLogout }) {
       const response = await fetch('/api/notifications/mine');
       const data = await response.json();
       if (response.ok) setActivity(data);
-    } catch (err) {
+    } catch {
       setActivity([]);
     }
   }
@@ -163,7 +179,7 @@ export default function OrganizerDashboard({ user, onLogout }) {
       const response = await fetch(`/api/users/${user.id}/organizer-record`);
       const data = await response.json();
       if (response.ok) setRecord(data);
-    } catch (err) {
+    } catch {
       // Leave the record card on its loading state.
     }
   }
@@ -177,7 +193,7 @@ export default function OrganizerDashboard({ user, onLogout }) {
         return;
       }
       setCrewDirectory(data);
-    } catch (err) {
+    } catch {
       setError('Could not reach the server.');
     }
   }
@@ -210,7 +226,7 @@ export default function OrganizerDashboard({ user, onLogout }) {
       setListings((current) =>
         current.map((listing) => (listing.id === listingId ? { ...listing, photo_path: data.photo_path } : listing))
       );
-    } catch (err) {
+    } catch {
       setError('Could not reach the server.');
     } finally {
       setPhotoUploadingId(null);
@@ -221,7 +237,7 @@ export default function OrganizerDashboard({ user, onLogout }) {
     try {
       await fetch(`/api/job-listings/${listingId}/cancel`, { method: 'POST' });
       loadListings();
-    } catch (err) {
+    } catch {
       setError('Could not reach the server.');
     }
   }
@@ -258,6 +274,17 @@ export default function OrganizerDashboard({ user, onLogout }) {
           <h1>Welcome, {firstName}</h1>
           <p>Your account is still waiting on admin approval. Once you're approved, you'll be able to post gigs and hire crew here.</p>
         </div>
+          {!user.has_documents && (
+            <div className="krew-db-verify">
+              <p>
+                <strong>One step left:</strong> upload a photo of your ID and a selfie. An admin can only review your
+                account once both are in.
+              </p>
+              <Link to="/verify" className="krew-button-primary krew-button-inline">
+                Upload ID and selfie <ArrowRight size={16} strokeWidth={2} />
+              </Link>
+            </div>
+          )}
       </DashboardShell>
     );
   }
@@ -308,9 +335,12 @@ export default function OrganizerDashboard({ user, onLogout }) {
               <div className="krew-db-card-head">
                 <h2>Recent activity</h2>
               </div>
-              {activity === null && <div className="krew-dash-loading-note">Loading…</div>}
+              {activity === null && <div className="krew-dash-loading-note" role="status">Loading…</div>}
               {activity && activity.length === 0 && (
-                <p className="krew-db-empty">Nothing yet - applications, hires and payment updates will show up here.</p>
+                <p className="krew-db-empty">
+                  Nothing yet - applications, hires and payment updates will show up here.{' '}
+                  <button type="button" className="krew-dash-text-btn" onClick={() => goTo('post')}>Post a gig</button>
+                </p>
               )}
               {activity && activity.length > 0 && (
                 <ul className="krew-db-activity">
@@ -337,7 +367,7 @@ export default function OrganizerDashboard({ user, onLogout }) {
                   <InfoTooltip text="This is what crew see on every gig you post - worked out automatically from payments both sides confirmed, not a self-reported rating." />
                 </h2>
               </div>
-              {record === null && <div className="krew-dash-loading-note">Loading…</div>}
+              {record === null && <div className="krew-dash-loading-note" role="status">Loading…</div>}
               {record && record.confirmed_job_count === 0 && (
                 <p className="krew-db-empty">
                   <span className="krew-status-pill new">New here</span> Once you've paid crew and both sides confirm, your on-time
@@ -420,7 +450,7 @@ export default function OrganizerDashboard({ user, onLogout }) {
             </button>
           </div>
 
-          {listings === null && !error && <div className="krew-dash-loading-note">Loading…</div>}
+          {listings === null && !error && <div className="krew-dash-loading-note" role="status">Loading…</div>}
 
           {listings && listings.length === 0 && (
             <div className="krew-dash-empty">
@@ -495,11 +525,14 @@ export default function OrganizerDashboard({ user, onLogout }) {
             <p>Every verified crew member. Hire someone directly - no listing needed - or open their profile first.</p>
           </div>
 
-          {crewDirectory === null && !error && <div className="krew-dash-loading-note">Loading…</div>}
+          {crewDirectory === null && !error && <div className="krew-dash-loading-note" role="status">Loading…</div>}
 
           {crewDirectory && crewDirectory.length === 0 && (
             <div className="krew-dash-empty">
-              <p>No approved crew members yet.</p>
+              <p>No approved crew members yet. Post a gig and crew can apply as soon as they're approved.</p>
+              <button type="button" className="krew-button-primary krew-button-inline" onClick={() => goTo('post')}>
+                Post a gig <ArrowRight size={16} strokeWidth={2} />
+              </button>
             </div>
           )}
 
@@ -509,7 +542,7 @@ export default function OrganizerDashboard({ user, onLogout }) {
                 <li className="krew-db-crew-row" key={crewMember.id}>
                   <span className="krew-db-crew-avatar">
                     {crewMember.profile_photo_path ? (
-                      <img src={`/uploads/${crewMember.profile_photo_path}`} alt="" />
+                      <img src={`/uploads/${crewMember.profile_photo_path}`} alt="" loading="lazy" decoding="async" />
                     ) : (
                       <span aria-hidden="true">{initials(crewMember.name)}</span>
                     )}
@@ -554,11 +587,14 @@ export default function OrganizerDashboard({ user, onLogout }) {
             </p>
           </div>
 
-          {jobs === null && <div className="krew-dash-loading-note">Loading…</div>}
+          {jobs === null && <div className="krew-dash-loading-note" role="status">Loading…</div>}
 
           {jobs && jobs.length === 0 && (
             <div className="krew-dash-empty">
               <p>No jobs yet - accept an applicant or hire someone from Find Crew and it'll show up here.</p>
+              <button type="button" className="krew-button-primary krew-button-inline" onClick={() => goTo('crew')}>
+                Find crew <ArrowRight size={16} strokeWidth={2} />
+              </button>
             </div>
           )}
 

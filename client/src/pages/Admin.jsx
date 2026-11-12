@@ -5,6 +5,8 @@ import {
   UserRoundCheck,
   Scale,
   ChartColumn,
+  KeyRound,
+  PhoneCall,
   BadgeCheck,
   Wallet,
   IdCard,
@@ -17,6 +19,8 @@ import {
 } from 'lucide-react';
 import DashboardShell from '../components/DashboardShell.jsx';
 import ListingPhoto from '../components/ListingPhoto.jsx';
+import usePageMeta from '../usePageMeta.js';
+import { PAGE_META, sectionTitle } from '../pageMeta.js';
 
 // Admin screen, in the moodboard's sidebar layout (panel 9, DashboardShell.jsx). Four sections:
 // - Overview: the two queues that need a person (account approvals, open disputes) plus headline numbers.
@@ -32,6 +36,7 @@ const SECTIONS = [
   { key: 'overview', label: 'Overview', icon: LayoutDashboard },
   { key: 'approvals', label: 'Approvals', icon: UserRoundCheck },
   { key: 'disputes', label: 'Disputes', icon: Scale },
+  { key: 'resets', label: 'Password resets', icon: KeyRound },
   { key: 'analytics', label: 'Analytics', icon: ChartColumn },
 ];
 
@@ -62,6 +67,7 @@ export default function Admin({ user, onLogout }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const requested = searchParams.get('section');
   const section = SECTIONS.some((item) => item.key === requested) ? requested : 'overview';
+  usePageMeta({ title: sectionTitle(SECTIONS.find((item) => item.key === section).label, 'KREW admin'), description: PAGE_META['/admin'].description });
 
   const [pendingUsers, setPendingUsers] = useState(null); //null means still loading
   const [actioningId, setActioningId] = useState(null);
@@ -81,11 +87,60 @@ export default function Admin({ user, onLogout }) {
 
   const [stats, setStats] = useState(null);
 
+  // Password resets: open requests, and the code issued for each (shown once, to read out).
+  const [resets, setResets] = useState(null);
+  const [resetsError, setResetsError] = useState(null);
+  const [issuedCodes, setIssuedCodes] = useState({});
+  const [resetBusyId, setResetBusyId] = useState(null);
+
   useEffect(() => {
     loadPendingUsers();
     loadDisputes();
     loadStats();
+    loadResets();
   }, []);
+
+  // A notification link can land straight on ?section=resets - load the latest requests then too.
+  useEffect(() => {
+    if (section === 'resets') loadResets();
+  }, [section]);
+
+  async function loadResets() {
+    try {
+      const response = await fetch('/api/admin/password-resets');
+      const data = await response.json();
+      if (!response.ok) {
+        setResetsError(data.error || 'Could not load password reset requests.');
+        return;
+      }
+      setResets(data);
+    } catch {
+      setResetsError('Could not reach the server.');
+    }
+  }
+
+  async function handleResetAction(reset, action) {
+    setResetBusyId(reset.id);
+    setResetsError(null);
+    try {
+      const response = await fetch(`/api/admin/password-resets/${reset.id}/${action}`, { method: 'POST' });
+      const data = await response.json();
+      if (!response.ok) {
+        setResetsError(data.error || 'Something went wrong. Please try again.');
+        return;
+      }
+      if (action === 'issue') {
+        setIssuedCodes((current) => ({ ...current, [reset.id]: data }));
+        loadResets();
+      } else {
+        setResets((current) => current.filter((r) => r.id !== reset.id));
+      }
+    } catch {
+      setResetsError('Could not reach the server.');
+    } finally {
+      setResetBusyId(null);
+    }
+  }
 
   function goTo(nextSection) {
     setSearchParams(nextSection === 'overview' ? {} : { section: nextSection });
@@ -106,7 +161,7 @@ export default function Admin({ user, onLogout }) {
         return;
       }
       setPendingUsers(data);
-    } catch (err) {
+    } catch {
       setApprovalsError('Could not reach the server.');
     }
   }
@@ -115,7 +170,7 @@ export default function Admin({ user, onLogout }) {
     try {
       const response = await fetch('/api/admin/stats');
       if (response.ok) setStats(await response.json());
-    } catch (err) {
+    } catch {
       // The tiles just stay on their loading state.
     }
   }
@@ -139,7 +194,7 @@ export default function Admin({ user, onLogout }) {
         action === 'approve' ? `${pendingUser.name} is approved and has been notified.` : `${pendingUser.name}'s account was rejected.`
       );
       loadStats();
-    } catch (err) {
+    } catch {
       setApprovalsError('Could not reach the server.');
     } finally {
       setActioningId(null);
@@ -155,7 +210,7 @@ export default function Admin({ user, onLogout }) {
         return;
       }
       setDisputes(data);
-    } catch (err) {
+    } catch {
       setDisputesError('Could not reach the server.');
     }
   }
@@ -192,7 +247,7 @@ export default function Admin({ user, onLogout }) {
       setResolvingId(null);
       loadDisputes();
       loadStats();
-    } catch (err) {
+    } catch {
       setResolveError('Could not reach the server.');
     } finally {
       setResolveSubmitting(false);
@@ -210,6 +265,8 @@ export default function Admin({ user, onLogout }) {
         ? pendingUsers.length
         : item.key === 'disputes' && openDisputes?.length
         ? openDisputes.length
+        : item.key === 'resets' && resets?.length
+        ? resets.length
         : null,
   }));
 
@@ -359,7 +416,7 @@ export default function Admin({ user, onLogout }) {
                   </button>
                 )}
               </div>
-              {pendingUsers === null && <div className="krew-dash-loading-note">Loading…</div>}
+              {pendingUsers === null && <div className="krew-dash-loading-note" role="status">Loading…</div>}
               {pendingUsers && pendingUsers.length === 0 && <p className="krew-db-empty">You're all caught up - no accounts waiting.</p>}
               {pendingUsers && pendingUsers.length > 0 && (
                 <ul className="krew-adm-list">{pendingUsers.slice(0, 4).map((u) => renderApprovalRow(u, true))}</ul>
@@ -375,7 +432,7 @@ export default function Admin({ user, onLogout }) {
                   </button>
                 )}
               </div>
-              {disputes === null && !disputesError && <div className="krew-dash-loading-note">Loading…</div>}
+              {disputes === null && !disputesError && <div className="krew-dash-loading-note" role="status">Loading…</div>}
               {openDisputes && openDisputes.length === 0 && <p className="krew-db-empty">No open disputes right now.</p>}
               {openDisputes && openDisputes.length > 0 && (
                 <ul className="krew-adm-list">
@@ -410,11 +467,14 @@ export default function Admin({ user, onLogout }) {
           {approvalsError && <div className="krew-form-banner error">{approvalsError}</div>}
           {approvalsNotice && <div className="krew-form-banner success">{approvalsNotice}</div>}
 
-          {pendingUsers === null && !approvalsError && <div className="krew-dash-loading-note">Loading…</div>}
+          {pendingUsers === null && !approvalsError && <div className="krew-dash-loading-note" role="status">Loading…</div>}
 
           {pendingUsers && pendingUsers.length === 0 && (
             <div className="krew-dash-empty">
               <p>No accounts are waiting on review right now.</p>
+              <button type="button" className="krew-button-secondary krew-button-inline" onClick={() => goTo('disputes')}>
+                Check disputes
+              </button>
             </div>
           )}
 
@@ -433,11 +493,14 @@ export default function Admin({ user, onLogout }) {
 
           {disputesError && <div className="krew-form-banner error">{disputesError}</div>}
 
-          {disputes === null && !disputesError && <div className="krew-dash-loading-note">Loading…</div>}
+          {disputes === null && !disputesError && <div className="krew-dash-loading-note" role="status">Loading…</div>}
 
           {disputes && disputes.length === 0 && (
             <div className="krew-dash-empty">
               <p>No disputes have been raised.</p>
+              <button type="button" className="krew-button-secondary krew-button-inline" onClick={() => goTo('approvals')}>
+                Check approvals
+              </button>
             </div>
           )}
 
@@ -448,6 +511,9 @@ export default function Admin({ user, onLogout }) {
           {openDisputes && openDisputes.length === 0 && disputes && disputes.length > 0 && (
             <div className="krew-dash-empty">
               <p>No open disputes right now - you're caught up.</p>
+              <button type="button" className="krew-button-secondary krew-button-inline" onClick={() => goTo('approvals')}>
+                Check approvals
+              </button>
             </div>
           )}
 
@@ -621,6 +687,88 @@ export default function Admin({ user, onLogout }) {
         </>
       )}
 
+      {section === 'resets' && (
+        <>
+          <div className="krew-db-head">
+            <h1>Password resets</h1>
+            <p>
+              People who forgot their password. Call the number on the account, check it's really them (their name, and
+              what they've done on KREW), then generate a code and read it out. Codes work once, for 30 minutes.
+            </p>
+          </div>
+
+          {resetsError && <div className="krew-form-banner error">{resetsError}</div>}
+
+          {resets === null && !resetsError && <div className="krew-dash-loading-note" role="status">Loading…</div>}
+
+          {resets && resets.length === 0 && (
+            <div className="krew-dash-empty">
+              <p>No one is waiting on a password reset.</p>
+              <button type="button" className="krew-button-secondary krew-button-inline" onClick={() => goTo('approvals')}>
+                Check approvals
+              </button>
+            </div>
+          )}
+
+          {resets && resets.length > 0 && (
+            <ul className="krew-adm-list krew-adm-list-card">
+              {resets.map((reset) => {
+                const issued = issuedCodes[reset.id];
+                const busy = resetBusyId === reset.id;
+                return (
+                  <li className="krew-adm-row krew-adm-reset" key={reset.id}>
+                    <span className="krew-db-crew-avatar krew-adm-avatar" aria-hidden="true">
+                      {initials(reset.name)}
+                    </span>
+                    <div className="krew-adm-row-main">
+                      <strong>{reset.name}</strong>
+                      <span>
+                        {roleLabel(reset.role)} · Asked {formatServerDay(reset.requested_at)}
+                      </span>
+                      <a className="krew-adm-call" href={`tel:${reset.phone}`}>
+                        <PhoneCall size={16} strokeWidth={1.6} aria-hidden="true" /> {reset.phone}
+                      </a>
+                    </div>
+                    {issued ? (
+                      <div className="krew-adm-code" aria-live="polite">
+                        <span>Read this out</span>
+                        <strong>{issued.code}</strong>
+                        <small>
+                          Works until{' '}
+                          {new Date(issued.expires_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                        </small>
+                      </div>
+                    ) : (
+                      <span className="krew-adm-docs missing">
+                        {reset.status === 'code_issued' ? 'A code was already sent - generate a new one if needed' : 'Waiting for a call'}
+                      </span>
+                    )}
+                    <div className="krew-adm-actions">
+                      <button
+                        type="button"
+                        className="krew-button-primary krew-button-inline krew-db-small-btn"
+                        disabled={busy}
+                        onClick={() => handleResetAction(reset, 'issue')}
+                      >
+                        {busy ? 'Working…' : issued || reset.status === 'code_issued' ? 'New code' : 'Generate code'}
+                      </button>
+                      <button
+                        type="button"
+                        className="krew-button-secondary krew-button-inline krew-db-small-btn krew-adm-reject"
+                        disabled={busy}
+                        onClick={() => handleResetAction(reset, 'cancel')}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </>
+      )}
+
       {section === 'analytics' && (
         <>
           <div className="krew-db-head">
@@ -628,7 +776,7 @@ export default function Admin({ user, onLogout }) {
             <p>Live counts from KREW's own records. Payments are only counted once both sides confirmed them (or an admin settled a dispute) - KREW tracks payments, it doesn't process them.</p>
           </div>
 
-          {stats === null && <div className="krew-dash-loading-note">Loading…</div>}
+          {stats === null && <div className="krew-dash-loading-note" role="status">Loading…</div>}
 
           {stats && (
             <div className="krew-adm-analytics">

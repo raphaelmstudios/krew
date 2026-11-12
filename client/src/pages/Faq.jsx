@@ -1,11 +1,14 @@
 import { Link } from 'react-router-dom';
 import PublicNav from '../components/PublicNav.jsx';
 import PublicFooter from '../components/PublicFooter.jsx';
+import usePageMeta from '../usePageMeta.js';
+import { PAGE_META } from '../pageMeta.js';
 
 // This page provides answers to frequently asked questions about KREW, including explanations of terms like "New here", "on time" percentage, "completed jobs", and "verified". 
 // It also explains how payment confirmation works, how to file a dispute, and what information is visible to other users. 
 // The page includes links to the Terms of Service and Privacy Policy for further details.
 export default function Faq() {
+  usePageMeta(PAGE_META['/faq']);
   return (
     <div className="krew-public-page">
       <PublicNav />
@@ -60,10 +63,19 @@ export default function Faq() {
           <h2>How do I file a dispute?</h2>
           <p>
             From your dashboard's job list, open the job in question and select "Raise a dispute" - this is
-            available any time a job isn't already confirmed or already disputed. Describe what's wrong, and an admin
+            available any time a job isn't already disputed, including after it's confirmed if something turns out to
+            be wrong. Describe what's wrong, and an admin
             will review it and resolve it from their side; both people on the job are notified once that happens.
             Filing a dispute doesn't block the other person's account - it just holds that one job open until an
             admin looks at it.
+          </p>
+
+          <h2>I forgot my password. What now?</h2>
+          <p>
+            Choose "Forgot password?" on the log in page and enter your phone number. A KREW admin will call that number
+            to check it's really you, then read you a one-time code. Enter it on the "Set a new password" page within 30
+            minutes. Once your password is changed, every device logged in to your account is logged out. If you still
+            know your password and just want a new one, use "Change password" in your dashboard instead.
           </p>
 
           <h2>Who can see my reliability numbers?</h2>

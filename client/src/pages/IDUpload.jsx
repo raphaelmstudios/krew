@@ -53,8 +53,8 @@ export default function IDUpload({ user, onSubmitted }) {
         return;
       }
 
-      onSubmitted && onSubmitted(data);
-    } catch (err) {
+      onSubmitted?.(data);
+    } catch {
       setError('Could not reach the server. Check your connection and try again.');
     } finally {
       setSubmitting(false);

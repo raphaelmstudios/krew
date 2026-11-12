@@ -6,12 +6,14 @@
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { db } from '../db.js';
 import { requireAdmin } from '../middleware/auth.js';
 import { createNotification } from '../notifications.js';
+import { text, LIMITS } from '../security.js';
+import crypto from 'node:crypto';
+import { hashResetCode, RESET_CODE_MINUTES } from './auth.js';
+import { UPLOAD_ROOT } from '../paths.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const adminRouter = express.Router();
 
@@ -113,7 +115,11 @@ adminRouter.post('/disputes/:id/resolve', (req, res) => {
     if (outcome !== 'confirm' && outcome !== 'reopen') {
         return res.status(400).json({ error: "Outcome must be 'confirm' or 'reopen'." });
     }
-    const trimmedNotes = resolution_notes && resolution_notes.trim() ? resolution_notes.trim() : null;
+    const cleanNotes = text(resolution_notes, LIMITS.resolutionNotes);
+    if (cleanNotes === null) {
+        return res.status(400).json({ error: `Keep the resolution note to ${LIMITS.resolutionNotes} characters or fewer.` });
+    }
+    const trimmedNotes = cleanNotes || null;
     if (!trimmedNotes) {
         return res.status(400).json({ error: 'Enter a resolution note explaining the decision.' });
     }
@@ -132,6 +138,9 @@ adminRouter.post('/disputes/:id/resolve', (req, res) => {
         if (!Number.isFinite(finalAmountNumber) || finalAmountNumber <= 0) {
             return res.status(400).json({ error: 'Enter a final amount greater than zero to confirm this job.' });
         }
+        if (finalAmountNumber > LIMITS.maxAmount) {
+            return res.status(400).json({ error: `The amount can't be more than KES ${LIMITS.maxAmount.toLocaleString()}.` });
+        }
     }
 
     // The dispute row and the transaction's status change have to land together, same
@@ -146,7 +155,7 @@ adminRouter.post('/disputes/:id/resolve', (req, res) => {
         if (outcome === 'confirm') {
             db.prepare(
                 `UPDATE transactions
-                 SET status = 'confirmed',
+                 SET status = 'confirmed', completed_at = datetime('now'),
                      organizer_confirmed_at = datetime('now'), organizer_confirmed_amount = ?,
                      crew_confirmed_at = datetime('now'), crew_confirmed_amount = ?
                  WHERE id = ?`
@@ -154,7 +163,7 @@ adminRouter.post('/disputes/:id/resolve', (req, res) => {
         } else {
             db.prepare(
                 `UPDATE transactions
-                 SET status = 'pending',
+                 SET status = 'pending', completed_at = NULL,
                      organizer_confirmed_at = NULL, organizer_confirmed_amount = NULL,
                      crew_confirmed_at = NULL, crew_confirmed_amount = NULL
                  WHERE id = ?`
@@ -174,8 +183,8 @@ adminRouter.post('/disputes/:id/resolve', (req, res) => {
         outcome === 'confirm'
             ? `Your dispute was resolved - the job is now confirmed for KES ${finalAmountNumber.toLocaleString()}.`
             : 'Your dispute was reviewed - please reconfirm your payment for this job.';
-    createNotification(resolvedTransaction.organizer_id, 'dispute_resolved', resolutionMessage, '/dashboard');
-    createNotification(resolvedTransaction.crew_member_id, 'dispute_resolved', resolutionMessage, '/dashboard');
+    createNotification(resolvedTransaction.organizer_id, 'dispute_resolved', resolutionMessage, '/dashboard?section=payments');
+    createNotification(resolvedTransaction.crew_member_id, 'dispute_resolved', resolutionMessage, '/dashboard?section=jobs');
 
     res.json({ id: disputeId, status: 'resolved', outcome });
 });
@@ -186,7 +195,7 @@ adminRouter.post('/disputes/:id/resolve', (req, res) => {
 // Paths are stored relative to server/uploads; on Windows they're saved with backslashes,
 // so they're normalised first, and anything that would resolve outside the uploads folder
 // is refused.
-const UPLOAD_ROOT = path.join(__dirname, '..', '..', 'uploads');
+// UPLOAD_ROOT comes from paths.js (UPLOADS_DIR environment variable, or server/uploads).
 
 adminRouter.get('/users/:id/files/:kind', (req, res) => {
     const userId = Number(req.params.id);
@@ -249,4 +258,62 @@ adminRouter.get('/stats', (req, res) => {
             resolved: count(`SELECT COUNT(*) AS n FROM disputes WHERE status = 'resolved'`),
         },
     });
+});
+
+// --- Password resets (see the password_resets table in db.js and routes/auth.js) ---------
+// Open requests, oldest first, with what the admin needs to confirm it's really the account
+// owner on the phone: their name, number and role.
+adminRouter.get('/password-resets', (req, res) => {
+    const resets = db
+        .prepare(
+            `SELECT r.id, r.status, r.requested_at, r.issued_at, r.expires_at,
+                    u.id AS user_id, u.name, u.phone, u.role, u.verification_status
+             FROM password_resets r
+             JOIN users u ON u.id = r.user_id
+             WHERE r.status IN ('requested', 'code_issued')
+             ORDER BY r.requested_at ASC`
+        )
+        .all();
+    res.json(resets);
+});
+
+// Makes a one-time code for a request, after the admin has called the owner and confirmed
+// who they are. The code is shown to the admin once, to read out; only its hash is kept.
+// Issuing again replaces the old code. Letters and digits that look alike (0/O, 1/I/L) are
+// left out so it's easy to read over the phone.
+const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+
+adminRouter.post('/password-resets/:id/issue', (req, res) => {
+    const resetId = Number(req.params.id);
+    const reset = db
+        .prepare(`SELECT id FROM password_resets WHERE id = ? AND status IN ('requested', 'code_issued')`)
+        .get(resetId);
+    if (!reset) {
+        return res.status(404).json({ error: 'That reset request is no longer open.' });
+    }
+
+    const raw = Array.from(crypto.randomBytes(8), (byte) => CODE_ALPHABET[byte % CODE_ALPHABET.length]).join('');
+    const code = `${raw.slice(0, 4)}-${raw.slice(4)}`;
+    const expiresAt = new Date(Date.now() + RESET_CODE_MINUTES * 60 * 1000).toISOString();
+
+    db.prepare(
+        `UPDATE password_resets
+         SET status = 'code_issued', code_hash = ?, issued_by = ?, issued_at = datetime('now'),
+             expires_at = ?, failed_attempts = 0
+         WHERE id = ?`
+    ).run(hashResetCode(code), req.user.id, expiresAt, resetId);
+
+    res.json({ id: resetId, code, expires_at: expiresAt });
+});
+
+// Closes a request without issuing a code (e.g. the caller couldn't confirm who they are).
+adminRouter.post('/password-resets/:id/cancel', (req, res) => {
+    const resetId = Number(req.params.id);
+    const result = db
+        .prepare(`UPDATE password_resets SET status = 'cancelled' WHERE id = ? AND status IN ('requested', 'code_issued')`)
+        .run(resetId);
+    if (result.changes === 0) {
+        return res.status(404).json({ error: 'That reset request is no longer open.' });
+    }
+    res.json({ id: resetId, status: 'cancelled' });
 });

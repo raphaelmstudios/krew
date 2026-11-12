@@ -18,6 +18,8 @@ import InfoTooltip from '../components/InfoTooltip.jsx';
 import CrewCard, { initials } from '../components/CrewCard.jsx';
 import { categoryIcon } from '../components/ListingPhoto.jsx';
 import HireForm from './HireForm.jsx';
+import usePageMeta from '../usePageMeta.js';
+import { PAGE_META, NOT_FOUND_META, crewMeta } from '../pageMeta.js';
 
 // A crew member's public profile, full-screen rather than boxed: a full-width cover hero with
 // the name, role and headline stats, a tall portrait card that overlaps the hero with the bio
@@ -54,6 +56,8 @@ export default function CrewProfile() {
   const [lightboxIndex, setLightboxIndex] = useState(null); // null = closed
   const [linkCopied, setLinkCopied] = useState(false);
   const [hireStep, setHireStep] = useState(null); // null = closed, 'form' = hiring, 'done' = hire created
+
+  usePageMeta(profile ? crewMeta(profile) : notFound ? NOT_FOUND_META : PAGE_META['/hire-crew']);
 
   useEffect(() => {
     let cancelled = false;
@@ -104,10 +108,10 @@ export default function CrewProfile() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/auth/me')
+    fetch('/api/auth/session')
       .then((response) => (response.ok ? response.json() : null))
       .then((data) => {
-        if (!cancelled) setSession(data);
+        if (!cancelled) setSession(data?.user ?? null);
       })
       .catch(() => {
         if (!cancelled) setSession(null);
@@ -122,7 +126,7 @@ export default function CrewProfile() {
       await navigator.clipboard.writeText(window.location.href);
       setLinkCopied(true);
       setTimeout(() => setLinkCopied(false), 2000);
-    } catch (err) {
+    } catch {
       // Clipboard blocked - nothing else to do, the address bar still has the link.
     }
   }
@@ -156,7 +160,7 @@ export default function CrewProfile() {
               <Link to="/hire-crew" className="krew-button-secondary krew-button-inline">Browse crew</Link>
             </div>
           )}
-          {!notFound && !error && <div className="krew-dash-loading-note">Loading profile…</div>}
+          {!notFound && !error && <div className="krew-dash-loading-note" role="status">Loading profile…</div>}
         </div>
         <PublicFooter />
       </div>
@@ -264,7 +268,15 @@ export default function CrewProfile() {
               )}
             </div>
             {portfolio.length === 0 ? (
-              <p className="krew-cp-empty">No portfolio photos yet.</p>
+              <p className="krew-cp-empty">
+                No portfolio photos yet.
+                {isOwnProfile && (
+                  <>
+                    {' '}
+                    <Link to="/dashboard?section=profile">Add your first photos</Link>
+                  </>
+                )}
+              </p>
             ) : (
               <div className="krew-cp-portfolio-grid">
                 {visiblePortfolio.map((image, index) => (
@@ -275,7 +287,7 @@ export default function CrewProfile() {
                     onClick={() => setLightboxIndex(index)}
                     aria-label={`Open portfolio photo ${index + 1} of ${portfolio.length}`}
                   >
-                    <img src={`/uploads/${image.image_path}`} alt="" loading="lazy" />
+                    <img src={`/uploads/${image.image_path}`} alt="" loading="lazy" decoding="async" />
                   </button>
                 ))}
               </div>

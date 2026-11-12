@@ -5,6 +5,8 @@ import PublicNav from '../components/PublicNav.jsx';
 import PublicFooter from '../components/PublicFooter.jsx';
 import InfoTooltip from '../components/InfoTooltip.jsx';
 import ListingPhoto from '../components/ListingPhoto.jsx';
+import usePageMeta from '../usePageMeta.js';
+import { PAGE_META, NOT_FOUND_META, gigMeta } from '../pageMeta.js';
 
 // The Gig Detail page, laid out like the moodboard's Gig Detail panel: back link, the title with
 // its category and location tags, the listing photo, an apply panel on the right (pay, due date,
@@ -40,6 +42,8 @@ export default function GigDetail() {
 
   const [applyState, setApplyState] = useState('idle'); // idle | applying | applied | already_applied | error
   const [applyError, setApplyError] = useState(null);
+
+  usePageMeta(listing ? gigMeta(listing) : notFound ? NOT_FOUND_META : PAGE_META['/find-work']);
 
   useEffect(() => {
     let cancelled = false;
@@ -91,10 +95,10 @@ export default function GigDetail() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/auth/me')
+    fetch('/api/auth/session')
       .then((response) => (response.ok ? response.json() : null))
       .then((data) => {
-        if (!cancelled) setSession(data);
+        if (!cancelled) setSession(data?.user ?? null);
       })
       .catch(() => {
         if (!cancelled) setSession(null);
@@ -139,7 +143,7 @@ export default function GigDetail() {
         return;
       }
       setApplyState('applied');
-    } catch (err) {
+    } catch {
       setApplyError('Could not reach the server.');
       setApplyState('error');
     }
@@ -212,7 +216,7 @@ export default function GigDetail() {
               <Link to="/find-work" className="krew-button-secondary krew-button-inline">Browse open gigs</Link>
             </div>
           )}
-          {!notFound && !error && <div className="krew-dash-loading-note">Loading gig…</div>}
+          {!notFound && !error && <div className="krew-dash-loading-note" role="status">Loading gig…</div>}
         </div>
         <PublicFooter />
       </div>

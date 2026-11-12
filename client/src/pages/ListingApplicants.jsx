@@ -43,7 +43,7 @@ export default function ListingApplicants({ listing, onBack, onAccepted }) {
         return;
       }
       setApplicants(data);
-    } catch (err) {
+    } catch {
       setError('Could not reach the server.');
     }
   }
@@ -63,7 +63,7 @@ export default function ListingApplicants({ listing, onBack, onAccepted }) {
         return;
       }
       onAccepted();
-    } catch (err) {
+    } catch {
       setError('Could not reach the server.');
     } finally {
       setAcceptingId(null);
@@ -85,11 +85,14 @@ export default function ListingApplicants({ listing, onBack, onAccepted }) {
 
       {error && <div className="krew-form-banner error">{error}</div>}
 
-      {applicants === null && !error && <div className="krew-dash-loading-note">Loading…</div>}
+      {applicants === null && !error && <div className="krew-dash-loading-note" role="status">Loading…</div>}
 
       {applicants && applicants.length === 0 && (
         <div className="krew-dash-empty">
-          <p>No one has applied yet. Check back soon.</p>
+          <p>No one has applied yet. Share the gig's page so crew can find it.</p>
+          <Link to={`/gigs/${listing.id}`} className="krew-button-secondary krew-button-inline">
+            Open the gig page
+          </Link>
         </div>
       )}
 
@@ -99,7 +102,7 @@ export default function ListingApplicants({ listing, onBack, onAccepted }) {
             <li className="krew-db-crew-row" key={applicant.application_id}>
               <span className="krew-db-crew-avatar">
                 {applicant.profile_photo_path ? (
-                  <img src={`/uploads/${applicant.profile_photo_path}`} alt="" />
+                  <img src={`/uploads/${applicant.profile_photo_path}`} alt="" loading="lazy" decoding="async" />
                 ) : (
                   <span aria-hidden="true">{initials(applicant.crew_member_name)}</span>
                 )}

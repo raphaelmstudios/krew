@@ -1668,7 +1668,6 @@
   }
 }
 
-
 /* A compact rounded-rect tag, not a pill - the brief's "no pill buttons"
    rule is about buttons/CTAs reading as gimmicky, not every small rounded
    label (status pills are the brief's own named exception), but a skill
@@ -2334,24 +2333,6 @@
   padding-top: 40px;
 }
 
-.krew-cp-availability {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.krew-cp-availability::before {
-  content: '';
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--color-success);
-}
-
-.krew-cp-availability.working::before {
-  background: var(--color-warning);
-}
-
 .krew-cp-skills {
   display: flex;
   flex-wrap: wrap;
@@ -2856,5 +2837,284 @@
   .krew-cp-hire-dialog .krew-dash-form-card,
   .krew-cp-hire-done {
     padding: 26px 20px 22px;
+  }
+}
+
+/* ===================================================================== */
+/* 404 page (NotFound.jsx) - a no-show crew pass under two stage lights  */
+/* ===================================================================== */
+.krew-404 {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-panel);
+  color: var(--color-warm-ivory);
+  min-height: calc(100vh - 72px);
+  display: flex;
+  align-items: center;
+}
+
+.krew-404-beam {
+  top: -10%;
+  width: 46%;
+  height: 130%;
+  background: var(--color-soft-violet);
+  opacity: 0.12;
+  transform-origin: 50% 0;
+}
+
+.krew-404-beam-left {
+  left: 4%;
+  clip-path: polygon(46% 0, 54% 0, 100% 100%, 0 100%);
+  animation: krew-404-sweep 9s ease-in-out infinite alternate;
+}
+
+.krew-404-beam-right {
+  right: 2%;
+  clip-path: polygon(46% 0, 54% 0, 100% 100%, 0 100%);
+  background: var(--color-electric-violet);
+  opacity: 0.3;
+  animation: krew-404-sweep 11s ease-in-out -4s infinite alternate-reverse;
+}
+
+@keyframes krew-404-sweep {
+  from {
+    transform: rotate(-12deg);
+  }
+  to {
+    transform: rotate(12deg);
+  }
+}
+
+.krew-404-inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 72px 32px 96px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: 48px;
+  align-items: center;
+}
+
+.krew-404-eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-soft-violet);
+  margin: 0 0 16px 0;
+}
+
+.krew-404-copy h1 {
+  font-family: var(--font-display);
+  font-size: clamp(42px, 6vw, 76px);
+  line-height: 1.02;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0 0 20px 0;
+}
+
+.krew-404-copy h1 em {
+  font-style: italic;
+  white-space: nowrap;
+  color: var(--color-soft-violet);
+}
+
+.krew-404-text {
+  max-width: 480px;
+  font-size: 16px;
+  line-height: 1.65;
+  color: rgba(243, 240, 233, 0.78);
+  margin: 0 0 32px 0;
+}
+
+.krew-404-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 24px;
+}
+
+.krew-404-actions .krew-button-primary {
+  text-decoration: none;
+  background: var(--color-warm-ivory);
+  color: var(--color-ink-plum);
+}
+
+.krew-404-actions .krew-button-primary:hover {
+  background: #ffffff;
+}
+
+.krew-404-actions .krew-text-link {
+  color: var(--color-warm-ivory);
+  font-weight: 600;
+}
+
+.krew-404-actions .krew-text-link:hover {
+  color: var(--color-soft-violet);
+}
+
+/* The pass, hanging from a lanyard and swinging slightly */
+.krew-404-pass-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform-origin: 50% 0;
+  animation: krew-404-swing 4.5s ease-in-out infinite alternate;
+}
+
+@keyframes krew-404-swing {
+  from {
+    transform: rotate(-5deg);
+  }
+  to {
+    transform: rotate(4deg);
+  }
+}
+
+.krew-404-lanyard {
+  width: 22px;
+  height: 120px;
+  margin-top: -140px;
+  background: var(--color-electric-violet);
+  clip-path: polygon(0 0, 100% 0, 78% 100%, 22% 100%);
+}
+
+.krew-404-pass {
+  position: relative;
+  width: 280px;
+  padding: 34px 26px 26px;
+  border-radius: var(--radius-lg);
+  background: var(--color-warm-ivory);
+  color: var(--color-ink-plum);
+  box-shadow: 0 30px 60px rgba(10, 6, 14, 0.45);
+}
+
+.krew-404-pass-clip {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  width: 54px;
+  height: 22px;
+  margin-left: -27px;
+  border-radius: var(--radius-sm);
+  background: var(--color-soft-violet);
+  border: 3px solid var(--color-ink-plum);
+}
+
+.krew-404-pass-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  margin: 0 -8px 18px;
+  border-radius: var(--radius-md);
+  background: var(--color-ink-plum);
+  color: var(--color-warm-ivory);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.krew-404-pass-number {
+  font-family: var(--font-display);
+  font-size: 92px;
+  font-weight: 600;
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  margin-bottom: 18px;
+}
+
+.krew-404-pass-rows {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.krew-404-pass-rows div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(33, 22, 43, 0.2);
+}
+
+.krew-404-pass-rows dt {
+  color: rgba(33, 22, 43, 0.55);
+}
+
+.krew-404-pass-rows dd {
+  margin: 0;
+  font-weight: 700;
+  text-align: right;
+  min-width: 0;
+}
+
+.krew-404-pass-path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 150px;
+}
+
+.krew-404-pass-stamp {
+  position: absolute;
+  right: 18px;
+  top: 112px;
+  padding: 6px 12px;
+  border: 3px solid var(--color-danger);
+  border-radius: var(--radius-sm);
+  color: var(--color-danger);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transform: rotate(-14deg);
+  opacity: 0.9;
+}
+
+@media (max-width: 860px) {
+  .krew-404 {
+    min-height: 0;
+  }
+
+  .krew-404-inner {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 56px 20px 72px;
+    gap: 72px;
+  }
+
+  .krew-404-pass-wrap {
+    order: -1;
+    margin-top: 40px;
+  }
+
+  .krew-404-lanyard {
+    height: 90px;
+    margin-top: -100px;
+  }
+
+  .krew-404-pass {
+    width: 240px;
+  }
+
+  .krew-404-pass-number {
+    font-size: 76px;
+  }
+
+  .krew-404-beam {
+    width: 80%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .krew-404-beam,
+  .krew-404-pass-wrap {
+    animation: none;
   }
 }

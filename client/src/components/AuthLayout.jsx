@@ -19,7 +19,7 @@ export default function AuthLayout({ children }) {
       </div>
 
       <div className="krew-auth-visual" aria-hidden="true">
-        <div className="krew-auth-photo" style={{ backgroundImage: "url('/images/auth/login-register.jpg')" }} />
+        <div className="krew-auth-photo" style={{ backgroundImage: "url('/images/auth/login-register.webp')" }} />
         <span className="krew-auth-scrim" />
         <span className="krew-auth-shape krew-auth-shape-1" />
         <span className="krew-auth-shape krew-auth-shape-2" />

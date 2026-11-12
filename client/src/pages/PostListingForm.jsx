@@ -115,13 +115,13 @@ export default function PostListingForm({ onCreated, onCancel }) {
           formData.append('listing_photo', photoFile);
           const photoResponse = await fetch(`/api/job-listings/${data.id}/photo`, { method: 'POST', body: formData });
           photoFailed = !photoResponse.ok;
-        } catch (err) {
+        } catch {
           photoFailed = true;
         }
       }
 
       onCreated(photoFailed ? { photoFailed: true } : undefined);
-    } catch (err) {
+    } catch {
       // fetch itself throws when there's no network connection at all.
       setBanner({ type: 'error', text: 'Could not reach the server. Check your connection and try again.' });
     } finally {

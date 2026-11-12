@@ -10,8 +10,8 @@ export default function Logo({ variant = 'full', tone = 'auto', className = '', 
 
   return (
     <Link to="/" className={`krew-logo krew-logo-${variant} ${className}`} onClick={onClick} aria-label="KREW home">
-      {tone === 'auto' && <img src={`${base}.png`} alt="" className="krew-logo-for-light" />}
-      <img src={`${base}-light.png`} alt="" className={tone === 'auto' ? 'krew-logo-for-dark' : ''} />
+      {tone === 'auto' && <img src={`${base}.webp`} alt="" className="krew-logo-for-light" width={variant === 'mark' ? 240 : 520} height={variant === 'mark' ? 193 : 122} />}
+      <img src={`${base}-light.webp`} alt="" className={tone === 'auto' ? 'krew-logo-for-dark' : ''} width={variant === 'mark' ? 240 : 520} height={variant === 'mark' ? 193 : 122} />
     </Link>
   );
 }

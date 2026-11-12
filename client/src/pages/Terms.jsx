@@ -1,12 +1,15 @@
 import { Link } from 'react-router-dom';
 import PublicNav from '../components/PublicNav.jsx';
 import PublicFooter from '../components/PublicFooter.jsx';
+import usePageMeta from '../usePageMeta.js';
+import { PAGE_META } from '../pageMeta.js';
 
 // The Terms of Service page is a public-facing page that outlines the rules and guidelines for using the KREW platform. 
 // It includes sections on what KREW is and isn't, account verification, browsing without an account, acceptable use, and disclaimers about warranties and liabilities. 
 // The page also provides a link to the Privacy Policy for further information.
 
 export default function Terms() {
+  usePageMeta(PAGE_META['/terms']);
   return (
     <div className="krew-public-page">
       <PublicNav />
@@ -61,8 +64,8 @@ export default function Terms() {
           <h2>Acceptable use</h2>
           <p>
             Use KREW to find and offer real event and gig work. Don't use it to defraud another user, misrepresent who
-            you are, post fake listings or fake completed work, or try to get around the verification process. An
-            admin can suspend or remove an account that does any of this.
+            you are, post fake listings or fake completed work, or try to get around the verification process. The
+            KREW team can refuse to approve, or remove, an account that does any of this.
           </p>
 
           <h2>No warranty</h2>

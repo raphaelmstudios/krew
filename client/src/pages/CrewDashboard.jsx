@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -18,6 +18,8 @@ import {
 import JobCard from './JobCard.jsx';
 import DashboardShell from '../components/DashboardShell.jsx';
 import PilotSurveyBanner from '../components/PilotSurveyBanner.jsx';
+import usePageMeta from '../usePageMeta.js';
+import { PAGE_META, sectionTitle } from '../pageMeta.js';
 import InfoTooltip from '../components/InfoTooltip.jsx';
 import ListingPhoto from '../components/ListingPhoto.jsx';
 
@@ -83,6 +85,7 @@ export default function CrewDashboard({ user, onLogout }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const requested = searchParams.get('section');
   const section = SECTIONS.some((item) => item.key === requested) ? requested : 'overview';
+  usePageMeta({ title: sectionTitle(SECTIONS.find((item) => item.key === section).label), description: PAGE_META['/dashboard'].description });
 
   const [listings, setListings] = useState(null);
   const [applications, setApplications] = useState(null);
@@ -127,14 +130,28 @@ export default function CrewDashboard({ user, onLogout }) {
     }
   }, []);
 
+  // Reloaded whenever a section is opened - from the sidebar, or from a notification link
+  // that lands on ?section=... directly - not just the first time: the organizer could
+  // confirm a payment or accept an application while another section is open, so these
+  // shouldn't go stale. The first render is skipped because the mount effect loaded everything.
+  const [refreshTick, setRefreshTick] = useState(0);
+  const firstSectionLoad = useRef(true);
+  useEffect(() => {
+    if (firstSectionLoad.current) {
+      firstSectionLoad.current = false;
+      return;
+    }
+    if (!approved) return;
+    if (section === 'jobs' || section === 'overview') loadMyJobs();
+    if (section === 'applications' || section === 'overview') loadApplications();
+    if (section === 'gigs') loadOpenListings();
+  }, [section, refreshTick]);
+
   function goTo(nextSection) {
     setError(null);
     setSearchParams(nextSection === 'overview' ? {} : { section: nextSection });
+    setRefreshTick((tick) => tick + 1);
     window.scrollTo(0, 0);
-    // Reloaded every time, not just the first time - the organizer could confirm a payment
-    // or accept an application while another section is open, so these shouldn't go stale.
-    if (nextSection === 'jobs' || nextSection === 'overview') loadMyJobs();
-    if (nextSection === 'applications' || nextSection === 'overview') loadApplications();
   }
 
   async function loadPortfolio() {
@@ -144,7 +161,7 @@ export default function CrewDashboard({ user, onLogout }) {
       if (response.ok) {
         setPortfolio(data.portfolio);
       }
-    } catch (err) {
+    } catch {
       // Silently leave the portfolio section empty - the rest of the dashboard still works.
     }
   }
@@ -158,7 +175,7 @@ export default function CrewDashboard({ user, onLogout }) {
         return;
       }
       setListings(data);
-    } catch (err) {
+    } catch {
       setError('Could not reach the server.');
     }
   }
@@ -172,7 +189,7 @@ export default function CrewDashboard({ user, onLogout }) {
         return;
       }
       setApplications(data);
-    } catch (err) {
+    } catch {
       setError('Could not reach the server.');
     }
   }
@@ -186,7 +203,7 @@ export default function CrewDashboard({ user, onLogout }) {
         return;
       }
       setMyJobs(data);
-    } catch (err) {
+    } catch {
       setError('Could not reach the server.');
     }
   }
@@ -205,7 +222,7 @@ export default function CrewDashboard({ user, onLogout }) {
         current.map((listing) => (listing.id === listingId ? { ...listing, already_applied: true } : listing))
       );
       loadApplications();
-    } catch (err) {
+    } catch {
       setError('Could not reach the server.');
     } finally {
       setApplyingId(null);
@@ -227,7 +244,7 @@ export default function CrewDashboard({ user, onLogout }) {
         return;
       }
       setAvailability(data.availability_status);
-    } catch (err) {
+    } catch {
       setError('Could not reach the server.');
     } finally {
       setAvailabilitySaving(false);
@@ -250,7 +267,7 @@ export default function CrewDashboard({ user, onLogout }) {
         return;
       }
       setPhotoPath(data.profile_photo_path);
-    } catch (err) {
+    } catch {
       setProfileBanner({ type: 'error', text: 'Could not reach the server.' });
     } finally {
       setPhotoUploading(false);
@@ -283,7 +300,7 @@ export default function CrewDashboard({ user, onLogout }) {
       setYearsExperience(data.years_experience === null || data.years_experience === undefined ? '' : String(data.years_experience));
       setBio(data.bio || '');
       setProfileBanner({ type: 'success', text: 'Profile saved.' });
-    } catch (err) {
+    } catch {
       setProfileBanner({ type: 'error', text: 'Could not reach the server.' });
     } finally {
       setProfileSaving(false);
@@ -306,7 +323,7 @@ export default function CrewDashboard({ user, onLogout }) {
         return;
       }
       setPortfolio((current) => [...(current || []), { id: data.id, image_path: data.image_path }]);
-    } catch (err) {
+    } catch {
       setPortfolioBanner({ type: 'error', text: 'Could not reach the server.' });
     } finally {
       setPortfolioUploading(false);
@@ -325,7 +342,7 @@ export default function CrewDashboard({ user, onLogout }) {
         return;
       }
       setPortfolio((current) => current.filter((image) => image.id !== imageId));
-    } catch (err) {
+    } catch {
       setPortfolioBanner({ type: 'error', text: 'Could not reach the server.' });
     } finally {
       setDeletingPortfolioId(null);
@@ -404,6 +421,17 @@ export default function CrewDashboard({ user, onLogout }) {
           <h1>Welcome, {firstName}</h1>
           <p>Your account is still waiting on admin approval. Once you're approved, you'll be able to find gigs and apply here.</p>
         </div>
+          {!user.has_documents && (
+            <div className="krew-db-verify">
+              <p>
+                <strong>One step left:</strong> upload a photo of your ID and a selfie. An admin can only review your
+                account once both are in.
+              </p>
+              <Link to="/verify" className="krew-button-primary krew-button-inline">
+                Upload ID and selfie <ArrowRight size={16} strokeWidth={2} />
+              </Link>
+            </div>
+          )}
       </DashboardShell>
     );
   }
@@ -470,7 +498,7 @@ export default function CrewDashboard({ user, onLogout }) {
                   View all <ArrowRight size={15} strokeWidth={2} />
                 </button>
               </div>
-              {applications === null && <div className="krew-dash-loading-note">Loading…</div>}
+              {applications === null && <div className="krew-dash-loading-note" role="status">Loading…</div>}
               {applications && applications.length === 0 && (
                 <p className="krew-db-empty">
                   You haven't applied to anything yet.{' '}
@@ -538,11 +566,14 @@ export default function CrewDashboard({ user, onLogout }) {
             <p>Open listings you can apply to right now. Each one shows the organizer's real payment record.</p>
           </div>
 
-          {listings === null && !error && <div className="krew-dash-loading-note">Loading…</div>}
+          {listings === null && !error && <div className="krew-dash-loading-note" role="status">Loading…</div>}
 
           {listings && listings.length === 0 && (
             <div className="krew-dash-empty">
-              <p>No open gigs right now. Check back soon.</p>
+              <p>No open gigs right now. Check back soon - and make sure your profile is complete, so organizers can hire you directly.</p>
+              <button type="button" className="krew-button-primary krew-button-inline" onClick={() => goTo('profile')}>
+                Complete your profile <ArrowRight size={16} strokeWidth={2} />
+              </button>
             </div>
           )}
 
@@ -590,7 +621,7 @@ export default function CrewDashboard({ user, onLogout }) {
             </p>
           </div>
 
-          {applications === null && !error && <div className="krew-dash-loading-note">Loading…</div>}
+          {applications === null && !error && <div className="krew-dash-loading-note" role="status">Loading…</div>}
 
           {applications && applications.length === 0 && (
             <div className="krew-dash-empty">
@@ -616,11 +647,14 @@ export default function CrewDashboard({ user, onLogout }) {
             <p>Jobs you're hired for. Once you've been paid, confirm the amount here - when both sides confirm, it counts toward your record.</p>
           </div>
 
-          {myJobs === null && !error && <div className="krew-dash-loading-note">Loading…</div>}
+          {myJobs === null && !error && <div className="krew-dash-loading-note" role="status">Loading…</div>}
 
           {myJobs && myJobs.length === 0 && (
             <div className="krew-dash-empty">
-              <p>No confirmed jobs yet - once an organizer hires you or accepts your application, it'll show up here.</p>
+              <p>No jobs yet - once an organizer hires you or accepts your application, it'll show up here.</p>
+              <button type="button" className="krew-button-primary krew-button-inline" onClick={() => goTo('gigs')}>
+                Find gigs <ArrowRight size={16} strokeWidth={2} />
+              </button>
             </div>
           )}
 
@@ -735,7 +769,7 @@ export default function CrewDashboard({ user, onLogout }) {
             <div className="krew-portfolio-grid">
               {portfolio && portfolio.map((image) => (
                 <div className="krew-portfolio-thumb" key={image.id}>
-                  <img src={`/uploads/${image.image_path}`} alt="" />
+                  <img src={`/uploads/${image.image_path}`} alt="" loading="lazy" decoding="async" />
                   <button
                     type="button"
                     className="krew-portfolio-thumb-remove"
@@ -769,7 +803,7 @@ export default function CrewDashboard({ user, onLogout }) {
               )}
             </div>
 
-            {portfolio === null && <div className="krew-dash-loading-note">Loading portfolio…</div>}
+            {portfolio === null && <div className="krew-dash-loading-note" role="status">Loading portfolio…</div>}
           </section>
 
           <section className="krew-db-card">

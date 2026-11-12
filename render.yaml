@@ -3,6 +3,31 @@ services:
     name: krew
     env: node
     plan: free
-    buildCommand: "cd client && npm install && npm run build && cd ../server && npm install"
+    # --include=dev: with NODE_ENV=production npm would otherwise skip Vite, which the build needs.
+    buildCommand: "cd client && npm install --include=dev && npm run build && cd ../server && npm install"
     startCommand: "cd server && npm start"
     healthCheckPath: /api/health
+    envVars:
+      # Turns on the production-only protections in server/src/security.js and auth.js:
+      # secure cookies, the HTTPS redirect, HSTS and trusting Render's proxy.
+      - key: NODE_ENV
+        value: production
+      # better-sqlite3 needs Node 22 or newer.
+      - key: NODE_VERSION
+        value: "22"
+      # The free plan wipes the database whenever the service restarts or sleeps, so the demo
+      # accounts and jobs are loaded again each time it starts on an empty database
+      # (server/src/bootstrap.js). Set to false once you move to a paid plan with a disk.
+      - key: SEED_DEMO_DATA
+        value: "true"
+      # Private password for every demo account on the live site. Render asks for it when
+      # the Blueprint is created (sync: false = typed into the dashboard, never stored in Git).
+      - key: DEMO_PASSWORD
+        sync: false
+      # Your own admin account, created at start-up if it doesn't exist yet.
+      - key: ADMIN_NAME
+        sync: false
+      - key: ADMIN_PHONE
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
