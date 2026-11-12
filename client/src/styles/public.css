@@ -1687,16 +1687,369 @@
   color: var(--color-text-faint);
 }
 
-/* Gig detail (brief section 7.5) - the editorial page Find Work's cards
-   link to. A two-column layout (content, then a sticky-feeling payment +
-   apply panel) rather than a card grid, since this is one listing read in
-   full rather than many scanned at once. */
-.krew-gig-wrap {
-  max-width: 960px;
+/* Gig detail (moodboard panel 7) - title + tags, the listing photo with tabs under it, and a
+   sticky apply panel on the right */
+.krew-gd-wrap {
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 32px 24px 64px 24px;
+  padding: 32px 32px 0 32px;
 }
 
+.krew-gd-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-soft);
+  text-decoration: none;
+  margin-bottom: 22px;
+}
+
+.krew-gd-back:hover {
+  color: var(--color-text);
+}
+
+.krew-gd-head h1 {
+  font-family: var(--font-display);
+  font-size: 46px;
+  line-height: 1.08;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0 0 14px 0;
+  max-width: 820px;
+}
+
+.krew-gd-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 30px;
+}
+
+.krew-gd-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 40px;
+  align-items: start;
+}
+
+.krew-gd-photo {
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-xl);
+}
+
+.krew-gd-photo.placeholder .krew-listing-photo-icon {
+  max-width: 96px;
+}
+
+.krew-gd-tabs {
+  display: flex;
+  gap: 28px;
+  border-bottom: 1px solid var(--color-border);
+  margin-top: 28px;
+}
+
+.krew-gd-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  padding: 12px 0;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-soft);
+  cursor: pointer;
+  transition: color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease);
+}
+
+.krew-gd-tab:hover {
+  color: var(--color-text);
+}
+
+.krew-gd-tab.active {
+  color: var(--color-brand-text);
+  border-bottom-color: var(--color-brand-text);
+}
+
+.krew-gd-panel {
+  padding: 24px 0 8px 0;
+}
+
+.krew-gd-description {
+  font-size: 16px;
+  line-height: 1.75;
+  color: var(--color-text-soft);
+  white-space: pre-wrap;
+  margin: 0;
+  max-width: 680px;
+}
+
+.krew-gd-description.empty {
+  color: var(--color-text-faint);
+  font-style: italic;
+}
+
+.krew-gd-posted {
+  font-size: 13px;
+  color: var(--color-text-faint);
+  margin: 18px 0 0 0;
+}
+
+.krew-gd-org-name {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 600;
+  margin: 0 0 18px 0;
+}
+
+/* Organizer stats - bare line icons, a big number and a plain-language label */
+.krew-gd-org-stats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px;
+}
+
+.krew-gd-org-stats li {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--color-brand-text);
+}
+
+.krew-gd-org-stat-value {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-top: 6px;
+}
+
+.krew-gd-org-stat-label {
+  font-size: 13.5px;
+  line-height: 1.4;
+  color: var(--color-text-soft);
+}
+
+/* Apply panel */
+.krew-gd-side {
+  position: sticky;
+  top: 90px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.krew-gd-apply {
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 26px;
+  box-shadow: var(--shadow-md);
+}
+
+.krew-gd-amount-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+  margin: 0;
+}
+
+.krew-gd-amount {
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 600;
+  margin: 4px 0 18px 0;
+}
+
+.krew-gd-facts {
+  list-style: none;
+  margin: 0 0 22px 0;
+  padding: 18px 0 0 0;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.krew-gd-facts li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14.5px;
+  color: var(--color-text);
+}
+
+.krew-gd-facts svg {
+  flex-shrink: 0;
+  color: var(--color-brand-text);
+}
+
+.krew-gd-apply-btn.krew-button-inline {
+  width: 100%;
+  padding: 15px 22px;
+}
+
+.krew-gd-apply-note {
+  font-size: 13.5px;
+  color: var(--color-text-soft);
+  text-align: center;
+  margin: 12px 0 0 0;
+}
+
+.krew-gd-apply-note a {
+  color: var(--color-brand-text);
+  font-weight: 600;
+}
+
+.krew-gd-applied {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-success);
+  margin: 0;
+}
+
+.krew-gd-applied svg {
+  flex-shrink: 0;
+}
+
+.krew-gd-org-mini {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 18px 22px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.krew-gd-org-mini-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+}
+
+.krew-gd-org-mini strong {
+  font-size: 16px;
+}
+
+.krew-gd-org-mini-record {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 13.5px;
+  color: var(--color-text-soft);
+}
+
+/* More open gigs */
+.krew-gd-more {
+  margin-top: 72px;
+  padding-bottom: 88px;
+}
+
+.krew-gd-more .krew-cp-block-head {
+  margin-bottom: 18px;
+}
+
+.krew-gd-more-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.krew-gd-more-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color var(--motion-fast) var(--motion-ease), box-shadow var(--motion-base) var(--motion-ease), transform var(--motion-base) var(--motion-ease);
+}
+
+.krew-gd-more-card:hover {
+  border-color: var(--color-soft-violet);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-3px);
+}
+
+.krew-gd-more-photo {
+  aspect-ratio: 16 / 9;
+}
+
+.krew-gd-more-body {
+  padding: 16px 18px 18px 18px;
+}
+
+.krew-gd-more-body h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+}
+
+.krew-gd-more-body p {
+  font-size: 13px;
+  color: var(--color-text-soft);
+  margin: 0 0 10px 0;
+}
+
+.krew-gd-more-body strong {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+@media (max-width: 860px) {
+  .krew-gd-wrap {
+    padding: 20px 20px 0 20px;
+  }
+
+  .krew-gd-head h1 {
+    font-size: 32px;
+  }
+
+  .krew-gd-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+
+  .krew-gd-side {
+    position: static;
+    order: -1;
+  }
+
+  .krew-gd-photo {
+    border-radius: var(--radius-lg);
+  }
+
+  .krew-gd-org-stats {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+
+  .krew-gd-more {
+    margin-top: 48px;
+    padding-bottom: 56px;
+  }
+
+  .krew-gd-more-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Plain back link - still used by the Crew Profile loading / not-found state */
 .krew-gig-back-link {
   display: inline-block;
   color: var(--color-text-soft);
@@ -1707,115 +2060,6 @@
 
 .krew-gig-back-link:hover {
   color: var(--color-text);
-}
-
-.krew-gig-layout {
-  display: grid;
-  grid-template-columns: 1fr 300px;
-  gap: 40px;
-  align-items: start;
-}
-
-.krew-gig-title {
-  font-family: var(--font-display);
-  font-size: 34px;
-  line-height: 1.15;
-  margin: 6px 0 12px 0;
-}
-
-.krew-gig-organizer {
-  color: var(--color-text-soft);
-  font-size: 14.5px;
-}
-
-.krew-gig-organizer strong {
-  color: var(--color-text);
-}
-
-.krew-gig-meta-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 18px;
-  margin: 20px 0;
-  padding: 16px 0;
-  border-top: 1px solid var(--color-border);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.krew-gig-meta-row span {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  color: var(--color-text-soft);
-}
-
-.krew-gig-body {
-  margin-top: 24px;
-}
-
-.krew-gig-body h2 {
-  font-size: 18px;
-  margin-bottom: 10px;
-}
-
-.krew-gig-body p {
-  color: var(--color-text-soft);
-  line-height: 1.7;
-  white-space: pre-wrap;
-}
-
-.krew-gig-side {
-  position: sticky;
-  top: 90px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.krew-gig-amount-card {
-  background: var(--color-surface-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-}
-
-.krew-gig-amount-label {
-  font-size: 12.5px;
-  color: var(--color-text-faint);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.krew-gig-amount {
-  font-family: var(--font-display);
-  font-size: 30px;
-  margin: 4px 0;
-}
-
-.krew-gig-amount-sub {
-  font-size: 13px;
-  color: var(--color-text-soft);
-}
-
-.krew-gig-apply-panel {
-  background: var(--color-surface-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-}
-
-.krew-gig-apply-note {
-  font-size: 14px;
-  color: var(--color-text-soft);
-  margin-bottom: 12px;
-}
-
-.krew-gig-apply-cta {
-  width: 100%;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
 }
 
 /* Crew profile - full-screen: a full-width cover hero with the name and headline stats, a tall
@@ -2432,20 +2676,6 @@
     top: auto;
     bottom: 12px;
     transform: none;
-  }
-}
-
-@media (max-width: 860px) {
-  .krew-gig-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .krew-gig-side {
-    position: static;
-  }
-
-  .krew-gig-title {
-    font-size: 28px;
   }
 }
 

@@ -58,6 +58,9 @@ const profilePhotosPath = path.join(__dirname, '..', 'uploads', 'profile-photos'
 app.use('/uploads/profile-photos', express.static(profilePhotosPath));
 const portfolioPhotosPath = path.join(__dirname, '..', 'uploads', 'portfolio-photos');
 app.use('/uploads/portfolio-photos', express.static(portfolioPhotosPath));
+// Listing photos (routes/listings.js) - shown on the public Find Work page, so public too.
+const listingPhotosPath = path.join(__dirname, '..', 'uploads', 'listing-photos');
+app.use('/uploads/listing-photos', express.static(listingPhotosPath));
 
 const clientDistPath = path.join(__dirname, '..', '..', 'client', 'dist');
 app.use(express.static(clientDistPath));

@@ -141,6 +141,15 @@ db.exec(`
 // re-notify the same organizer about the same job every time it runs, rather than once -
 // it's set the moment a reminder is actually sent, and the check skips any row where it's
 // already filled in.
+// Which open listing a job came from (null for direct hires and for jobs created before
+// this column existed) - lets a crew member's public work history show the listing's
+// public title and category instead of the private job description.
+try {
+  db.exec(`ALTER TABLE transactions ADD COLUMN listing_id INTEGER REFERENCES job_listings(id);`);
+} catch (err) {
+  if (!err.message.includes('duplicate column name')) throw err;
+}
+
 try {
   db.exec(`ALTER TABLE transactions ADD COLUMN due_reminder_sent_at TEXT;`);
 } catch (err) {
@@ -189,6 +198,15 @@ try {
 }
 try {
   db.exec(`ALTER TABLE job_listings ADD COLUMN location TEXT;`);
+} catch (err) {
+  if (!err.message.includes('duplicate column name')) throw err;
+}
+
+// Redesign: one photo per listing, uploaded by the organizer who posted it (shown on
+// Find Work's cards and the gig page). Same save-to-disk pattern as profile photos -
+// this column only stores the file's path under uploads/, never the image itself.
+try {
+  db.exec(`ALTER TABLE job_listings ADD COLUMN photo_path TEXT;`);
 } catch (err) {
   if (!err.message.includes('duplicate column name')) throw err;
 }

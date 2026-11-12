@@ -16,6 +16,7 @@ const MAX_PROFESSIONAL_ROLE_LENGTH = 60;
 const MAX_SKILLS = 8;
 const MAX_SKILL_LENGTH = 30;
 const MAX_BIO_LENGTH = 400;
+const WORK_HISTORY_LIMIT = 10; // most recent confirmed jobs shown on a public crew profile
 
 // Profile photos (shown publicly on the crew directory) are a separate, later upload
 // from the private id_document_path/selfie_path pair collected at signup - those two
@@ -116,7 +117,7 @@ usersRouter.get('/crew-directory', requireRole('organizer'), (req, res) => {
 usersRouter.get('/crew-directory/public', (req, res) => {
   const crewMembers = db
     .prepare(
-      `SELECT id, name, profile_photo_path, availability_status, professional_role, skills
+      `SELECT id, name, profile_photo_path, availability_status, professional_role, skills, years_experience
        FROM users
        WHERE role = 'crew_member' AND verification_status = 'approved'
        ORDER BY name ASC`
@@ -408,11 +409,29 @@ usersRouter.get('/:id/public-profile', (req, res) => {
     .prepare(`SELECT id, image_path FROM portfolio_images WHERE user_id = ? ORDER BY created_at ASC`)
     .all(crewMemberId);
 
+  // Verified work history - the crew member's most recent confirmed (paid) jobs. Deliberately
+  // shows only what's already public or harmless: the listing's public title + category when
+  // the job came from an open listing, and the month it was confirmed. Never the amount, the
+  // organizer, or the private job description - a direct hire just shows as "Direct hire".
+  const workHistory = db
+    .prepare(
+      `SELECT t.id, l.title, l.category,
+              COALESCE(t.daraja_confirmed_at, MAX(t.organizer_confirmed_at, t.crew_confirmed_at),
+                       t.organizer_confirmed_at, t.crew_confirmed_at, t.due_date) AS confirmed_on
+       FROM transactions t
+       LEFT JOIN job_listings l ON l.id = t.listing_id
+       WHERE t.crew_member_id = ? AND t.status = 'confirmed'
+       ORDER BY confirmed_on DESC, t.id DESC
+       LIMIT ?`
+    )
+    .all(crewMemberId, WORK_HISTORY_LIMIT);
+
   const { skills, ...rest } = crewMember;
   res.json({
     ...rest,
     skills: splitSkills(skills),
     portfolio,
+    work_history: workHistory,
     ...computeCrewRecord(crewMemberId),
   });
 });

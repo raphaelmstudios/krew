@@ -3,6 +3,10 @@
 // It also allows organizers to hire approved crew members directly without going through the open job board.
 
 import express from 'express';
+import multer from 'multer';
+import path from 'node:path';
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { db } from '../db.js';
 import { requireRole } from '../middleware/auth.js';
 import { computeOrganizerRecord, computeCrewRecord } from './users.js';
@@ -23,6 +27,36 @@ export const LISTING_CATEGORIES = [
   'Sound & AV',
   'Other',
 ];
+
+// Listing photos - one per listing, uploaded by its organizer after the listing is
+// created (so the main create route can stay plain JSON). Saved to uploads/listing-photos
+// and served publicly (see index.js), same pattern and limits as profile photos.
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const UPLOAD_ROOT = path.join(__dirname, '..', '..', 'uploads');
+const LISTING_PHOTOS_DIR = path.join(UPLOAD_ROOT, 'listing-photos');
+fs.mkdirSync(LISTING_PHOTOS_DIR, { recursive: true });
+
+const ALLOWED_PHOTO_TYPES = ['image/jpeg', 'image/png'];
+const MAX_PHOTO_SIZE = 5 * 1024 * 1024; // 5MB
+
+const uploadListingPhoto = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, LISTING_PHOTOS_DIR),
+    filename: (req, file, cb) => {
+      // Never trust the browser's filename - build our own from the listing id and the time.
+      const safeExt = path.extname(file.originalname).toLowerCase().replace(/[^a-z0-9.]/g, '');
+      cb(null, `listing-${Number(req.params.id)}-${Date.now()}${safeExt}`);
+    },
+  }),
+  fileFilter: (req, file, cb) => {
+    if (!ALLOWED_PHOTO_TYPES.includes(file.mimetype)) {
+      cb(new Error('UNSUPPORTED_FILE_TYPE'));
+      return;
+    }
+    cb(null, true);
+  },
+  limits: { fileSize: MAX_PHOTO_SIZE },
+}).single('listing_photo');
 
 function startOfDay(value) {
   const date = new Date(value);
@@ -85,11 +119,48 @@ listingsRouter.post('/', requireRole('organizer'), (req, res) => {
   });
 });
 
+// --- organizer: add or replace the photo on one of their own open listings ---
+// Ownership is checked before the upload is accepted, and the listing id + organizer id
+// are both in the WHERE clause, so nobody can put a photo on someone else's listing.
+listingsRouter.post('/:id/photo', requireRole('organizer'), (req, res) => {
+  const listingId = Number(req.params.id);
+  const listing = db
+    .prepare(`SELECT id, photo_path FROM job_listings WHERE id = ? AND organizer_id = ? AND status = 'open'`)
+    .get(listingId, req.user.id);
+  if (!listing) {
+    return res.status(404).json({ error: 'No open listing of yours found with that id.' });
+  }
+
+  uploadListingPhoto(req, res, (uploadErr) => {
+    if (uploadErr) {
+      if (uploadErr.message === 'UNSUPPORTED_FILE_TYPE') {
+        return res.status(400).json({ error: 'Please upload a JPG or PNG file.' });
+      }
+      if (uploadErr.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: 'The photo must be smaller than 5MB.' });
+      }
+      console.error('Listing photo upload failed:', uploadErr);
+      return res.status(500).json({ error: 'Something went wrong. Please try again later.' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ error: 'Choose a photo to upload.' });
+    }
+
+    const relativePath = `listing-photos/${req.file.filename}`;
+    db.prepare(`UPDATE job_listings SET photo_path = ? WHERE id = ? AND organizer_id = ?`).run(relativePath, listingId, req.user.id);
+    // Replacing a photo deletes the old file so uploads don't pile up.
+    if (listing.photo_path) {
+      fs.unlink(path.join(UPLOAD_ROOT, listing.photo_path), () => {});
+    }
+    res.json({ id: listingId, photo_path: relativePath });
+  });
+});
+
 // --- organizer: their own listings, with how many people are waiting on each ---
 listingsRouter.get('/mine', requireRole('organizer'), (req, res) => {
   const listings = db
     .prepare(
-      `SELECT l.id, l.amount, l.due_date, l.job_description, l.title, l.category, l.location, l.status, l.created_at,
+      `SELECT l.id, l.amount, l.due_date, l.job_description, l.title, l.category, l.location, l.status, l.created_at, l.photo_path,
               (SELECT COUNT(*) FROM job_applications a WHERE a.listing_id = l.id AND a.status = 'pending') AS pending_applicant_count
        FROM job_listings l
        WHERE l.organizer_id = ?
@@ -165,10 +236,10 @@ listingsRouter.post('/:id/accept', requireRole('organizer'), (req, res) => {
   const acceptApplicant = db.transaction(() => {
     const result = db
       .prepare(
-        `INSERT INTO transactions (organizer_id, crew_member_id, amount, due_date, job_description, status)
-         VALUES (?, ?, ?, ?, ?, 'pending')`
+        `INSERT INTO transactions (organizer_id, crew_member_id, amount, due_date, job_description, status, listing_id)
+         VALUES (?, ?, ?, ?, ?, 'pending', ?)`
       )
-      .run(listing.organizer_id, crewMemberId, listing.amount, listing.due_date, listing.job_description);
+      .run(listing.organizer_id, crewMemberId, listing.amount, listing.due_date, listing.job_description, listingId);
 
     db.prepare(`UPDATE job_listings SET status = 'filled' WHERE id = ?`).run(listingId);
     db.prepare(`UPDATE job_applications SET status = 'accepted' WHERE id = ?`).run(application.id);
@@ -202,7 +273,7 @@ listingsRouter.post('/:id/accept', requireRole('organizer'), (req, res) => {
 listingsRouter.get('/open', requireRole('crew_member'), (req, res) => {
   const listings = db
     .prepare(
-      `SELECT l.id, l.amount, l.due_date, l.job_description, l.title, l.category, l.location, l.created_at,
+      `SELECT l.id, l.amount, l.due_date, l.job_description, l.title, l.category, l.location, l.created_at, l.photo_path,
               org.id AS organizer_id, org.name AS organizer_name,
               EXISTS(
                 SELECT 1 FROM job_applications a WHERE a.listing_id = l.id AND a.crew_member_id = ?
@@ -235,7 +306,7 @@ listingsRouter.get('/open', requireRole('crew_member'), (req, res) => {
 listingsRouter.get('/public', (req, res) => {
   const listings = db
     .prepare(
-      `SELECT l.id, l.amount, l.due_date, l.job_description, l.title, l.category, l.location, l.created_at,
+      `SELECT l.id, l.amount, l.due_date, l.job_description, l.title, l.category, l.location, l.created_at, l.photo_path,
               l.organizer_id, org.name AS organizer_name
        FROM job_listings l
        JOIN users org ON org.id = l.organizer_id
@@ -260,7 +331,7 @@ listingsRouter.get('/public/:id', (req, res) => {
   const listingId = Number(req.params.id);
   const listing = db
     .prepare(
-      `SELECT l.id, l.amount, l.due_date, l.job_description, l.title, l.category, l.location, l.created_at,
+      `SELECT l.id, l.amount, l.due_date, l.job_description, l.title, l.category, l.location, l.created_at, l.photo_path,
               l.organizer_id, org.name AS organizer_name
        FROM job_listings l
        JOIN users org ON org.id = l.organizer_id
@@ -320,7 +391,7 @@ listingsRouter.get('/mine-applications', requireRole('crew_member'), (req, res) 
   const applications = db
     .prepare(
       `SELECT a.id, a.status, a.created_at,
-              l.id AS listing_id, l.amount, l.due_date, l.job_description, l.title, l.category, l.location, l.status AS listing_status,
+              l.id AS listing_id, l.amount, l.due_date, l.job_description, l.title, l.category, l.location, l.photo_path, l.status AS listing_status,
               org.name AS organizer_name
        FROM job_applications a
        JOIN job_listings l ON l.id = a.listing_id
