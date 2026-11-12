@@ -17,6 +17,7 @@ import PublicFooter from '../components/PublicFooter.jsx';
 import InfoTooltip from '../components/InfoTooltip.jsx';
 import CrewCard, { initials } from '../components/CrewCard.jsx';
 import { categoryIcon } from '../components/ListingPhoto.jsx';
+import HireForm from './HireForm.jsx';
 
 // A crew member's public profile, full-screen rather than boxed: a full-width cover hero with
 // the name, role and headline stats, a tall portrait card that overlaps the hero with the bio
@@ -52,6 +53,7 @@ export default function CrewProfile() {
   const [showAllPortfolio, setShowAllPortfolio] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(null); // null = closed
   const [linkCopied, setLinkCopied] = useState(false);
+  const [hireStep, setHireStep] = useState(null); // null = closed, 'form' = hiring, 'done' = hire created
 
   useEffect(() => {
     let cancelled = false;
@@ -126,6 +128,12 @@ export default function CrewProfile() {
   }
 
   const isOwnProfile = session && String(session.id) === String(id);
+  // Hire straight from the profile (same direct hire as Find Crew in the organizer dashboard):
+  // approved organizers get the form, organizers still waiting on approval see why they can't
+  // yet, and anyone logged out is pointed at signing up. Crew and admins don't see it at all.
+  const isOrganizer = session?.role === 'organizer';
+  const canHire = isOrganizer && session.verification_status === 'approved';
+  const showSignUpToHire = session === null;
   const portfolio = profile?.portfolio || [];
   const workHistory = profile?.work_history || [];
   const visiblePortfolio = showAllPortfolio ? portfolio : portfolio.slice(0, PORTFOLIO_PREVIEW_COUNT);
@@ -191,6 +199,21 @@ export default function CrewProfile() {
               {isOwnProfile && (
                 <Link to="/dashboard" className="krew-cp-hero-btn primary">
                   <Pencil size={15} strokeWidth={2} /> Edit Profile
+                </Link>
+              )}
+              {canHire && (
+                <button type="button" className="krew-cp-hero-btn primary" onClick={() => setHireStep('form')}>
+                  <Handshake size={16} strokeWidth={1.75} /> Hire {profile.name.split(' ')[0]}
+                </button>
+              )}
+              {isOrganizer && !canHire && (
+                <span className="krew-cp-hero-btn disabled" title="You can hire once your account is approved.">
+                  <Handshake size={16} strokeWidth={1.75} /> Hire after approval
+                </span>
+              )}
+              {showSignUpToHire && (
+                <Link to="/register" className="krew-cp-hero-btn primary">
+                  <Handshake size={16} strokeWidth={1.75} /> Sign up to hire
                 </Link>
               )}
               <button type="button" className="krew-cp-hero-btn" onClick={handleCopyLink}>
@@ -321,6 +344,15 @@ export default function CrewProfile() {
         />
       )}
 
+      {hireStep && (
+        <HireDialog
+          crewMember={{ id: profile.id, name: profile.name }}
+          step={hireStep}
+          onCreated={() => setHireStep('done')}
+          onClose={() => setHireStep(null)}
+        />
+      )}
+
       <PublicFooter />
     </div>
   );
@@ -388,6 +420,58 @@ function Lightbox({ images, index, onChange, onClose, name }) {
         </button>
       )}
       <span className="krew-lightbox-count">{index + 1} / {count}</span>
+    </div>
+  );
+}
+
+// The hire form from the organizer dashboard, opened over the profile so the organizer doesn't
+// lose their place. Once the hire goes through it says where the job now lives (Payments).
+function HireDialog({ crewMember, step, onCreated, onClose }) {
+  useEffect(() => {
+    function handleKey(e) {
+      if (e.key === 'Escape') onClose();
+    }
+    document.addEventListener('keydown', handleKey);
+    document.body.classList.add('krew-modal-open');
+    return () => {
+      document.removeEventListener('keydown', handleKey);
+      document.body.classList.remove('krew-modal-open');
+    };
+  }, []);
+
+  return (
+    <div className="krew-moment-backdrop" onClick={onClose}>
+      <div
+        className="krew-cp-hire-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Hire ${crewMember.name}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button type="button" className="krew-cp-hire-close" onClick={onClose} aria-label="Close">
+          <X size={20} strokeWidth={1.75} />
+        </button>
+        {step === 'form' ? (
+          <HireForm crewMember={crewMember} onCreated={onCreated} onCancel={onClose} />
+        ) : (
+          <div className="krew-cp-hire-done">
+            <BadgeCheck size={44} strokeWidth={1.2} aria-hidden="true" />
+            <h2>{crewMember.name.split(' ')[0]} is hired</h2>
+            <p>
+              The job is in your Payments. Once you've paid, confirm the amount there - when{' '}
+              {crewMember.name.split(' ')[0]} confirms the same amount, it counts toward both of your records.
+            </p>
+            <div className="krew-cp-hire-done-actions">
+              <Link to="/dashboard?section=payments" className="krew-button-primary krew-button-inline">
+                Go to Payments <ArrowRight size={16} strokeWidth={2} />
+              </Link>
+              <button type="button" className="krew-button-secondary krew-button-inline" onClick={onClose}>
+                Stay here
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

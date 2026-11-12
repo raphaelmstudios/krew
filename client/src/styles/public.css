@@ -2762,3 +2762,99 @@
     aspect-ratio: 16 / 10;
   }
 }
+
+/* Crew profile - Hire button + the hire dialog over the profile (CrewProfile.jsx HireDialog).
+   Reuses the payment moment's backdrop (dashboard.css) and the dashboard's HireForm card. */
+.krew-cp-hero-btn.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.krew-cp-hire-dialog {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  border-radius: var(--radius-xl);
+  background: var(--color-surface-card);
+  box-shadow: 0 30px 80px rgba(20, 12, 26, 0.35);
+  animation: krew-moment-rise var(--motion-slow) var(--motion-ease) both;
+}
+
+.krew-cp-hire-dialog .krew-dash-form-card {
+  border: none;
+  box-shadow: none;
+  background: none;
+  margin: 0;
+  padding: 30px 28px 28px;
+}
+
+.krew-cp-hire-dialog .krew-dash-form-title {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  padding-right: 36px;
+}
+
+.krew-cp-hire-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 1;
+  display: inline-flex;
+  padding: 6px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-soft);
+  cursor: pointer;
+}
+
+.krew-cp-hire-close:hover {
+  color: var(--color-text);
+}
+
+.krew-cp-hire-done {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 36px 28px 28px;
+}
+
+.krew-cp-hire-done > svg {
+  color: var(--color-success);
+  margin-bottom: 14px;
+}
+
+.krew-cp-hire-done h2 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+}
+
+.krew-cp-hire-done p {
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--color-text-soft);
+  margin: 0 0 22px 0;
+}
+
+.krew-cp-hire-done-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.krew-cp-hire-done-actions a {
+  text-decoration: none;
+}
+
+@media (max-width: 860px) {
+  .krew-cp-hire-dialog .krew-dash-form-card,
+  .krew-cp-hire-done {
+    padding: 26px 20px 22px;
+  }
+}

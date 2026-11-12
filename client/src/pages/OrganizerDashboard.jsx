@@ -274,7 +274,7 @@ export default function OrganizerDashboard({ user, onLogout }) {
             <p>Let's make your next event exceptional.</p>
           </div>
 
-          <PilotSurveyBanner />
+          <PilotSurveyBanner role="organizer" />
 
           <div className="krew-db-overview">
             <section className="krew-db-upcoming">

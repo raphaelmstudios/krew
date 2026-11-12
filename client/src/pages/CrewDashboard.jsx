@@ -425,7 +425,7 @@ export default function CrewDashboard({ user, onLogout }) {
             <p>Here's what's happening with your work.</p>
           </div>
 
-          <PilotSurveyBanner />
+          <PilotSurveyBanner role="crew_member" />
 
           <div className="krew-db-overview">
             <section className="krew-db-upcoming">
