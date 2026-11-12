@@ -3,11 +3,9 @@
 
 
 import Database from 'better-sqlite3';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { DB_PATH } from './paths.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DB_PATH = path.join(__dirname, '..', 'krew.db');
+// DB_PATH comes from paths.js (DATABASE_PATH environment variable, or server/krew.db).
 
 export const db = new Database(DB_PATH);
 db.pragma('journal_mode = WAL');
@@ -116,7 +114,7 @@ db.exec(`CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);`)
 // This table handles every job agreement between an organizer and a crew member
 // Each job agreement between an organizer and a crew member is presented in one row in this table.
 // due_date and job_description are the terms the organizer sets when creating the job.
-// daraja_confirmed_at stays empty for now, it gets filled in once M-Pesa Daraja is wired up.
+// daraja_confirmed_at is unused: it's reserved for a future M-Pesa (Daraja) integration and stays empty.
 db.exec(`
     CREATE TABLE IF NOT EXISTS transactions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -141,11 +139,50 @@ db.exec(`
 // re-notify the same organizer about the same job every time it runs, rather than once -
 // it's set the moment a reminder is actually sent, and the check skips any row where it's
 // already filled in.
+// Which open listing a job came from (null for direct hires and for jobs created before
+// this column existed) - lets a crew member's public work history show the listing's
+// public title and category instead of the private job description.
+try {
+  db.exec(`ALTER TABLE transactions ADD COLUMN listing_id INTEGER REFERENCES job_listings(id);`);
+} catch (err) {
+  if (!err.message.includes('duplicate column name')) throw err;
+}
+
 try {
   db.exec(`ALTER TABLE transactions ADD COLUMN due_reminder_sent_at TEXT;`);
 } catch (err) {
   if (!err.message.includes('duplicate column name')) throw err;
 }
+
+// When a job became complete - set once, at the moment status moves to 'confirmed' (both
+// sides' amounts matched, or an admin settled a dispute with a final amount). Before this,
+// "when was it completed" had to be guessed from whichever confirmation came last.
+try {
+  db.exec(`ALTER TABLE transactions ADD COLUMN completed_at TEXT;`);
+} catch (err) {
+  if (!err.message.includes('duplicate column name')) throw err;
+}
+
+// Repair: jobs where both sides confirmed the same amount but the status never moved past
+// 'pending' (confirmations made before the match-and-confirm step existed). They're
+// complete in every way that matters, so they're marked that way here - otherwise they sit
+// on both dashboards as "awaiting confirmation" with nothing left for anyone to do.
+db.exec(`
+  UPDATE transactions
+  SET status = 'confirmed',
+      completed_at = MAX(organizer_confirmed_at, crew_confirmed_at)
+  WHERE status = 'pending'
+    AND organizer_confirmed_at IS NOT NULL
+    AND crew_confirmed_at IS NOT NULL
+    AND organizer_confirmed_amount = crew_confirmed_amount;
+`);
+
+// Backfill completed_at for jobs confirmed before the column existed.
+db.exec(`
+  UPDATE transactions
+  SET completed_at = COALESCE(MAX(organizer_confirmed_at, crew_confirmed_at), organizer_confirmed_at, crew_confirmed_at, created_at)
+  WHERE status = 'confirmed' AND completed_at IS NULL;
+`);
 
 // This query makes looking up either the jobs an organizer has posted or the jobs a crew member has accepted faster
 db.exec(`CREATE INDEX IF NOT EXISTS idx_transactions_organizer_id ON transactions(organizer_id);`);
@@ -189,6 +226,15 @@ try {
 }
 try {
   db.exec(`ALTER TABLE job_listings ADD COLUMN location TEXT;`);
+} catch (err) {
+  if (!err.message.includes('duplicate column name')) throw err;
+}
+
+// Redesign: one photo per listing, uploaded by the organizer who posted it (shown on
+// Find Work's cards and the gig page). Same save-to-disk pattern as profile photos -
+// this column only stores the file's path under uploads/, never the image itself.
+try {
+  db.exec(`ALTER TABLE job_listings ADD COLUMN photo_path TEXT;`);
 } catch (err) {
   if (!err.message.includes('duplicate column name')) throw err;
 }
@@ -264,4 +310,42 @@ db.exec(`
     );`);
 db.exec(`CREATE INDEX IF NOT EXISTS idx_portfolio_images_user_id ON portfolio_images(user_id);`);
 
- }
+//password_resets
+// KREW has no email or SMS, so a forgotten password is reset with a person in the loop:
+// the account owner asks for a reset (status 'requested'), a KREW admin calls the phone
+// number on the account to confirm it's really them, then issues a one-time code
+// ('code_issued') that the owner types in with a new password ('used'). Only a hash of the
+// code is stored, it expires after 30 minutes, and 5 wrong tries cancel it.
+db.exec(`
+    CREATE TABLE IF NOT EXISTS password_resets (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      status TEXT NOT NULL DEFAULT 'requested' CHECK (status IN ('requested', 'code_issued', 'used', 'cancelled')),
+      code_hash TEXT,
+      issued_by INTEGER REFERENCES users(id),
+      issued_at TEXT,
+      expires_at TEXT,
+      failed_attempts INTEGER NOT NULL DEFAULT 0,
+      used_at TEXT,
+      requested_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );`);
+db.exec(`CREATE INDEX IF NOT EXISTS idx_password_resets_user_id ON password_resets(user_id);`);
+
+ // Housekeeping on every start: expired logins are deleted rather than left in the table
+// (they're refused anyway - see middleware/auth.js - this just keeps the table small).
+db.exec(`DELETE FROM sessions WHERE expires_at < strftime('%Y-%m-%dT%H:%M:%fZ', 'now');`);
+
+// Phone numbers are stored in one format, 0712345678 (see normalizePhone in security.js),
+// so 0712345678 and +254712345678 can't be two different accounts. Older rows typed as
+// +254... or 254... are converted, unless that would clash with an existing account.
+db.exec(`
+  UPDATE users
+  SET phone = '0' || substr(phone, length(phone) - 8)
+  WHERE phone NOT LIKE '0%'
+    AND length(phone) >= 12
+    AND NOT EXISTS (
+      SELECT 1 FROM users other WHERE other.phone = '0' || substr(users.phone, length(users.phone) - 8)
+    );
+`);
+
+}

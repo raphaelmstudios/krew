@@ -1,17 +1,79 @@
 import { useEffect, useState } from 'react';
-import NotificationBell from '../components/NotificationBell.jsx';
+import { useSearchParams } from 'react-router-dom';
+import {
+  LayoutDashboard,
+  UserRoundCheck,
+  Scale,
+  ChartColumn,
+  KeyRound,
+  PhoneCall,
+  BadgeCheck,
+  Wallet,
+  IdCard,
+  ScanFace,
+  ArrowRight,
+  CircleCheck,
+  CircleDashed,
+  Megaphone,
+  ChevronDown,
+} from 'lucide-react';
+import DashboardShell from '../components/DashboardShell.jsx';
+import ListingPhoto from '../components/ListingPhoto.jsx';
+import usePageMeta from '../usePageMeta.js';
+import { PAGE_META, sectionTitle } from '../pageMeta.js';
 
-//Admin screen - two tabs: pending account approvals, and dispute resolution.
-//NOTE: this screen used to have no login checks; anyone with the /admin URL could open it
-//and approve or reject accounts. Thats only acceptable since there was no real loging system yet.
-//Now that AdminGate.jsx requires a real admin session (Task d1-7), that note is no longer
-//true, so its been updated instead of left here to mislead whoever reads this next.
-export default function Admin({ onLogout }) {
-  const [tab, setTab] = useState('approvals'); // approvals | disputes
+// Admin screen, in the moodboard's sidebar layout (panel 9, DashboardShell.jsx). Four sections:
+// - Overview: the two queues that need a person (account approvals, open disputes) plus headline numbers.
+// - Account Approvals: accounts waiting on ID verification - view their ID and selfie, then approve or reject.
+// - Disputes: jobs either side flagged, with both confirmed amounts side by side, and the resolve form.
+// - Analytics: live counts across people, gigs, jobs and disputes (GET /api/admin/stats).
+// The moodboard also shows a Settings item; there are no admin settings in KREW yet, so it's left
+// out rather than linking to an empty page.
+// NOTE: this screen used to have no login checks; AdminGate.jsx requires a real admin session
+// now (Task d1-7), so anyone seeing this is a logged-in admin.
+
+const SECTIONS = [
+  { key: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { key: 'approvals', label: 'Approvals', icon: UserRoundCheck },
+  { key: 'disputes', label: 'Disputes', icon: Scale },
+  { key: 'resets', label: 'Password resets', icon: KeyRound },
+  { key: 'analytics', label: 'Analytics', icon: ChartColumn },
+];
+
+function initials(name) {
+  return (name || '')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0].toUpperCase())
+    .join('');
+}
+
+// Timestamps from SQLite are UTC without a timezone marker.
+function formatServerDay(value) {
+  if (!value) return '';
+  return new Date(`${value.replace(' ', 'T')}Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function formatDate(value) {
+  return new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function roleLabel(role) {
+  return role === 'crew_member' ? 'Crew member' : role === 'organizer' ? 'Organizer' : role;
+}
+
+export default function Admin({ user, onLogout }) {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requested = searchParams.get('section');
+  const section = SECTIONS.some((item) => item.key === requested) ? requested : 'overview';
+  usePageMeta({ title: sectionTitle(SECTIONS.find((item) => item.key === section).label, 'KREW admin'), description: PAGE_META['/admin'].description });
 
   const [pendingUsers, setPendingUsers] = useState(null); //null means still loading
   const [actioningId, setActioningId] = useState(null);
+  const [confirmRejectId, setConfirmRejectId] = useState(null); // reject asks once more before it goes through
   const [approvalsError, setApprovalsError] = useState(null);
+  const [approvalsNotice, setApprovalsNotice] = useState(null);
 
   const [disputes, setDisputes] = useState(null);
   const [disputesError, setDisputesError] = useState(null);
@@ -21,27 +83,104 @@ export default function Admin({ onLogout }) {
   const [finalAmount, setFinalAmount] = useState('');
   const [resolveError, setResolveError] = useState(null);
   const [resolveSubmitting, setResolveSubmitting] = useState(false);
+  const [showResolved, setShowResolved] = useState(false);
+
+  const [stats, setStats] = useState(null);
+
+  // Password resets: open requests, and the code issued for each (shown once, to read out).
+  const [resets, setResets] = useState(null);
+  const [resetsError, setResetsError] = useState(null);
+  const [issuedCodes, setIssuedCodes] = useState({});
+  const [resetBusyId, setResetBusyId] = useState(null);
 
   useEffect(() => {
     loadPendingUsers();
     loadDisputes();
+    loadStats();
+    loadResets();
   }, []);
+
+  // A notification link can land straight on ?section=resets - load the latest requests then too.
+  useEffect(() => {
+    if (section === 'resets') loadResets();
+  }, [section]);
+
+  async function loadResets() {
+    try {
+      const response = await fetch('/api/admin/password-resets');
+      const data = await response.json();
+      if (!response.ok) {
+        setResetsError(data.error || 'Could not load password reset requests.');
+        return;
+      }
+      setResets(data);
+    } catch {
+      setResetsError('Could not reach the server.');
+    }
+  }
+
+  async function handleResetAction(reset, action) {
+    setResetBusyId(reset.id);
+    setResetsError(null);
+    try {
+      const response = await fetch(`/api/admin/password-resets/${reset.id}/${action}`, { method: 'POST' });
+      const data = await response.json();
+      if (!response.ok) {
+        setResetsError(data.error || 'Something went wrong. Please try again.');
+        return;
+      }
+      if (action === 'issue') {
+        setIssuedCodes((current) => ({ ...current, [reset.id]: data }));
+        loadResets();
+      } else {
+        setResets((current) => current.filter((r) => r.id !== reset.id));
+      }
+    } catch {
+      setResetsError('Could not reach the server.');
+    } finally {
+      setResetBusyId(null);
+    }
+  }
+
+  function goTo(nextSection) {
+    setSearchParams(nextSection === 'overview' ? {} : { section: nextSection });
+    setApprovalsNotice(null);
+    window.scrollTo(0, 0);
+    // Other admins (or the people involved) can change these while another section is open.
+    if (nextSection === 'overview' || nextSection === 'approvals') loadPendingUsers();
+    if (nextSection === 'overview' || nextSection === 'disputes') loadDisputes();
+    if (nextSection === 'overview' || nextSection === 'analytics') loadStats();
+  }
 
   async function loadPendingUsers() {
     try {
       const response = await fetch('/api/admin/users/pending');
       const data = await response.json();
+      if (!response.ok) {
+        setApprovalsError(data.error || 'Could not load pending accounts.');
+        return;
+      }
       setPendingUsers(data);
-    } catch (err) {
+    } catch {
       setApprovalsError('Could not reach the server.');
     }
   }
 
-  async function handleAction(userId, action) {
-    setActioningId(userId);
-    setApprovalsError(null);
+  async function loadStats() {
     try {
-      const response = await fetch(`/api/admin/users/${userId}/${action}`, { method: 'POST' });
+      const response = await fetch('/api/admin/stats');
+      if (response.ok) setStats(await response.json());
+    } catch {
+      // The tiles just stay on their loading state.
+    }
+  }
+
+  async function handleAction(pendingUser, action) {
+    setActioningId(pendingUser.id);
+    setApprovalsError(null);
+    setApprovalsNotice(null);
+    try {
+      const response = await fetch(`/api/admin/users/${pendingUser.id}/${action}`, { method: 'POST' });
       const data = await response.json();
       if (!response.ok) {
         setApprovalsError(data.error || 'Something went wrong. Please try again.');
@@ -49,8 +188,13 @@ export default function Admin({ onLogout }) {
       }
 
       //Takes the approved/rejected user out of the pending list instead of reloading the whole list from the server
-      setPendingUsers((current) => current.filter((u) => u.id !== userId));
-    } catch (err) {
+      setPendingUsers((current) => current.filter((u) => u.id !== pendingUser.id));
+      setConfirmRejectId(null);
+      setApprovalsNotice(
+        action === 'approve' ? `${pendingUser.name} is approved and has been notified.` : `${pendingUser.name}'s account was rejected.`
+      );
+      loadStats();
+    } catch {
       setApprovalsError('Could not reach the server.');
     } finally {
       setActioningId(null);
@@ -61,8 +205,12 @@ export default function Admin({ onLogout }) {
     try {
       const response = await fetch('/api/admin/disputes');
       const data = await response.json();
+      if (!response.ok) {
+        setDisputesError(data.error || 'Could not load disputes.');
+        return;
+      }
       setDisputes(data);
-    } catch (err) {
+    } catch {
       setDisputesError('Could not reach the server.');
     }
   }
@@ -98,7 +246,8 @@ export default function Admin({ onLogout }) {
       }
       setResolvingId(null);
       loadDisputes();
-    } catch (err) {
+      loadStats();
+    } catch {
       setResolveError('Could not reach the server.');
     } finally {
       setResolveSubmitting(false);
@@ -107,96 +256,252 @@ export default function Admin({ onLogout }) {
 
   const openDisputes = disputes ? disputes.filter((d) => d.status === 'open') : null;
   const resolvedDisputes = disputes ? disputes.filter((d) => d.status !== 'open') : null;
+  const firstName = (user?.name || 'Admin').split(' ')[0];
+
+  const navItems = SECTIONS.map((item) => ({
+    ...item,
+    badge:
+      item.key === 'approvals' && pendingUsers?.length
+        ? pendingUsers.length
+        : item.key === 'disputes' && openDisputes?.length
+        ? openDisputes.length
+        : item.key === 'resets' && resets?.length
+        ? resets.length
+        : null,
+  }));
+
+  // --- pieces shared by Overview and the full sections ---
+
+  function renderDocLinks(pendingUser) {
+    if (!pendingUser.id_document_path || !pendingUser.selfie_path) {
+      return <span className="krew-adm-docs missing">Documents not uploaded yet</span>;
+    }
+    return (
+      <span className="krew-adm-docs">
+        <a href={`/api/admin/users/${pendingUser.id}/files/id`} target="_blank" rel="noopener noreferrer">
+          <IdCard size={18} strokeWidth={1.5} aria-hidden="true" /> ID document
+        </a>
+        <a href={`/api/admin/users/${pendingUser.id}/files/selfie`} target="_blank" rel="noopener noreferrer">
+          <ScanFace size={18} strokeWidth={1.5} aria-hidden="true" /> Selfie
+        </a>
+      </span>
+    );
+  }
+
+  function renderApprovalRow(pendingUser, compact = false) {
+    const busy = actioningId === pendingUser.id;
+    // Approving is the ID check itself, so it waits until there's an ID and selfie to look at.
+    const hasDocuments = Boolean(pendingUser.id_document_path && pendingUser.selfie_path);
+    return (
+      <li className={`krew-adm-row ${compact ? 'compact' : ''}`} key={pendingUser.id}>
+        <span className="krew-db-crew-avatar krew-adm-avatar" aria-hidden="true">
+          {initials(pendingUser.name)}
+        </span>
+        <div className="krew-adm-row-main">
+          <strong>{pendingUser.name}</strong>
+          <span>
+            {roleLabel(pendingUser.role)} · {pendingUser.phone} · Signed up {formatServerDay(pendingUser.created_at)}
+          </span>
+        </div>
+        {!compact && renderDocLinks(pendingUser)}
+        {compact ? (
+          <button type="button" className="krew-dash-text-btn" onClick={() => goTo('approvals')}>
+            Review
+          </button>
+        ) : (
+          <div className="krew-adm-actions">
+            {confirmRejectId === pendingUser.id ? (
+              <>
+                <button
+                  type="button"
+                  className="krew-button-secondary krew-button-inline krew-db-small-btn krew-adm-reject"
+                  disabled={busy}
+                  onClick={() => handleAction(pendingUser, 'reject')}
+                >
+                  {busy ? 'Rejecting…' : 'Confirm reject'}
+                </button>
+                <button type="button" className="krew-dash-text-btn" onClick={() => setConfirmRejectId(null)} disabled={busy}>
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className="krew-button-primary krew-button-inline krew-db-small-btn"
+                  disabled={busy || !hasDocuments}
+                  title={hasDocuments ? undefined : 'Waiting for their ID and selfie'}
+                  onClick={() => handleAction(pendingUser, 'approve')}
+                >
+                  {busy ? 'Approving…' : 'Approve'}
+                </button>
+                <button
+                  type="button"
+                  className="krew-button-secondary krew-button-inline krew-db-small-btn krew-adm-reject"
+                  disabled={busy}
+                  onClick={() => setConfirmRejectId(pendingUser.id)}
+                >
+                  Reject
+                </button>
+              </>
+            )}
+          </div>
+        )}
+      </li>
+    );
+  }
+
+  function renderAmountStep(label, confirmedAt, amount) {
+    const done = amount != null;
+    const Icon = done ? CircleCheck : CircleDashed;
+    return (
+      <div className={`krew-jc-step ${done ? 'done' : ''}`}>
+        <Icon size={22} strokeWidth={1.4} aria-hidden="true" />
+        <span>
+          <strong>{label}</strong>
+          <small>
+            {done ? `Confirmed KES ${Number(amount).toLocaleString()}${confirmedAt ? ` · ${formatServerDay(confirmedAt)}` : ''}` : 'Has not confirmed'}
+          </small>
+        </span>
+      </div>
+    );
+  }
+
+  function renderStat(Icon, value, label, onClick) {
+    const content = (
+      <>
+        <Icon size={24} strokeWidth={1.3} aria-hidden="true" />
+        <strong>{value}</strong>
+        <span>{label}</span>
+      </>
+    );
+    return onClick ? (
+      <button type="button" className="krew-adm-stat clickable" onClick={onClick}>
+        {content}
+      </button>
+    ) : (
+      <div className="krew-adm-stat">{content}</div>
+    );
+  }
+
+  const loadingValue = '–';
 
   return (
-    <div className="krew-admin-page">
-      <div className="krew-admin-header">
-        <div>
-          <h1 className="krew-admin-title">Admin</h1>
-          <p className="krew-admin-subhead">
-            {tab === 'approvals'
-              ? 'Accounts waiting on ID verification before they can use KREW'
-              : "Jobs either side has flagged as disputed, waiting on a decision"}
-          </p>
-        </div>
-        <div className="krew-dash-header-right">
-          <NotificationBell />
-          {onLogout && <button type="button" className="krew-admin-logout" onClick={onLogout}>Log out</button>}
-        </div>
-      </div>
-
-      <div className="krew-dash-tabs">
-        <button
-          type="button"
-          className={`krew-dash-tab ${tab === 'approvals' ? 'active' : ''}`}
-          onClick={() => setTab('approvals')}
-        >
-          Pending Approvals{pendingUsers && pendingUsers.length > 0 ? ` (${pendingUsers.length})` : ''}
-        </button>
-        <button
-          type="button"
-          className={`krew-dash-tab ${tab === 'disputes' ? 'active' : ''}`}
-          onClick={() => setTab('disputes')}
-        >
-          Disputes{openDisputes && openDisputes.length > 0 ? ` (${openDisputes.length})` : ''}
-        </button>
-      </div>
-
-      {tab === 'approvals' && (
+    <DashboardShell user={user || { name: 'Admin' }} navItems={navItems} active={section} onNavigate={goTo} onLogout={onLogout}>
+      {section === 'overview' && (
         <>
-          {approvalsError && <div className="krew-form-banner error">{approvalsError}</div>}
+          <div className="krew-db-head">
+            <h1>Welcome back, {firstName}</h1>
+            <p>Here's what needs a person today.</p>
+          </div>
 
-          {pendingUsers === null && <div className="krew-admin-empty">Loading…</div>}
+          <div className="krew-adm-stats">
+            {renderStat(UserRoundCheck, pendingUsers ? pendingUsers.length : loadingValue, 'accounts waiting for approval', () => goTo('approvals'))}
+            {renderStat(Scale, openDisputes ? openDisputes.length : loadingValue, 'open disputes', () => goTo('disputes'))}
+            {renderStat(BadgeCheck, stats ? stats.jobs.confirmed : loadingValue, 'jobs paid and confirmed')}
+            {renderStat(
+              Wallet,
+              stats ? `KES ${Number(stats.jobs.confirmed_volume).toLocaleString()}` : loadingValue,
+              'in confirmed payments'
+            )}
+          </div>
+
+          <div className="krew-db-overview">
+            <section className="krew-db-card">
+              <div className="krew-db-card-head">
+                <h2>Waiting for approval</h2>
+                {pendingUsers && pendingUsers.length > 0 && (
+                  <button type="button" className="krew-text-link krew-db-link-btn krew-adm-link" onClick={() => goTo('approvals')}>
+                    Review all <ArrowRight size={15} strokeWidth={2} />
+                  </button>
+                )}
+              </div>
+              {pendingUsers === null && <div className="krew-dash-loading-note" role="status">Loading…</div>}
+              {pendingUsers && pendingUsers.length === 0 && <p className="krew-db-empty">You're all caught up - no accounts waiting.</p>}
+              {pendingUsers && pendingUsers.length > 0 && (
+                <ul className="krew-adm-list">{pendingUsers.slice(0, 4).map((u) => renderApprovalRow(u, true))}</ul>
+              )}
+            </section>
+
+            <section className="krew-db-card">
+              <div className="krew-db-card-head">
+                <h2>Open disputes</h2>
+                {openDisputes && openDisputes.length > 0 && (
+                  <button type="button" className="krew-text-link krew-db-link-btn krew-adm-link" onClick={() => goTo('disputes')}>
+                    Review all <ArrowRight size={15} strokeWidth={2} />
+                  </button>
+                )}
+              </div>
+              {disputes === null && !disputesError && <div className="krew-dash-loading-note" role="status">Loading…</div>}
+              {openDisputes && openDisputes.length === 0 && <p className="krew-db-empty">No open disputes right now.</p>}
+              {openDisputes && openDisputes.length > 0 && (
+                <ul className="krew-adm-list">
+                  {openDisputes.slice(0, 4).map((dispute) => (
+                    <li className="krew-adm-row compact" key={dispute.id}>
+                      <Scale className="krew-adm-row-icon" size={22} strokeWidth={1.4} aria-hidden="true" />
+                      <div className="krew-adm-row-main">
+                        <strong>{dispute.title || 'Direct hire'}</strong>
+                        <span>
+                          {dispute.organizer_name} &amp; {dispute.crew_member_name} · KES {Number(dispute.amount).toLocaleString()}
+                        </span>
+                      </div>
+                      <button type="button" className="krew-dash-text-btn" onClick={() => goTo('disputes')}>
+                        Review
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          </div>
+        </>
+      )}
+
+      {section === 'approvals' && (
+        <>
+          <div className="krew-db-head">
+            <h1>Account approvals</h1>
+            <p>Accounts waiting on ID verification before they can use KREW. Open the ID and selfie, check they match the name, then decide.</p>
+          </div>
+
+          {approvalsError && <div className="krew-form-banner error">{approvalsError}</div>}
+          {approvalsNotice && <div className="krew-form-banner success">{approvalsNotice}</div>}
+
+          {pendingUsers === null && !approvalsError && <div className="krew-dash-loading-note" role="status">Loading…</div>}
 
           {pendingUsers && pendingUsers.length === 0 && (
-            <div className="krew-admin-empty">No accounts are waiting on review right now.</div>
+            <div className="krew-dash-empty">
+              <p>No accounts are waiting on review right now.</p>
+              <button type="button" className="krew-button-secondary krew-button-inline" onClick={() => goTo('disputes')}>
+                Check disputes
+              </button>
+            </div>
           )}
 
           {pendingUsers && pendingUsers.length > 0 && (
-            <div>
-              {pendingUsers.map((user) => (
-                <div className="krew-admin-row" key={user.id}>
-                  <div className="krew-admin-row-info">
-                    <div className="krew-admin-row-name">{user.name}</div>
-                    <div className="krew-admin-row-meta">
-                      <span className="krew-admin-role-pill">{user.role.replace('_', ' ')}</span>
-                      {user.phone}
-                      {!user.id_document_path || !user.selfie_path ? ' · documents not uploaded yet' : ''}
-                    </div>
-                  </div>
-                  <div className="krew-admin-actions">
-                    <button
-                      type="button"
-                      className="krew-admin-btn approve"
-                      disabled={actioningId === user.id}
-                      onClick={() => handleAction(user.id, 'approve')}
-                    >
-                      Approve
-                    </button>
-                    <button
-                      type="button"
-                      className="krew-admin-btn reject"
-                      disabled={actioningId === user.id}
-                      onClick={() => handleAction(user.id, 'reject')}
-                    >
-                      Reject
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <ul className="krew-adm-list krew-adm-list-card">{pendingUsers.map((u) => renderApprovalRow(u))}</ul>
           )}
         </>
       )}
 
-      {tab === 'disputes' && (
+      {section === 'disputes' && (
         <>
+          <div className="krew-db-head">
+            <h1>Disputes</h1>
+            <p>Jobs either side has flagged, waiting on a decision. A disputed job is left out of both people's records until it's resolved here.</p>
+          </div>
+
           {disputesError && <div className="krew-form-banner error">{disputesError}</div>}
 
-          {disputes === null && !disputesError && <div className="krew-admin-empty">Loading…</div>}
+          {disputes === null && !disputesError && <div className="krew-dash-loading-note" role="status">Loading…</div>}
 
           {disputes && disputes.length === 0 && (
-            <div className="krew-admin-empty">No disputes have been raised.</div>
+            <div className="krew-dash-empty">
+              <p>No disputes have been raised.</p>
+              <button type="button" className="krew-button-secondary krew-button-inline" onClick={() => goTo('approvals')}>
+                Check approvals
+              </button>
+            </div>
           )}
 
           {/* disputes.length > 0 but every one of them is already resolved - without this,
@@ -204,87 +509,115 @@ export default function Admin({ onLogout }) {
               identical to the tab having failed to load rather than meaning "you're caught
               up". */}
           {openDisputes && openDisputes.length === 0 && disputes && disputes.length > 0 && (
-            <div className="krew-admin-empty">No open disputes right now.</div>
+            <div className="krew-dash-empty">
+              <p>No open disputes right now - you're caught up.</p>
+              <button type="button" className="krew-button-secondary krew-button-inline" onClick={() => goTo('approvals')}>
+                Check approvals
+              </button>
+            </div>
           )}
 
           {openDisputes && openDisputes.length > 0 && (
-            <div>
+            <div className="krew-job-list">
               {openDisputes.map((dispute) => (
-                <div className="krew-admin-dispute" key={dispute.id}>
-                  <div className="krew-admin-row">
-                    <div className="krew-admin-row-info">
-                      <div className="krew-admin-row-name">
-                        {dispute.organizer_name} &amp; {dispute.crew_member_name}
-                      </div>
-                      <div className="krew-admin-row-meta">
-                        KES {Number(dispute.amount).toLocaleString()} · due {new Date(dispute.due_date).toLocaleDateString()}
-                      </div>
-                      <div className="krew-admin-row-meta">
-                        Raised by <span className="krew-admin-role-pill">{dispute.raised_by_role?.replace('_', ' ')}</span>
-                        {dispute.raised_by_name}: "{dispute.reason}"
-                      </div>
-                      {dispute.details && (
-                        <div className="krew-admin-row-meta krew-admin-dispute-details">{dispute.details}</div>
-                      )}
-                      <div className="krew-admin-row-meta">
-                        {dispute.organizer_confirmed_amount != null
-                          ? `Organizer confirmed KES ${Number(dispute.organizer_confirmed_amount).toLocaleString()}`
-                          : 'Organizer has not confirmed'}
-                        {' · '}
-                        {dispute.crew_confirmed_amount != null
-                          ? `Crew confirmed KES ${Number(dispute.crew_confirmed_amount).toLocaleString()}`
-                          : 'Crew has not confirmed'}
-                      </div>
+                <article className="krew-jc krew-adm-dispute" key={dispute.id}>
+                  <div className="krew-jc-top">
+                    <ListingPhoto listing={{ category: dispute.category }} className="krew-jc-photo" />
+                    <div className="krew-jc-main">
+                      <h3 className="krew-jc-title">{dispute.title || 'Direct hire'}</h3>
+                      <span className="krew-jc-meta">
+                        <span>
+                          Organizer: <strong>{dispute.organizer_name}</strong>
+                        </span>
+                        <span>
+                          Crew: <strong>{dispute.crew_member_name}</strong>
+                        </span>
+                        <span>Due {formatDate(dispute.due_date)}</span>
+                      </span>
+                      {dispute.job_description && <p className="krew-jc-desc">{dispute.job_description}</p>}
                     </div>
-                    <div className="krew-admin-actions">
-                      <button
-                        type="button"
-                        className="krew-admin-btn resolve"
-                        onClick={() => (resolvingId === dispute.id ? setResolvingId(null) : openResolveForm(dispute.id))}
-                      >
-                        {resolvingId === dispute.id ? 'Close' : 'Resolve'}
-                      </button>
+                    <div className="krew-jc-side">
+                      <span className="krew-jc-amount">KES {Number(dispute.amount).toLocaleString()}</span>
+                      <span className="krew-status-pill disputed">Opened {formatServerDay(dispute.created_at)}</span>
                     </div>
                   </div>
 
+                  <div className="krew-adm-reason">
+                    <Megaphone size={20} strokeWidth={1.4} aria-hidden="true" />
+                    <div>
+                      <span className="krew-adm-reason-by">
+                        Raised by {dispute.raised_by_name} ({roleLabel(dispute.raised_by_role).toLowerCase()})
+                      </span>
+                      <p>“{dispute.reason}”</p>
+                      {dispute.details && <p className="krew-adm-reason-details">{dispute.details}</p>}
+                    </div>
+                  </div>
+
+                  <div className="krew-jc-track" aria-label="What each side confirmed">
+                    {renderAmountStep(dispute.organizer_name, dispute.organizer_confirmed_at, dispute.organizer_confirmed_amount)}
+                    <span className="krew-jc-track-line" aria-hidden="true" />
+                    {renderAmountStep(dispute.crew_member_name, dispute.crew_confirmed_at, dispute.crew_confirmed_amount)}
+                  </div>
+
+                  {resolvingId !== dispute.id && (
+                    <div className="krew-jc-actions">
+                      <button
+                        type="button"
+                        className="krew-button-primary krew-button-inline krew-db-small-btn"
+                        onClick={() => openResolveForm(dispute.id)}
+                      >
+                        Resolve <ArrowRight size={15} strokeWidth={2} />
+                      </button>
+                    </div>
+                  )}
+
                   {resolvingId === dispute.id && (
-                    <div className="krew-admin-resolve-form">
+                    <div className="krew-adm-resolve">
                       {resolveError && <div className="krew-form-banner error">{resolveError}</div>}
 
-                      <div className="krew-admin-resolve-outcome">
-                        <label>
+                      <div className="krew-adm-outcomes" role="radiogroup" aria-label="Outcome">
+                        <label className={`krew-adm-outcome ${outcome === 'confirm' ? 'selected' : ''}`}>
                           <input
                             type="radio"
-                            name="outcome"
+                            name={`outcome-${dispute.id}`}
                             value="confirm"
                             checked={outcome === 'confirm'}
                             onChange={() => setOutcome('confirm')}
                           />
-                          The job was paid - confirm it
+                          <span>
+                            <strong>The job was paid - confirm it</strong>
+                            <small>You set the final amount. It counts toward both records, like an agreed confirmation.</small>
+                          </span>
                         </label>
-                        <label>
+                        <label className={`krew-adm-outcome ${outcome === 'reopen' ? 'selected' : ''}`}>
                           <input
                             type="radio"
-                            name="outcome"
+                            name={`outcome-${dispute.id}`}
                             value="reopen"
                             checked={outcome === 'reopen'}
                             onChange={() => setOutcome('reopen')}
                           />
-                          Reopen - let both sides confirm again
+                          <span>
+                            <strong>Reopen it</strong>
+                            <small>Both confirmations are cleared so each side confirms again from scratch.</small>
+                          </span>
                         </label>
                       </div>
 
                       {outcome === 'confirm' && (
                         <div className="krew-field">
-                          <label className="krew-field-label" htmlFor={`final-amount-${dispute.id}`}>Final amount (KES)</label>
-                          <input
-                            id={`final-amount-${dispute.id}`}
-                            type="number"
-                            min="0"
-                            className="krew-field-input"
-                            value={finalAmount}
-                            onChange={(e) => setFinalAmount(e.target.value)}
-                          />
+                          <label className="krew-field-label" htmlFor={`final-amount-${dispute.id}`}>Final amount</label>
+                          <span className="krew-jc-input">
+                            <span aria-hidden="true">KES</span>
+                            <input
+                              id={`final-amount-${dispute.id}`}
+                              type="number"
+                              min="0"
+                              className="krew-field-input"
+                              value={finalAmount}
+                              onChange={(e) => setFinalAmount(e.target.value)}
+                            />
+                          </span>
                         </div>
                       )}
 
@@ -296,52 +629,208 @@ export default function Admin({ onLogout }) {
                           rows={3}
                           value={resolutionNotes}
                           onChange={(e) => setResolutionNotes(e.target.value)}
-                          placeholder="Explain what you decided and why - this is kept as part of the record."
+                          placeholder="Explain what you decided and why - both sides are notified and it's kept as part of the record."
                         />
                       </div>
 
-                      <div className="krew-admin-resolve-actions">
+                      <div className="krew-jc-form-row">
                         <button
                           type="button"
-                          className="krew-admin-btn resolve"
+                          className="krew-button-primary krew-button-inline krew-db-small-btn"
                           disabled={resolveSubmitting}
                           onClick={() => handleResolve(dispute.id)}
                         >
                           {resolveSubmitting ? 'Saving…' : 'Save resolution'}
                         </button>
-                        <button type="button" className="krew-dash-text-btn" onClick={() => setResolvingId(null)}>
+                        <button type="button" className="krew-dash-text-btn" onClick={() => setResolvingId(null)} disabled={resolveSubmitting}>
                           Cancel
                         </button>
                       </div>
                     </div>
                   )}
-                </div>
+                </article>
               ))}
             </div>
           )}
 
           {resolvedDisputes && resolvedDisputes.length > 0 && (
-            <>
-              <h2 className="krew-admin-resolved-heading">Resolved</h2>
-              {resolvedDisputes.map((dispute) => (
-                <div className="krew-admin-row krew-admin-row-resolved" key={dispute.id}>
-                  <div className="krew-admin-row-info">
-                    <div className="krew-admin-row-name">
-                      {dispute.organizer_name} &amp; {dispute.crew_member_name}
-                    </div>
-                    <div className="krew-admin-row-meta">
-                      KES {Number(dispute.amount).toLocaleString()} · resolved {new Date(dispute.resolved_at).toLocaleDateString()}
-                    </div>
-                    {dispute.resolution_notes && (
-                      <div className="krew-admin-row-meta krew-admin-dispute-details">{dispute.resolution_notes}</div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </>
+            <section className="krew-adm-resolved">
+              <button
+                type="button"
+                className={`krew-adm-resolved-toggle ${showResolved ? 'open' : ''}`}
+                onClick={() => setShowResolved((current) => !current)}
+                aria-expanded={showResolved}
+              >
+                Resolved ({resolvedDisputes.length})
+                <ChevronDown size={18} strokeWidth={1.75} aria-hidden="true" />
+              </button>
+              {showResolved && (
+                <ul className="krew-adm-list krew-adm-list-card">
+                  {resolvedDisputes.map((dispute) => (
+                    <li className="krew-adm-row resolved" key={dispute.id}>
+                      <BadgeCheck className="krew-adm-row-icon" size={22} strokeWidth={1.4} aria-hidden="true" />
+                      <div className="krew-adm-row-main">
+                        <strong>
+                          {dispute.title || 'Direct hire'} · {dispute.organizer_name} &amp; {dispute.crew_member_name}
+                        </strong>
+                        <span>
+                          KES {Number(dispute.amount).toLocaleString()} · resolved {formatServerDay(dispute.resolved_at)}
+                        </span>
+                        {dispute.resolution_notes && <p>{dispute.resolution_notes}</p>}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
           )}
         </>
       )}
-    </div>
+
+      {section === 'resets' && (
+        <>
+          <div className="krew-db-head">
+            <h1>Password resets</h1>
+            <p>
+              People who forgot their password. Call the number on the account, check it's really them (their name, and
+              what they've done on KREW), then generate a code and read it out. Codes work once, for 30 minutes.
+            </p>
+          </div>
+
+          {resetsError && <div className="krew-form-banner error">{resetsError}</div>}
+
+          {resets === null && !resetsError && <div className="krew-dash-loading-note" role="status">Loading…</div>}
+
+          {resets && resets.length === 0 && (
+            <div className="krew-dash-empty">
+              <p>No one is waiting on a password reset.</p>
+              <button type="button" className="krew-button-secondary krew-button-inline" onClick={() => goTo('approvals')}>
+                Check approvals
+              </button>
+            </div>
+          )}
+
+          {resets && resets.length > 0 && (
+            <ul className="krew-adm-list krew-adm-list-card">
+              {resets.map((reset) => {
+                const issued = issuedCodes[reset.id];
+                const busy = resetBusyId === reset.id;
+                return (
+                  <li className="krew-adm-row krew-adm-reset" key={reset.id}>
+                    <span className="krew-db-crew-avatar krew-adm-avatar" aria-hidden="true">
+                      {initials(reset.name)}
+                    </span>
+                    <div className="krew-adm-row-main">
+                      <strong>{reset.name}</strong>
+                      <span>
+                        {roleLabel(reset.role)} · Asked {formatServerDay(reset.requested_at)}
+                      </span>
+                      <a className="krew-adm-call" href={`tel:${reset.phone}`}>
+                        <PhoneCall size={16} strokeWidth={1.6} aria-hidden="true" /> {reset.phone}
+                      </a>
+                    </div>
+                    {issued ? (
+                      <div className="krew-adm-code" aria-live="polite">
+                        <span>Read this out</span>
+                        <strong>{issued.code}</strong>
+                        <small>
+                          Works until{' '}
+                          {new Date(issued.expires_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                        </small>
+                      </div>
+                    ) : (
+                      <span className="krew-adm-docs missing">
+                        {reset.status === 'code_issued' ? 'A code was already sent - generate a new one if needed' : 'Waiting for a call'}
+                      </span>
+                    )}
+                    <div className="krew-adm-actions">
+                      <button
+                        type="button"
+                        className="krew-button-primary krew-button-inline krew-db-small-btn"
+                        disabled={busy}
+                        onClick={() => handleResetAction(reset, 'issue')}
+                      >
+                        {busy ? 'Working…' : issued || reset.status === 'code_issued' ? 'New code' : 'Generate code'}
+                      </button>
+                      <button
+                        type="button"
+                        className="krew-button-secondary krew-button-inline krew-db-small-btn krew-adm-reject"
+                        disabled={busy}
+                        onClick={() => handleResetAction(reset, 'cancel')}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </>
+      )}
+
+      {section === 'analytics' && (
+        <>
+          <div className="krew-db-head">
+            <h1>Analytics</h1>
+            <p>Live counts from KREW's own records. Payments are only counted once both sides confirmed them (or an admin settled a dispute) - KREW tracks payments, it doesn't process them.</p>
+          </div>
+
+          {stats === null && <div className="krew-dash-loading-note" role="status">Loading…</div>}
+
+          {stats && (
+            <div className="krew-adm-analytics">
+              <section className="krew-db-card">
+                <div className="krew-db-card-head">
+                  <h2>People</h2>
+                </div>
+                <dl className="krew-adm-figures">
+                  <div><dt>Approved crew</dt><dd>{stats.users.crew}</dd></div>
+                  <div><dt>Approved organizers</dt><dd>{stats.users.organizers}</dd></div>
+                  <div><dt>Waiting for approval</dt><dd>{stats.users.pending}</dd></div>
+                  <div><dt>Rejected</dt><dd>{stats.users.rejected}</dd></div>
+                  <div><dt>Joined in the last 7 days</dt><dd>{stats.users.joined_last_7_days}</dd></div>
+                </dl>
+              </section>
+
+              <section className="krew-db-card">
+                <div className="krew-db-card-head">
+                  <h2>Gigs</h2>
+                </div>
+                <dl className="krew-adm-figures">
+                  <div><dt>Open</dt><dd>{stats.listings.open}</dd></div>
+                  <div><dt>Filled</dt><dd>{stats.listings.filled}</dd></div>
+                  <div><dt>Cancelled</dt><dd>{stats.listings.cancelled}</dd></div>
+                  <div><dt>Applications sent</dt><dd>{stats.listings.applications}</dd></div>
+                </dl>
+              </section>
+
+              <section className="krew-db-card">
+                <div className="krew-db-card-head">
+                  <h2>Jobs &amp; payments</h2>
+                </div>
+                <dl className="krew-adm-figures">
+                  <div><dt>Jobs created</dt><dd>{stats.jobs.total}</dd></div>
+                  <div><dt>Awaiting confirmation</dt><dd>{stats.jobs.pending}</dd></div>
+                  <div><dt>Paid and confirmed</dt><dd>{stats.jobs.confirmed}</dd></div>
+                  <div><dt>Disputed</dt><dd>{stats.jobs.disputed}</dd></div>
+                  <div><dt>Confirmed payment volume</dt><dd>KES {Number(stats.jobs.confirmed_volume).toLocaleString()}</dd></div>
+                </dl>
+              </section>
+
+              <section className="krew-db-card">
+                <div className="krew-db-card-head">
+                  <h2>Disputes</h2>
+                </div>
+                <dl className="krew-adm-figures">
+                  <div><dt>Open</dt><dd>{stats.disputes.open}</dd></div>
+                  <div><dt>Resolved</dt><dd>{stats.disputes.resolved}</dd></div>
+                </dl>
+              </section>
+            </div>
+          )}
+        </>
+      )}
+    </DashboardShell>
   );
 }

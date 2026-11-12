@@ -12,7 +12,7 @@ export default function AdminGate() {
       forbiddenMessage="This account isn't an admin account."
       showSignupLink={false}
     >
-      {({ onLogout }) => <Admin onLogout={onLogout} />}
+      {({ user, onLogout }) => <Admin user={user} onLogout={onLogout} />}
     </RoleGate>
   );
 }

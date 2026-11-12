@@ -4,10 +4,11 @@
 import express from 'express';
 import multer from 'multer';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
 import { db } from '../db.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
+import { extensionFor, verifySavedFiles } from '../uploadSafety.js';
+import { UPLOAD_ROOT } from '../paths.js';
 
 export const usersRouter = express.Router();
 
@@ -16,14 +17,14 @@ const MAX_PROFESSIONAL_ROLE_LENGTH = 60;
 const MAX_SKILLS = 8;
 const MAX_SKILL_LENGTH = 30;
 const MAX_BIO_LENGTH = 400;
+const WORK_HISTORY_LIMIT = 10; // most recent confirmed jobs shown on a public crew profile
 
 // Profile photos (shown publicly on the crew directory) are a separate, later upload
 // from the private id_document_path/selfie_path pair collected at signup - those two
 // are never shown to anyone but an admin, this one is meant to be seen. Same
 // save-to-disk-not-the-database pattern as routes/documents.js: files live outside
 // client/server so the web server never serves them directly by accident.
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const PHOTO_UPLOAD_ROOT = path.join(__dirname, '..', '..', 'uploads');
+const PHOTO_UPLOAD_ROOT = UPLOAD_ROOT; // from paths.js (UPLOADS_DIR, or server/uploads)
 const PROFILE_PHOTOS_DIR = path.join(PHOTO_UPLOAD_ROOT, 'profile-photos');
 fs.mkdirSync(PROFILE_PHOTOS_DIR, { recursive: true });
 
@@ -34,9 +35,9 @@ const photoStorage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, PROFILE_PHOTOS_DIR),
   filename: (req, file, cb) => {
     // Never trust the filename the browser sends - build our own from the logged-in
-    // user's id and the current time instead.
-    const safeExt = path.extname(file.originalname).toLowerCase().replace(/[^a-z0-9.]/g, '');
-    cb(null, `user-${req.user.id}-profile-photo-${Date.now()}${safeExt}`);
+    // user's id and the current time instead, with the extension taken from the accepted
+    // file type (uploadSafety.js).
+    cb(null, `user-${req.user.id}-profile-photo-${Date.now()}${extensionFor(file.mimetype)}`);
   },
 });
 
@@ -64,8 +65,7 @@ const MAX_PORTFOLIO_IMAGES = 12;
 const portfolioStorage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, PORTFOLIO_PHOTOS_DIR),
   filename: (req, file, cb) => {
-    const safeExt = path.extname(file.originalname).toLowerCase().replace(/[^a-z0-9.]/g, '');
-    cb(null, `user-${req.user.id}-portfolio-${Date.now()}${safeExt}`);
+    cb(null, `user-${req.user.id}-portfolio-${Date.now()}${extensionFor(file.mimetype)}`);
   },
 });
 
@@ -91,7 +91,7 @@ function splitSkills(skills) {
 usersRouter.get('/crew-directory', requireRole('organizer'), (req, res) => {
   const crewMembers = db
     .prepare(
-      `SELECT id, name, availability_status, professional_role, skills
+      `SELECT id, name, availability_status, professional_role, skills, profile_photo_path, years_experience
        FROM users
        WHERE role = 'crew_member' AND verification_status = 'approved'
        ORDER BY name ASC`
@@ -116,7 +116,7 @@ usersRouter.get('/crew-directory', requireRole('organizer'), (req, res) => {
 usersRouter.get('/crew-directory/public', (req, res) => {
   const crewMembers = db
     .prepare(
-      `SELECT id, name, profile_photo_path, availability_status, professional_role, skills
+      `SELECT id, name, profile_photo_path, availability_status, professional_role, skills, years_experience
        FROM users
        WHERE role = 'crew_member' AND verification_status = 'approved'
        ORDER BY name ASC`
@@ -223,8 +223,11 @@ usersRouter.post('/me/portfolio', requireRole('crew_member'), (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: 'Choose a photo to upload.' });
     }
+    if (!verifySavedFiles([req.file])) {
+      return res.status(400).json({ error: "That file isn't a real JPG or PNG photo." });
+    }
 
-    const relativePath = path.join('portfolio-photos', req.file.filename);
+    const relativePath = `portfolio-photos/${req.file.filename}`;
     const { lastInsertRowid } = db
       .prepare(`INSERT INTO portfolio_images (user_id, image_path) VALUES (?, ?)`)
       .run(req.user.id, relativePath);
@@ -274,8 +277,11 @@ usersRouter.post('/me/photo', requireAuth, (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: 'Choose a photo to upload.' });
     }
+    if (!verifySavedFiles([req.file])) {
+      return res.status(400).json({ error: "That file isn't a real JPG or PNG photo." });
+    }
 
-    const relativePath = path.join('profile-photos', req.file.filename);
+    const relativePath = `profile-photos/${req.file.filename}`;
 
     // If they already had a photo, swap it out and delete the old file so we don't
     // leave orphaned uploads behind every time someone updates their photo.
@@ -408,11 +414,28 @@ usersRouter.get('/:id/public-profile', (req, res) => {
     .prepare(`SELECT id, image_path FROM portfolio_images WHERE user_id = ? ORDER BY created_at ASC`)
     .all(crewMemberId);
 
+  // Verified work history - the crew member's most recent confirmed (paid) jobs. Deliberately
+  // shows only what's already public or harmless: the listing's public title + category when
+  // the job came from an open listing, and the month it was confirmed. Never the amount, the
+  // organizer, or the private job description - a direct hire just shows as "Direct hire".
+  const workHistory = db
+    .prepare(
+      `SELECT t.id, l.title, l.category,
+              COALESCE(t.completed_at, t.due_date) AS confirmed_on
+       FROM transactions t
+       LEFT JOIN job_listings l ON l.id = t.listing_id
+       WHERE t.crew_member_id = ? AND t.status = 'confirmed'
+       ORDER BY confirmed_on DESC, t.id DESC
+       LIMIT ?`
+    )
+    .all(crewMemberId, WORK_HISTORY_LIMIT);
+
   const { skills, ...rest } = crewMember;
   res.json({
     ...rest,
     skills: splitSkills(skills),
     portfolio,
+    work_history: workHistory,
     ...computeCrewRecord(crewMemberId),
   });
 });

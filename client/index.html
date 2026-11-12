@@ -2,9 +2,40 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>client</title>
+    <!-- Title, description and share tags: these are the homepage defaults. The server rewrites them
+         per page before sending and adds the page's canonical address (server/src/pageMeta.js); in the
+         browser, usePageMeta keeps them in step. -->
+    <title>KREW · Hire event crew and find paid gigs in Nairobi</title>
+    <meta name="description" content="Hire verified event crew or find paid gigs in Nairobi. Both sides confirm every payment, building records you can check before you agree." />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="KREW" />
+    <meta property="og:locale" content="en_KE" />
+    <meta property="og:title" content="KREW · Hire event crew and find paid gigs in Nairobi" />
+    <meta property="og:description" content="Hire verified event crew or find paid gigs in Nairobi. Both sides confirm every payment, building records you can check before you agree." />
+    <meta property="og:image" content="/brand/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="KREW - Hire event crew. Find paid gigs. Every payment confirmed by both sides." />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="KREW · Hire event crew and find paid gigs in Nairobi" />
+    <meta name="twitter:description" content="Hire verified event crew or find paid gigs in Nairobi. Both sides confirm every payment, building records you can check before you agree." />
+    <meta name="twitter:image" content="/brand/og-image.png" />
+    <meta name="twitter:image:alt" content="KREW - Hire event crew. Find paid gigs. Every payment confirmed by both sides." />
+
+    <!-- Icons, all made from the KREW logo -->
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/brand/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/brand/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#21162B" />
+
+    <!-- Applies a saved light/dark choice before the page draws (no flash of the wrong theme).
+         A file rather than inline code, so the Content-Security-Policy can block inline scripts. -->
+    <script src="/theme-init.js"></script>
   </head>
   <body>
     <div id="root"></div>

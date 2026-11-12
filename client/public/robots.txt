@@ -1,0 +1,6 @@
+# Public pages are open to search engines; private, signed-in areas are not.
+User-agent: *
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /verify
+Disallow: /api/

@@ -1,98 +1,6 @@
 /* Dashboard Styles */
 
-.krew-dash-page {
-  min-height: 100vh;
-}
-
-.krew-dash-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 24px;
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface-card);
-}
-
-.krew-dash-header-right {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-}
-
-.krew-dash-greeting {
-  font-size: 13.5px;
-  color: var(--color-text-soft);
-  font-weight: 600;
-}
-
-.krew-dash-body {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 36px 24px 80px 24px;
-}
-
-/* Mobile pass (Day 3 checklist): .krew-dash-header had no flex-wrap, so on a phone-width
-   screen the bell + "Log out" on the right were pushed straight past the edge of the
-   viewport instead of wrapping - a real clipping bug, not just a cosmetic squeeze, found
-   by actually screenshotting these pages at 390px rather than assuming the existing flex
-   layout would hold up. */
-@media (max-width: 860px) {
-  .krew-dash-header {
-    flex-wrap: wrap;
-    gap: 10px;
-    padding: 16px 20px;
-  }
-
-  .krew-dash-header-right {
-    gap: 12px;
-    /* When the right-hand block wraps onto its own line below the wordmark/title, a
-       single flex item on a line with justify-content: space-between lands at the start
-       of that line (there's nothing to "space between" it and) - margin-left: auto is
-       the actual fix, pushing it to the end of its own line regardless. Found this by
-       screenshotting at 360px: without it, the bell + notification panel ended up
-       anchored near the LEFT edge of the screen instead of under the bell. */
-    margin-left: auto;
-  }
-
- 
-  .krew-notif-wrapper {
-    order: 1;
-  }
-
-  .krew-dash-body {
-    padding: 24px 16px 60px 16px;
-  }
-
-  .krew-dash-tabs {
-    max-width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-}
-
-.krew-dash-title-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-}
-
-.krew-dash-title {
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  margin: 0;
-}
-
-/* Post button on the dashboard */
-.krew-dash-post-btn {
-  width: auto;
-  padding: 11px 22px;
-  margin-top: 0;
-}
-
+/* Loading note (the spinner in front of it lives in index.css) */
 .krew-dash-loading-note {
   font-size: 13.5px;
   color: var(--color-text-soft);
@@ -118,51 +26,6 @@
   flex-direction: column;
   gap: 12px;
 }
-
-.krew-job-card {
-  background: var(--color-surface-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 18px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-}
-
-.krew-job-card-main {
-  min-width: 0;
-}
-
-.krew-job-card-crew {
-  font-size: 15px;
-  font-weight: 700;
-  margin-bottom: 4px;
-}
-
-.krew-job-card-desc {
-  font-size: 13.5px;
-  color: var(--color-text-soft);
-  margin-bottom: 6px;
-  line-height: 1.4;
-}
-
-.krew-job-card-meta {
-  font-size: 12.5px;
-  color: var(--color-text-faint);
-}
-
-.krew-job-card-side {
-  flex-shrink: 0;
-  text-align: right;
-}
-
-.krew-job-card-amount {
-  font-size: 15px;
-  font-weight: 700;
-  margin-bottom: 6px;
-}
-
 
 .krew-status-pill {
   display: inline-block;
@@ -206,38 +69,10 @@
   color: var(--color-text-soft);
 }
 
-
 .krew-status-pill.new {
   background: var(--color-brand-bg);
   color: var(--color-ink-plum);
   text-transform: none;
-}
-
-.krew-job-card-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 8px;
-  justify-content: flex-end;
-}
-
-
-@media (max-width: 860px) {
-  .krew-job-card {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .krew-job-card-side {
-    text-align: left;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-
-  .krew-job-card-actions {
-    justify-content: flex-start;
-  }
 }
 
 .krew-dash-text-btn {
@@ -254,24 +89,6 @@
 
 .krew-dash-text-btn.danger {
   color: var(--color-danger);
-}
-
-.krew-dash-back-link {
-  background: none;
-  border: none;
-  padding: 0;
-  margin-bottom: 18px;
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--color-text-soft);
-  cursor: pointer;
-  font-family: inherit;
-}
-
-.krew-dash-listing-summary {
-  font-size: 13px;
-  color: var(--color-text-soft);
-  margin: 4px 0 0 0;
 }
 
 /* Pilot readiness: the survey banner shown to organizers/crew during the Sprint 4 pilot
@@ -310,10 +127,10 @@
 }
 
 .krew-pilot-banner-dismiss {
+  display: inline-flex;
   background: none;
   border: none;
   color: inherit;
-  font-size: 20px;
   line-height: 1;
   cursor: pointer;
   padding: 0 2px;
@@ -336,33 +153,6 @@
    forms.css - rounded, but to the controlled scale, not a 999px pill,
    since these ARE buttons (each one is a click target that switches
    tabs). */
-.krew-dash-tabs {
-  display: flex;
-  gap: 4px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  padding: 4px;
-  margin-bottom: 24px;
-  width: fit-content;
-}
-
-.krew-dash-tab {
-  padding: 9px 20px;
-  border-radius: var(--radius-lg);
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--color-text-soft);
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
-}
-
-.krew-dash-tab.active {
-  background: var(--color-brand);
-  color: var(--color-text-on-brand);
-}
 
 .krew-dash-form-card {
   max-width: 100%;
@@ -386,10 +176,11 @@
   flex: 1;
 }
 
+/* Outlined secondary button - the moodboard's "Hire Crew ->" / identity's "Learn More ->" */
 .krew-button-secondary {
   background: none;
-  border: 1px solid var(--color-border);
-  color: var(--color-text-soft);
+  border: 1.5px solid var(--color-text);
+  color: var(--color-text);
   padding: 13px 20px;
   border-radius: var(--radius-md);
   font-size: 15px;
@@ -400,8 +191,8 @@
 }
 
 .krew-button-secondary:hover:not(:disabled) {
-  border-color: var(--color-text-soft);
-  color: var(--color-text);
+  border-color: var(--color-brand-text);
+  color: var(--color-brand-text);
 }
 
 .krew-button-secondary:disabled {
@@ -412,13 +203,6 @@
 /* My profile card (crew self-service: photo, professional role, skills,
    availability) - everything an organizer sees about a crew member on the
    public Hire Crew directory, editable in one place. */
-.krew-dash-profile-card {
-  background: var(--color-surface-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 24px 28px;
-  margin-bottom: 24px;
-}
 
 .krew-dash-profile-top {
   display: flex;
@@ -486,11 +270,6 @@
    Profile page). A plain grid of square thumbnails, each with a small
    remove button in the corner, plus one more tile that's the upload
    control itself rather than a separate button elsewhere on the page. */
-.krew-dash-portfolio {
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px solid var(--color-border);
-}
 
 .krew-portfolio-grid {
   display: grid;
@@ -565,35 +344,7 @@
   display: none;
 }
 
-/* Read-only variant shown on the public crew profile page (CrewProfile.jsx)
-   - same grid and thumbnail shape, just without the add tile or remove
-   buttons, and a little larger since there's more room on that page. */
-.krew-portfolio-grid-display {
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-}
-
 /* Availability */
-.krew-dash-availability {
-  background: var(--color-surface-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 16px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-}
-
-/* Nested inside .krew-dash-profile-card above, rather than its own standalone
-   card at the top of the dashboard - no outer border/margin needed there, a
-   plain divider reads better as "part of the same profile". */
-.krew-dash-availability-inline {
-  background: var(--color-surface);
-  margin: 20px 0 0 0;
-  border-radius: var(--radius-md);
-}
 
 .krew-dash-availability-note {
   display: block;
@@ -603,70 +354,6 @@
 }
 
 /* Directory hires */
-.krew-dash-directory-hires {
-  margin-top: 36px;
-}
-
-.krew-dash-subtitle {
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  margin: 0 0 14px 0;
-}
-
-/* Confirmable job cards */
-.krew-job-card-confirmable {
-  flex-direction: column;
-  align-items: stretch;
-}
-
-.krew-job-card-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-}
-
-.krew-confirmation-block {
-  border-top: 1px solid var(--color-border);
-  padding-top: 14px;
-  margin-top: 14px;
-}
-
-.krew-confirmation-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  font-size: 13px;
-  color: var(--color-text-soft);
-  padding: 4px 0;
-}
-
-.krew-confirmation-form {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 10px;
-  flex-wrap: wrap;
-}
-
-.krew-confirmation-form .krew-field-input {
-  flex: 1;
-  min-width: 140px;
-}
-
-.krew-confirmation-form .krew-form-banner {
-  flex: 1 0 100%;
-  margin: 0 0 4px 0;
-}
-
-.krew-confirmation-form-actions {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex-shrink: 0;
-}
 
 /* Notification bell (NotificationBell.jsx) - dropped into the header of both dashboards
    and Admin.jsx, so it lives here rather than in admin.css even though Admin uses it too. */
@@ -789,7 +476,54 @@
   height: 7px;
   border-radius: 50%;
   background: var(--color-brand);
-  margin-top: 6px;
+  margin: 6px 0 0 auto;
+}
+
+/* Bare type icon at the start of each notification - brand-coloured while unread */
+.krew-notif-item-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--color-text-faint);
+}
+
+.krew-notif-item.unread .krew-notif-item-icon {
+  color: var(--color-brand-text);
+}
+
+/* Back link at the top of a sub-view inside the dashboard shell (e.g. a gig's applicants) */
+.krew-db-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 18px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-soft);
+  cursor: pointer;
+}
+
+.krew-db-back:hover {
+  color: var(--color-text);
+}
+
+/* The unread tint is lavender in light mode; on plum it washed out, so dark mode uses the
+   sunken surface instead (same fix as the pilot banner). */
+:root[data-theme='dark'] .krew-notif-item.unread,
+:root[data-theme='dark'] .krew-notif-item.unread:hover {
+  background: var(--color-surface-sunken);
+  filter: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .krew-notif-item.unread,
+  :root:not([data-theme='light']) .krew-notif-item.unread:hover {
+    background: var(--color-surface-sunken);
+    filter: none;
+  }
 }
 
 .krew-notif-item-text {
@@ -808,4 +542,2177 @@
 .krew-notif-item-time {
   font-size: 11.5px;
   color: var(--color-text-faint);
+}
+/* Organizer's own listing cards - the listing photo (or its placeholder) on the left, and
+   the "Add photo / Change photo" control styled as a text button over a hidden file input */
+
+.krew-dash-photo-btn {
+  cursor: pointer;
+}
+
+.krew-dash-photo-btn input[type='file'] {
+  display: none;
+}
+
+/* ===================================================================== */
+/* Dashboard shell (DashboardShell.jsx) - the moodboard's sidebar layout  */
+/* ===================================================================== */
+.krew-shell {
+  min-height: 100vh;
+  display: flex;
+  background: var(--color-surface);
+}
+
+.krew-shell-sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 248px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 26px 18px 22px 18px;
+  background: var(--color-surface-card);
+  border-right: 1px solid var(--color-border);
+  z-index: 40;
+}
+
+.krew-shell-sidebar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px 30px 10px;
+}
+
+.krew-shell-close {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--color-text-soft);
+  cursor: pointer;
+  padding: 4px;
+}
+
+.krew-shell-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.krew-shell-nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  padding: 11px 12px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: none;
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--color-text-soft);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
+}
+
+.krew-shell-nav-item:hover {
+  color: var(--color-text);
+  background: var(--color-surface);
+}
+
+.krew-shell-nav-item.active {
+  color: var(--color-brand-text);
+  background: var(--color-surface-selected);
+}
+
+.krew-shell-nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: -18px;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--color-brand);
+}
+
+.krew-shell-nav-badge {
+  margin-left: auto;
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--color-brand);
+  color: var(--color-text-on-brand);
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.krew-shell-sidebar-bottom {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 18px;
+  border-top: 1px solid var(--color-border);
+}
+
+.krew-shell-help,
+.krew-shell-logout {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-soft);
+  text-decoration: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.krew-shell-help:hover,
+.krew-shell-logout:hover {
+  color: var(--color-text);
+  background: var(--color-surface);
+}
+
+.krew-shell-help span {
+  display: flex;
+  flex-direction: column;
+}
+
+.krew-shell-help small {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-faint);
+}
+
+.krew-shell-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.krew-shell-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  padding: 14px 36px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.krew-shell-menu,
+.krew-shell-topbar-logo {
+  display: none;
+}
+
+.krew-shell-menu {
+  background: none;
+  border: none;
+  color: var(--color-text);
+  cursor: pointer;
+  padding: 4px;
+}
+
+.krew-shell-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.krew-shell-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-electric-violet);
+  color: var(--color-warm-ivory);
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.krew-shell-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.krew-shell-content {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 36px 36px 72px 36px;
+}
+
+.krew-shell-backdrop {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .krew-shell-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    height: auto;
+    transform: translateX(-100%);
+    transition: transform var(--motion-base) var(--motion-ease);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .krew-shell-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .krew-shell-close {
+    display: inline-flex;
+  }
+
+  .krew-shell-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 35;
+    background: rgba(20, 12, 27, 0.5);
+  }
+
+  .krew-shell-topbar {
+    justify-content: space-between;
+    padding: 12px 16px;
+  }
+
+  .krew-shell-menu,
+  .krew-shell-topbar-logo {
+    display: inline-flex;
+  }
+
+  .krew-shell-topbar-logo img {
+    height: 24px;
+  }
+
+  .krew-shell-topbar-actions {
+    gap: 8px;
+  }
+
+  .krew-shell-content {
+    padding: 24px 16px 56px 16px;
+  }
+}
+
+/* ===================================================================== */
+/* Crew dashboard sections                                               */
+/* ===================================================================== */
+.krew-db-head {
+  margin-bottom: 28px;
+}
+
+.krew-db-head h1 {
+  font-family: var(--font-display);
+  font-size: 36px;
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  margin: 0 0 6px 0;
+}
+
+.krew-db-head p {
+  font-size: 15px;
+  color: var(--color-text-soft);
+  margin: 0;
+  max-width: 620px;
+}
+
+.krew-db-head-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.krew-db-overview {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.krew-db-card {
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+}
+
+section.krew-db-card ~ section.krew-db-card {
+  margin-top: 20px;
+}
+
+.krew-db-overview section.krew-db-card ~ section.krew-db-card {
+  margin-top: 0;
+}
+
+.krew-db-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.krew-db-card-head h2 {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.krew-db-card-note {
+  font-size: 13px;
+  color: var(--color-text-faint);
+}
+
+.krew-db-card-sub {
+  font-size: 13.5px;
+  color: var(--color-text-soft);
+  margin: -8px 0 16px 0;
+}
+
+.krew-db-link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  cursor: pointer;
+  font-size: 13.5px;
+}
+
+.krew-db-empty {
+  font-size: 14px;
+  color: var(--color-text-soft);
+  margin: 0;
+}
+
+.krew-db-small-btn.krew-button-inline {
+  padding: 10px 16px;
+  font-size: 14px;
+}
+
+/* Upcoming gig - the plum hero card spanning the top of the overview */
+.krew-db-upcoming {
+  grid-column: 1 / -1;
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 24px;
+  align-items: stretch;
+  min-height: 210px;
+  padding: 28px 28px 28px 32px;
+  border-radius: var(--radius-xl);
+  background: var(--color-panel);
+  color: var(--color-text-on-dark);
+}
+
+.krew-db-upcoming-copy {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.krew-db-eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-soft-violet);
+  margin-bottom: 8px;
+}
+
+.krew-db-upcoming h2 {
+  font-family: var(--font-display);
+  font-size: 30px;
+  line-height: 1.15;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+}
+
+.krew-db-upcoming ul {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin: 0 0 10px 0;
+  padding: 0;
+}
+
+.krew-db-upcoming li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 14px;
+  color: rgba(243, 240, 233, 0.85);
+}
+
+.krew-db-upcoming li svg {
+  color: var(--color-soft-violet);
+}
+
+.krew-db-upcoming-meta {
+  font-size: 14px;
+  color: rgba(243, 240, 233, 0.7);
+  margin: 0 0 16px 0;
+}
+
+.krew-db-upcoming-link {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: var(--color-warm-ivory);
+  color: var(--color-ink-plum);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.krew-db-upcoming-link:hover {
+  background: #FFFFFF;
+}
+
+.krew-db-upcoming-photo {
+  position: relative;
+  z-index: 1;
+  border-radius: var(--radius-lg);
+  min-height: 160px;
+}
+
+.krew-db-upcoming-shard {
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 46%;
+  background: var(--color-electric-violet);
+  clip-path: polygon(55% 0, 100% 0, 100% 100%, 15% 100%);
+  opacity: 0.35;
+}
+
+/* Rows - applications etc. */
+.krew-db-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.krew-db-row {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.krew-db-row:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.krew-db-row:last-child {
+  padding-bottom: 0;
+}
+
+.krew-db-row-photo {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-md);
+}
+
+.krew-db-row-photo .krew-listing-photo-icon {
+  width: 46%;
+}
+
+.krew-db-row-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.krew-db-row-main strong {
+  font-size: 14.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.krew-db-row-main span {
+  font-size: 12.5px;
+  color: var(--color-text-faint);
+}
+
+.krew-db-row-amount {
+  font-size: 13.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Profile strength */
+.krew-db-percent {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--color-brand-text);
+}
+
+.krew-db-progress {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--color-surface-sunken);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.krew-db-progress span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--color-brand);
+  transition: width var(--motion-slow) var(--motion-ease);
+}
+
+.krew-db-checklist {
+  list-style: none;
+  margin: 0 0 14px 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.krew-db-checklist li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.krew-db-checklist li svg {
+  color: var(--color-text-faint);
+  flex-shrink: 0;
+}
+
+.krew-db-checklist li.done {
+  color: var(--color-text-faint);
+  text-decoration: line-through;
+}
+
+.krew-db-checklist li.done svg {
+  color: var(--color-success);
+}
+
+/* Availability - full width on the overview, status on the left and the switch on the right */
+.krew-db-availability-card {
+  grid-column: 1 / -1;
+}
+
+.krew-db-availability {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px 24px;
+}
+
+.krew-db-availability-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.krew-db-availability-status::before {
+  content: '';
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--color-success);
+}
+
+.krew-db-availability-status.working::before {
+  background: var(--color-warning);
+}
+
+.krew-db-availability p {
+  font-size: 13.5px;
+  color: var(--color-text-soft);
+  margin: 4px 0 0 0;
+}
+
+/* Bottom banner */
+.krew-db-banner {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+  padding: 30px 32px;
+  border-radius: var(--radius-xl);
+  background: var(--color-electric-violet);
+  color: var(--color-warm-ivory);
+}
+
+.krew-db-banner > div,
+.krew-db-banner-link {
+  position: relative;
+  z-index: 1;
+}
+
+.krew-db-banner h2 {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+}
+
+.krew-db-banner p {
+  font-size: 14.5px;
+  margin: 0;
+  color: rgba(243, 240, 233, 0.85);
+}
+
+.krew-db-banner-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-warm-ivory);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}
+
+.krew-db-banner-shard-1 {
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 40%;
+  background: var(--color-ink-plum);
+  clip-path: polygon(50% 0, 100% 0, 100% 100%, 15% 100%);
+  opacity: 0.35;
+}
+
+.krew-db-banner-shard-2 {
+  right: 0;
+  bottom: 0;
+  width: 22%;
+  height: 70%;
+  background: var(--color-soft-violet);
+  clip-path: polygon(65% 0, 100% 0, 100% 100%, 0 100%);
+  opacity: 0.4;
+}
+
+/* Find Gigs list */
+.krew-db-gigs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.krew-db-gig {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr) auto;
+  gap: 20px;
+  align-items: center;
+  padding: 14px;
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.krew-db-gig-photo {
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-md);
+}
+
+.krew-db-gig-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+
+.krew-db-gig-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.krew-db-gig-title:hover {
+  color: var(--color-brand-text);
+}
+
+.krew-db-gig-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 13px;
+  color: var(--color-text-soft);
+}
+
+.krew-db-gig-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.krew-db-gig-org {
+  font-size: 12.5px;
+  color: var(--color-text-faint);
+}
+
+.krew-db-gig-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  padding-right: 6px;
+}
+
+.krew-db-gig-amount {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+@media (max-width: 860px) {
+  .krew-db-head h1 {
+    font-size: 28px;
+  }
+
+  .krew-db-overview {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .krew-db-upcoming {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 24px;
+  }
+
+  .krew-db-upcoming-photo {
+    min-height: 0;
+    aspect-ratio: 16 / 9;
+    order: -1;
+  }
+
+  .krew-db-row {
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+  }
+
+  .krew-db-row-photo {
+    width: 48px;
+    height: 48px;
+  }
+
+  .krew-db-row-amount {
+    display: none;
+  }
+
+  .krew-db-gig {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .krew-db-gig-photo {
+    aspect-ratio: 16 / 9;
+  }
+
+  .krew-db-gig-side {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0;
+  }
+
+  .krew-db-banner {
+    padding: 24px;
+  }
+}
+
+/* ===================================================================== */
+/* Organizer dashboard extras (same shell + krew-db-* system as the crew  */
+/* dashboard). Icons stay bare - no tiles or shaded chips behind them.   */
+/* ===================================================================== */
+.krew-db-upcoming h2.krew-db-big-number {
+  font-size: 64px;
+  line-height: 1;
+  margin: 0 0 10px 0;
+}
+
+/* Recent activity */
+.krew-db-activity {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.krew-db-activity li {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  padding: 12px 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.krew-db-activity li:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.krew-db-activity li:last-child {
+  padding-bottom: 0;
+}
+
+.krew-db-activity li svg {
+  color: var(--color-text-faint);
+  margin-top: 1px;
+}
+
+.krew-db-activity li.unread svg {
+  color: var(--color-brand-text);
+}
+
+.krew-db-activity-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--color-text);
+}
+
+.krew-db-activity li.unread .krew-db-activity-text {
+  font-weight: 600;
+}
+
+.krew-db-activity-text small {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-text-faint);
+}
+
+/* Payment record stats */
+.krew-db-stats {
+  list-style: none;
+  margin: 0 0 14px 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.krew-db-stats li {
+  display: grid;
+  grid-template-columns: 24px 112px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+}
+
+.krew-db-stats li svg {
+  color: var(--color-brand-text);
+}
+
+.krew-db-stats strong {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.krew-db-stats span {
+  font-size: 13.5px;
+  color: var(--color-text-soft);
+}
+
+.krew-db-card .krew-db-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+}
+
+.krew-db-card .krew-db-empty .krew-status-pill {
+  margin-right: 6px;
+}
+
+/* My Gigs actions */
+.krew-db-gig-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin-top: 4px;
+}
+
+.krew-db-gig-actions .krew-dash-text-btn {
+  padding: 0;
+}
+
+/* Find Crew */
+.krew-db-crew {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.krew-db-crew-row {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--color-border);
+}
+
+.krew-db-crew-row:first-child {
+  border-top: none;
+}
+
+.krew-db-crew-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-panel);
+  color: var(--color-warm-ivory);
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 600;
+}
+
+.krew-db-crew-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.krew-db-crew-main {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.krew-db-crew-main strong {
+  font-size: 15.5px;
+}
+
+.krew-db-crew-main > span {
+  font-size: 13px;
+  color: var(--color-text-soft);
+}
+
+.krew-db-crew-record {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+
+.krew-db-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.krew-db-dot::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-success);
+}
+
+.krew-db-dot.working::before {
+  background: var(--color-warning);
+}
+
+.krew-db-crew-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.krew-db-crew-actions a.krew-dash-text-btn {
+  text-decoration: none;
+}
+
+@media (max-width: 860px) {
+  .krew-db-upcoming h2.krew-db-big-number {
+    font-size: 48px;
+  }
+
+  .krew-db-crew-row {
+    grid-template-columns: 48px minmax(0, 1fr);
+    padding: 16px;
+  }
+
+  .krew-db-crew-avatar {
+    width: 48px;
+    height: 48px;
+    font-size: 16px;
+  }
+
+  .krew-db-crew-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+}
+
+/* Forms inside the dashboard shell (Post a Gig, Hire): a readable column rather than the full
+   content width, the page heading already names the form, and both buttons share one height. */
+.krew-shell-content .krew-dash-form-card {
+  max-width: 760px;
+}
+
+.krew-db-head + .krew-dash-form-card .krew-dash-form-title {
+  display: none;
+}
+
+.krew-shell-content .krew-dash-form-actions {
+  align-items: stretch;
+}
+
+.krew-shell-content .krew-dash-form-actions > button {
+  margin: 0;
+}
+
+/* The pilot banner's lavender tint has no dark-mode version, so it washed out on plum. */
+:root[data-theme='dark'] .krew-pilot-banner {
+  background: var(--color-surface-sunken);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .krew-pilot-banner {
+    background: var(--color-surface-sunken);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+  }
+}
+
+/* ===================================================================== */
+/* Job card (JobCard.jsx) - Payments / My Jobs. A two-step confirmation  */
+/* track sits in the middle: your side, then theirs. Bare icons only.    */
+/* ===================================================================== */
+.krew-jc {
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.krew-jc-top {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: start;
+}
+
+.krew-jc-photo {
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-md);
+}
+
+.krew-jc-photo .krew-listing-photo-icon {
+  width: 38%;
+}
+
+.krew-jc-main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding-top: 2px;
+}
+
+.krew-jc-title {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 0;
+}
+
+.krew-jc-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-size: 13px;
+  color: var(--color-text-soft);
+}
+
+.krew-jc-meta strong {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.krew-jc-desc {
+  font-size: 13.5px;
+  color: var(--color-text-soft);
+  margin: 2px 0 0 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.krew-jc-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 2px 4px 0 0;
+}
+
+.krew-jc-amount {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* The two-step track */
+.krew-jc-track {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 64px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-sunken);
+}
+
+.krew-jc-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.krew-jc-step svg {
+  flex-shrink: 0;
+  color: var(--color-text-faint);
+}
+
+.krew-jc-step.done svg {
+  color: var(--color-success);
+}
+
+.krew-jc-step span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.krew-jc-step strong {
+  font-size: 14px;
+}
+
+.krew-jc-step small {
+  font-size: 12.5px;
+  color: var(--color-text-soft);
+}
+
+.krew-jc-track-line {
+  height: 0;
+  border-top: 1.5px dashed var(--color-border-strong, var(--color-border));
+}
+
+.krew-jc-track-line.done {
+  border-top-style: solid;
+  border-top-color: var(--color-success);
+}
+
+/* One-line notes under the track */
+.krew-jc-note {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 10px;
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--color-text-soft);
+}
+
+.krew-jc-note svg {
+  flex-shrink: 0;
+}
+
+.krew-jc-note.success svg {
+  color: var(--color-success);
+}
+
+.krew-jc-note.warning svg {
+  color: var(--color-warning);
+}
+
+.krew-jc-note.danger svg {
+  color: var(--color-danger);
+}
+
+.krew-moment:focus {
+  outline: none;
+}
+
+.krew-jc-note-links {
+  justify-self: end;
+  display: inline-flex;
+  gap: 18px;
+}
+
+.krew-jc-note .krew-dash-text-btn {
+  padding: 0;
+}
+
+/* Actions + inline forms */
+.krew-jc-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.krew-jc-dispute {
+  margin-left: auto;
+  padding: 0;
+}
+
+.krew-jc-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.krew-jc-form .krew-field-label {
+  margin: 0;
+}
+
+.krew-jc-form .krew-form-banner {
+  margin: 0;
+}
+
+.krew-jc-form-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.krew-jc-input {
+  position: relative;
+  flex: 0 1 260px;
+}
+
+.krew-jc-input > span {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-faint);
+  pointer-events: none;
+}
+
+.krew-jc-input .krew-field-input {
+  padding-left: 50px;
+}
+
+/* ===================================================================== */
+/* Payment confirmation moment (PaymentConfirmedMoment.jsx) - panel 8    */
+/* ===================================================================== */
+body.krew-modal-open {
+  overflow: hidden;
+}
+
+.krew-moment-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background: rgba(20, 12, 26, 0.62);
+  animation: krew-moment-fade var(--motion-base) var(--motion-ease) both;
+}
+
+.krew-moment {
+  width: 100%;
+  max-width: 520px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  border-radius: var(--radius-xl);
+  background: var(--color-surface-card);
+  box-shadow: 0 30px 80px rgba(20, 12, 26, 0.35);
+  animation: krew-moment-rise var(--motion-slow) var(--motion-ease) both;
+}
+
+.krew-moment-top {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 44px 28px 34px;
+  background: var(--color-panel);
+  color: var(--color-warm-ivory);
+}
+
+.krew-moment-top > *:not(.krew-shard) {
+  position: relative;
+  z-index: 1;
+}
+
+.krew-moment-shard-1 {
+  left: 0;
+  top: 0;
+  width: 34%;
+  height: 100%;
+  background: var(--color-electric-violet);
+  clip-path: polygon(0 0, 70% 0, 20% 100%, 0 100%);
+  opacity: 0.45;
+  animation: krew-moment-shard-left 700ms var(--motion-ease) 80ms both;
+}
+
+.krew-moment-shard-2 {
+  right: 0;
+  top: 0;
+  width: 30%;
+  height: 100%;
+  background: var(--color-electric-violet);
+  clip-path: polygon(60% 0, 100% 0, 100% 100%, 0 100%);
+  opacity: 0.35;
+  animation: krew-moment-shard-right 700ms var(--motion-ease) 140ms both;
+}
+
+.krew-moment-shard-3 {
+  right: 0;
+  bottom: 0;
+  width: 16%;
+  height: 46%;
+  background: var(--color-soft-violet);
+  clip-path: polygon(70% 0, 100% 0, 100% 100%, 0 100%);
+  opacity: 0.5;
+  animation: krew-moment-shard-right 700ms var(--motion-ease) 220ms both;
+}
+
+.krew-moment-close {
+  position: absolute !important;
+  top: 14px;
+  right: 14px;
+  display: inline-flex;
+  padding: 6px;
+  border: none;
+  border-radius: var(--radius-sm, 8px);
+  background: none;
+  color: rgba(243, 240, 233, 0.75);
+  cursor: pointer;
+}
+
+.krew-moment-close:hover {
+  color: var(--color-warm-ivory);
+}
+
+.krew-moment-close:focus-visible {
+  outline: 2px solid var(--color-soft-violet);
+  outline-offset: 2px;
+}
+
+.krew-moment-icon {
+  color: var(--color-soft-violet);
+  margin-bottom: 16px;
+  animation: krew-moment-pop 520ms cubic-bezier(0.2, 0.9, 0.3, 1.25) 160ms both;
+}
+
+.krew-moment-eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-soft-violet);
+  margin-bottom: 8px;
+}
+
+.krew-moment-amount {
+  font-family: var(--font-display);
+  font-size: 46px;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  margin-bottom: 10px;
+}
+
+.krew-moment-job {
+  font-size: 14.5px;
+  color: rgba(243, 240, 233, 0.78);
+}
+
+.krew-moment-body {
+  padding: 26px 28px 28px;
+}
+
+.krew-moment-sides {
+  list-style: none;
+  margin: 0 0 20px 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.krew-moment-sides li {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 0;
+  border-top: 1px solid var(--color-border);
+  font-size: 14px;
+}
+
+.krew-moment-sides li:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.krew-moment-sides li svg {
+  color: var(--color-success);
+}
+
+.krew-moment-sides small {
+  font-size: 12.5px;
+  color: var(--color-text-faint);
+  white-space: nowrap;
+}
+
+.krew-moment-meaning {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 12px;
+  margin: 0 0 24px 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--color-text-soft);
+}
+
+.krew-moment-meaning svg {
+  color: var(--color-brand-text);
+  margin-top: 1px;
+}
+
+.krew-moment-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.krew-moment-actions a {
+  text-decoration: none;
+}
+
+@keyframes krew-moment-fade {
+  from { opacity: 0; }
+}
+
+@keyframes krew-moment-rise {
+  from { opacity: 0; transform: translateY(18px) scale(0.98); }
+}
+
+@keyframes krew-moment-pop {
+  from { opacity: 0; transform: scale(0.6); }
+}
+
+@keyframes krew-moment-shard-left {
+  from { transform: translateX(-40%); opacity: 0; }
+}
+
+@keyframes krew-moment-shard-right {
+  from { transform: translateX(40%); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .krew-moment-backdrop,
+  .krew-moment,
+  .krew-moment-icon,
+  .krew-moment-shard-1,
+  .krew-moment-shard-2,
+  .krew-moment-shard-3 {
+    animation: none;
+  }
+}
+
+@media (max-width: 860px) {
+  .krew-jc-top {
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .krew-jc-side {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0;
+  }
+
+  .krew-jc-track {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    padding: 14px 16px;
+  }
+
+  .krew-jc-track-line {
+    display: none;
+  }
+
+  .krew-jc-note {
+    align-items: start;
+  }
+
+  .krew-jc-note-links {
+    grid-column: 2 / -1;
+    justify-self: start;
+  }
+
+  .krew-moment-amount {
+    font-size: 38px;
+  }
+
+  .krew-moment-body {
+    padding: 22px 20px 22px;
+  }
+
+  .krew-moment-sides li {
+    grid-template-columns: 18px minmax(0, 1fr);
+  }
+
+  .krew-moment-sides small {
+    grid-column: 2;
+  }
+}
+
+/* ===================================================================== */
+/* Admin panel (Admin.jsx) - same shell, krew-db-* and krew-jc-* pieces, */
+/* plus the approval rows from moodboard panel 9. Bare icons only.       */
+/* ===================================================================== */
+.krew-adm-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.krew-adm-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 22px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-card);
+  color: var(--color-text);
+  font-family: inherit;
+  text-align: left;
+}
+
+.krew-adm-stat.clickable {
+  cursor: pointer;
+  transition: border-color var(--motion-base) var(--motion-ease);
+}
+
+.krew-adm-stat.clickable:hover {
+  border-color: var(--color-brand);
+}
+
+.krew-adm-stat svg {
+  color: var(--color-brand-text);
+  margin-bottom: 8px;
+}
+
+.krew-adm-stat strong {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.05;
+}
+
+.krew-adm-stat span {
+  font-size: 13.5px;
+  color: var(--color-text-soft);
+}
+
+.krew-adm-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+}
+
+/* Rows - approvals, dispute previews, resolved list */
+.krew-adm-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.krew-adm-list-card {
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.krew-adm-row {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 18px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--color-border);
+}
+
+.krew-adm-row:first-child {
+  border-top: none;
+}
+
+.krew-adm-row.compact {
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  gap: 14px;
+  padding: 12px 0;
+}
+
+.krew-adm-row.compact:first-child {
+  padding-top: 0;
+}
+
+.krew-adm-row.compact:last-child {
+  padding-bottom: 0;
+}
+
+.krew-adm-row.resolved {
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: start;
+}
+
+.krew-adm-avatar {
+  width: 48px;
+  height: 48px;
+  font-size: 16px;
+  border: 1px solid var(--color-border);
+}
+
+.krew-adm-row.compact .krew-adm-avatar {
+  width: 40px;
+  height: 40px;
+  font-size: 14px;
+}
+
+.krew-adm-row-icon {
+  color: var(--color-brand-text);
+  justify-self: center;
+}
+
+.krew-adm-row.resolved .krew-adm-row-icon {
+  color: var(--color-success);
+  margin-top: 1px;
+}
+
+.krew-adm-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.krew-adm-row-main strong {
+  font-size: 15px;
+}
+
+.krew-adm-row.compact .krew-adm-row-main strong {
+  font-size: 14.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.krew-adm-row-main span {
+  font-size: 13px;
+  color: var(--color-text-soft);
+}
+
+.krew-adm-row-main p {
+  margin: 6px 0 0 0;
+  font-size: 13.5px;
+  color: var(--color-text-soft);
+}
+
+.krew-adm-docs {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  font-size: 13.5px;
+}
+
+.krew-adm-docs a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--color-brand-text);
+  text-decoration: none;
+}
+
+.krew-adm-docs a:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.krew-adm-docs.missing {
+  color: var(--color-text-faint);
+}
+
+.krew-adm-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.krew-button-secondary.krew-adm-reject {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.krew-button-secondary.krew-adm-reject:hover:not(:disabled) {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
+/* Dispute cards */
+.krew-adm-reason {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 14px;
+  padding: 0 4px;
+}
+
+.krew-adm-reason svg {
+  color: var(--color-danger);
+  margin-top: 2px;
+}
+
+.krew-adm-reason-by {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+}
+
+.krew-adm-reason p {
+  margin: 4px 0 0 0;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.krew-adm-reason p.krew-adm-reason-details {
+  font-size: 13.5px;
+  color: var(--color-text-soft);
+}
+
+.krew-adm-resolve {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.krew-adm-resolve .krew-field {
+  margin: 0;
+}
+
+.krew-adm-resolve .krew-form-banner {
+  margin: 0;
+}
+
+.krew-adm-outcomes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.krew-adm-outcome {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 14px 16px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color var(--motion-base) var(--motion-ease);
+}
+
+.krew-adm-outcome.selected {
+  border-color: var(--color-brand);
+}
+
+.krew-adm-outcome input {
+  margin: 3px 0 0 0;
+  accent-color: var(--color-brand);
+}
+
+.krew-adm-outcome span {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.krew-adm-outcome strong {
+  font-size: 14px;
+}
+
+.krew-adm-outcome small {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--color-text-soft);
+}
+
+.krew-adm-resolve .krew-jc-input {
+  display: block;
+  max-width: 260px;
+}
+
+.krew-adm-resolved {
+  margin-top: 28px;
+}
+
+.krew-adm-resolved-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.krew-adm-resolved-toggle svg {
+  transition: transform var(--motion-base) var(--motion-ease);
+}
+
+.krew-adm-resolved-toggle.open svg {
+  transform: rotate(180deg);
+}
+
+/* Analytics */
+.krew-adm-analytics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.krew-adm-analytics section.krew-db-card ~ section.krew-db-card {
+  margin-top: 0;
+}
+
+.krew-adm-figures {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.krew-adm-figures div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 11px 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.krew-adm-figures div:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.krew-adm-figures dt {
+  font-size: 14px;
+  color: var(--color-text-soft);
+}
+
+.krew-adm-figures dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+@media (max-width: 1100px) {
+  .krew-adm-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .krew-adm-row {
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+  }
+
+  .krew-adm-row .krew-adm-docs {
+    grid-column: 2;
+  }
+
+  .krew-adm-row .krew-adm-actions {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+  }
+}
+
+@media (max-width: 860px) {
+  .krew-adm-stats {
+    gap: 12px;
+  }
+
+  .krew-adm-stat {
+    padding: 18px;
+  }
+
+  .krew-adm-stat strong {
+    font-size: 24px;
+  }
+
+  .krew-adm-row {
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .krew-adm-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 14px;
+  }
+
+  .krew-adm-row .krew-adm-docs,
+  .krew-adm-row .krew-adm-actions {
+    grid-column: 2;
+    grid-row: auto;
+    flex-wrap: wrap;
+  }
+
+  .krew-adm-row.compact {
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    padding: 12px 0;
+  }
+
+  .krew-adm-outcomes,
+  .krew-adm-analytics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ===================================================================== */
+/* Mobile pass - dashboards and admin                                    */
+/* ===================================================================== */
+@media (max-width: 860px) {
+  /* Plum hero cards: a shorter photo strip so the numbers stay near the top */
+  .krew-db-upcoming-photo {
+    aspect-ratio: 2 / 1;
+  }
+
+  /* Gig lists (Find Gigs, My Gigs): compact rows - thumbnail beside the details - instead of
+     a full-width placeholder photo per gig */
+  .krew-db-gig {
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 14px;
+    align-items: start;
+  }
+
+  .krew-db-gig-photo {
+    aspect-ratio: 1;
+  }
+
+  .krew-db-gig-photo .krew-listing-photo-icon {
+    width: 42%;
+  }
+
+  .krew-db-gig-title {
+    font-size: 16px;
+  }
+
+  .krew-db-gig-side {
+    grid-column: 1 / -1;
+  }
+
+  /* Application rows: the status sits under the details so titles aren't cut off */
+  .krew-db-row {
+    grid-template-columns: 48px minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .krew-db-row .krew-status-pill {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .krew-db-row-main strong {
+    white-space: normal;
+  }
+
+  /* Payment record: a narrower number column so the labels line up and don't wrap early */
+  .krew-db-stats li {
+    grid-template-columns: 24px 84px minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .krew-db-stats strong {
+    font-size: 20px;
+  }
+
+  /* Forms inside the shell: a little less padding so fields get the width */
+  .krew-shell-content .krew-dash-form-card {
+    padding: 22px 18px;
+  }
+}
+
+/* Pending account that hasn't uploaded its ID yet - the one thing left to do */
+.krew-db-verify {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 24px;
+  padding: 22px 24px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-card);
+}
+
+.krew-db-verify p {
+  margin: 0;
+  max-width: 520px;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--color-text-soft);
+}
+
+.krew-db-verify p strong {
+  color: var(--color-text);
+}
+
+.krew-db-verify a {
+  text-decoration: none;
+}
+
+/* Password reset queue (Admin.jsx, section "resets") */
+.krew-adm-call {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-brand-text);
+  text-decoration: none;
+}
+
+.krew-adm-call:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.krew-adm-code {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  border: 1.5px dashed var(--color-brand-text);
+}
+
+.krew-adm-code span,
+.krew-adm-code small {
+  font-size: 11.5px;
+  color: var(--color-text-soft);
+}
+
+.krew-adm-code span {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.krew-adm-code strong {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 20px;
+  letter-spacing: 0.08em;
 }

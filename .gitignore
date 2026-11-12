@@ -7,3 +7,4 @@ dist/
 .DS_Store
 server/uploads/
 .artifact-cache/
+Claude outputs/

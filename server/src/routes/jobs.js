@@ -6,6 +6,7 @@ import express from 'express';
 import { db } from '../db.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { createNotification, notifyAdmins } from '../notifications.js';
+import { text, LIMITS } from '../security.js';
 
 export const jobsRouter = express.Router();
 
@@ -43,15 +44,22 @@ jobsRouter.post('/', requireRole('organizer'), (req, res) => {
   if (!Number.isFinite(amountNumber) || amountNumber <= 0) {
     return res.status(400).json({ error: 'Enter an amount greater than zero.' });
   }
+  if (amountNumber > LIMITS.maxAmount) {
+    return res.status(400).json({ error: `The amount can't be more than KES ${LIMITS.maxAmount.toLocaleString()}.` });
+  }
 
-  if (!due_date || Number.isNaN(Date.parse(due_date))) {
+  if (typeof due_date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(due_date) || Number.isNaN(Date.parse(due_date))) {
     return res.status(400).json({ error: 'Enter a valid due date.' });
   }
   if (startOfDay(due_date) < startOfDay(new Date())) {
     return res.status(400).json({ error: 'Due date cannot be in the past.' });
   }
 
-  const description = job_description && job_description.trim() ? job_description.trim() : null;
+  const cleanDescription = text(job_description, LIMITS.description);
+  if (cleanDescription === null) {
+    return res.status(400).json({ error: `Keep the description to ${LIMITS.description} characters or fewer.` });
+  }
+  const description = cleanDescription || null;
 
   const result = db
     .prepare(
@@ -64,7 +72,7 @@ jobsRouter.post('/', requireRole('organizer'), (req, res) => {
     crewMemberId,
     'hired',
     `${organizer.name} hired you directly for a new job.`,
-    '/dashboard'
+    '/dashboard?section=jobs'
   );
 
   res.status(201).json({
@@ -82,6 +90,7 @@ jobsRouter.post('/', requireRole('organizer'), (req, res) => {
 // Admins don't have jobs of their own, so they get an empty list.
 // The jobs are returned in descending order of creation date, so the most recent jobs appear first.
 // Each job also includes both sides' payment confirmation details (date confirmed and amount confirmed), if either side has submitted one yet.
+// Jobs that came from an open listing also carry that listing's title, category, location and photo (null for direct hires).
 jobsRouter.get('/mine', requireAuth, (req, res) => {
   const { id, role } = req.user;
 
@@ -90,10 +99,12 @@ jobsRouter.get('/mine', requireAuth, (req, res) => {
       .prepare(
         `SELECT t.id, t.amount, t.due_date, t.job_description, t.status, t.created_at,
                 t.organizer_confirmed_at, t.organizer_confirmed_amount,
-                t.crew_confirmed_at, t.crew_confirmed_amount,
-                cm.id AS crew_member_id, cm.name AS crew_member_name
+                t.crew_confirmed_at, t.crew_confirmed_amount, t.completed_at,
+                cm.id AS crew_member_id, cm.name AS crew_member_name,
+                l.title, l.category, l.location, l.photo_path
          FROM transactions t
          JOIN users cm ON cm.id = t.crew_member_id
+         LEFT JOIN job_listings l ON l.id = t.listing_id
          WHERE t.organizer_id = ?
          ORDER BY t.created_at DESC`
       )
@@ -106,10 +117,12 @@ jobsRouter.get('/mine', requireAuth, (req, res) => {
       .prepare(
         `SELECT t.id, t.amount, t.due_date, t.job_description, t.status, t.created_at,
                 t.organizer_confirmed_at, t.organizer_confirmed_amount,
-                t.crew_confirmed_at, t.crew_confirmed_amount,
-                org.id AS organizer_id, org.name AS organizer_name
+                t.crew_confirmed_at, t.crew_confirmed_amount, t.completed_at,
+                org.id AS organizer_id, org.name AS organizer_name,
+                l.title, l.category, l.location, l.photo_path
          FROM transactions t
          JOIN users org ON org.id = t.organizer_id
+         LEFT JOIN job_listings l ON l.id = t.listing_id
          WHERE t.crew_member_id = ?
          ORDER BY t.created_at DESC`
       )
@@ -150,49 +163,62 @@ jobsRouter.post('/:id/confirm', requireAuth, (req, res) => {
   if (!Number.isFinite(amountNumber) || amountNumber <= 0) {
     return res.status(400).json({ error: 'Enter an amount greater than zero.' });
   }
+  if (amountNumber > LIMITS.maxAmount) {
+    return res.status(400).json({ error: `The amount can't be more than KES ${LIMITS.maxAmount.toLocaleString()}.` });
+  }
 
   // Which pair of columns we write to depends on which side of the agreement the logged-in person is on, never on anything they send us.
   const side = isOrganizer ? 'organizer' : 'crew';
-  db.prepare(
-    `UPDATE transactions SET ${side}_confirmed_at = datetime('now'), ${side}_confirmed_amount = ? WHERE id = ?`
-  ).run(amountNumber, transactionId);
+  // Match-and-confirm (Task d2-3): save this side's amount, then - once both sides have an
+  // entry in - see if they agree. Only a match moves the job to 'confirmed' (and stamps
+  // completed_at); a mismatch leaves it 'pending' rather than guessing which side is right.
+  // Both steps run as one database transaction, so a job can never end up with two matching
+  // confirmations but a status that still says pending.
+  const confirmAndMatch = db.transaction(() => {
+    db.prepare(
+      `UPDATE transactions SET ${side}_confirmed_at = datetime('now'), ${side}_confirmed_amount = ? WHERE id = ?`
+    ).run(amountNumber, transactionId);
 
-  let updated = db.prepare(`SELECT * FROM transactions WHERE id = ?`).get(transactionId);
+    db.prepare(
+      `UPDATE transactions
+       SET status = 'confirmed', completed_at = datetime('now')
+       WHERE id = ? AND status = 'pending'
+         AND organizer_confirmed_at IS NOT NULL AND crew_confirmed_at IS NOT NULL
+         AND organizer_confirmed_amount = crew_confirmed_amount`
+    ).run(transactionId);
 
-  // Match-and-confirm (Task d2-3): once both sides have an entry in, see if
-  // they agree. Only a match moves the job to 'confirmed' - a mismatch
-  // leaves it 'pending' rather than guessing which side is right.
+    return db.prepare(`SELECT * FROM transactions WHERE id = ?`).get(transactionId);
+  });
+  const updated = confirmAndMatch();
+
   const bothConfirmed = updated.organizer_confirmed_at !== null && updated.crew_confirmed_at !== null;
-  const amountsMatch = bothConfirmed && Number(updated.organizer_confirmed_amount) === Number(updated.crew_confirmed_amount);
-
-  if (bothConfirmed && amountsMatch) {
-    db.prepare(`UPDATE transactions SET status = 'confirmed' WHERE id = ?`).run(transactionId);
-    updated = db.prepare(`SELECT * FROM transactions WHERE id = ?`).get(transactionId);
-  }
+  const amountsMatch = updated.status === 'confirmed';
 
   // Whichever side didn't just submit this confirmation is the one who needs to hear about
   // it - the side that submitted it already sees the result directly in their own UI.
   const otherPartyId = isOrganizer ? transaction.crew_member_id : transaction.organizer_id;
+  // Straight to the section where the other person can see (and act on) this job.
+  const otherPartyLink = isOrganizer ? '/dashboard?section=jobs' : '/dashboard?section=payments';
   if (bothConfirmed && amountsMatch) {
     createNotification(
       otherPartyId,
       'payment_confirmed',
       `Payment of KES ${amountNumber.toLocaleString()} is now confirmed for your job with ${req.user.name}.`,
-      '/dashboard'
+      otherPartyLink
     );
   } else if (bothConfirmed && !amountsMatch) {
     createNotification(
       otherPartyId,
       'payment_mismatch',
       `The payment amounts you and ${req.user.name} confirmed don't match for this job - you may want to raise a dispute.`,
-      '/dashboard'
+      otherPartyLink
     );
   } else {
     createNotification(
       otherPartyId,
       'payment_confirmed_pending',
       `${req.user.name} confirmed their side of a payment. Confirm yours to complete it.`,
-      '/dashboard'
+      otherPartyLink
     );
   }
 
@@ -203,6 +229,7 @@ jobsRouter.post('/:id/confirm', requireAuth, (req, res) => {
     organizer_confirmed_amount: updated.organizer_confirmed_amount,
     crew_confirmed_at: updated.crew_confirmed_at,
     crew_confirmed_amount: updated.crew_confirmed_amount,
+    completed_at: updated.completed_at,
     mismatch: bothConfirmed && !amountsMatch,
   });
 });
@@ -237,11 +264,19 @@ jobsRouter.post('/:id/dispute', requireAuth, (req, res) => {
     return res.status(409).json({ error: 'This job is already disputed.' });
   }
 
-  const trimmedReason = reason && reason.trim() ? reason.trim() : null;
+  const cleanReason = text(reason, LIMITS.disputeReason);
+  if (cleanReason === null) {
+    return res.status(400).json({ error: `Keep the reason to ${LIMITS.disputeReason} characters or fewer - add more in the details.` });
+  }
+  const trimmedReason = cleanReason || null;
   if (!trimmedReason) {
     return res.status(400).json({ error: 'Enter a reason for the dispute.' });
   }
-  const trimmedDetails = details && details.trim() ? details.trim() : null;
+  const cleanDetails = text(details, LIMITS.disputeDetails);
+  if (cleanDetails === null) {
+    return res.status(400).json({ error: `Keep the details to ${LIMITS.disputeDetails} characters or fewer.` });
+  }
+  const trimmedDetails = cleanDetails || null;
 
   // The dispute row and the status change have to land together - a disputed job with no
   // dispute record, or a dispute record on a job that's still showing as confirmed, would
@@ -260,7 +295,7 @@ jobsRouter.post('/:id/dispute', requireAuth, (req, res) => {
     otherPartyId,
     'dispute_raised',
     `${req.user.name} raised a dispute on your job: "${trimmedReason}"`,
-    '/dashboard'
+    isOrganizer ? '/dashboard?section=jobs' : '/dashboard?section=payments'
   );
   notifyAdmins(
     'dispute_raised',
@@ -269,18 +304,4 @@ jobsRouter.post('/:id/dispute', requireAuth, (req, res) => {
   );
 
   res.status(201).json({ id: transactionId, status: 'disputed' });
-});
-
-// TODO (Task d2-4, not wired up yet): once KREW integrates Safaricom's Daraja API, M-Pesa
-// itself will call a route like this one when a payment actually goes through, instead of
-// either person having to manually confirm it through POST /:id/confirm above. This route
-// exists only so that integration point is visible in the codebase - it is not registered
-// with Safaricom, does not verify who is calling it, and does not touch the database.
-// When it's actually built, it should at minimum: verify the request really came from
-// Safaricom (Daraja signs or whitelists its callbacks, it doesn't use our session cookies),
-// look up the transaction the payment was for, and record it in the transaction's
-// `daraja_confirmed_at` column (already in the schema, see db.js) - probably auto-confirming
-// the job outright, since a real M-Pesa receipt is stronger proof than either side's word.
-jobsRouter.post('/:id/daraja-confirm', (req, res) => {
-  res.status(501).json({ error: 'Daraja integration is not implemented yet.' });
 });
