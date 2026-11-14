@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import Login from './Login.jsx';
 
 // A gate that checks the user's role before showing the real content.
 // If the user is not logged in, it shows a login form.
 // If the user is logged in but does not have an allowed role, it shows a forbidden message and a logout button.
 // If the user is logged in with an allowed role, it shows the real content (children).
-export default function RoleGate({ role, loginHeading, loginSubhead, forbiddenMessage, showSignupLink = true, children }) {
+// redirects sends a logged-in role that belongs somewhere else straight there instead of
+// showing the forbidden message - e.g. an admin who opens /dashboard lands on /admin.
+export default function RoleGate({ role, loginHeading, loginSubhead, forbiddenMessage, showSignupLink = true, redirects = {}, children }) {
   const allowedRoles = Array.isArray(role) ? role : [role];
 
   // checking -> looking up the session on load
@@ -48,6 +51,10 @@ export default function RoleGate({ role, loginHeading, loginSubhead, forbiddenMe
         <span className="krew-dash-loading-note" role="status">Checking your session…</span>
       </div>
     );
+  }
+
+  if (status === 'forbidden' && redirects[user?.role]) {
+    return <Navigate to={redirects[user.role]} replace />;
   }
 
   if (status === 'forbidden') {

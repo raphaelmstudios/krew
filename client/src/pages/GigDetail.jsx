@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, CalendarDays, MapPin, Wallet, BadgeCheck, Clock, Timer } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CalendarDays, MapPin, Wallet, BadgeCheck } from 'lucide-react';
 import PublicNav from '../components/PublicNav.jsx';
 import PublicFooter from '../components/PublicFooter.jsx';
 import InfoTooltip from '../components/InfoTooltip.jsx';
+import PaymentRecord from '../components/PaymentRecord.jsx';
 import ListingPhoto from '../components/ListingPhoto.jsx';
 import usePageMeta from '../usePageMeta.js';
 import { PAGE_META, NOT_FOUND_META, gigMeta } from '../pageMeta.js';
@@ -27,6 +28,25 @@ function formatDate(value) {
 function formatPosted(value) {
   // created_at is a SQLite UTC timestamp without a timezone marker.
   return formatDate(`${value.replace(' ', 'T')}Z`);
+}
+
+// The organizer's logo or photo, or their initials on the brand plum when they haven't added one.
+function OrganizerAvatar({ listing, className }) {
+  if (listing.organizer_photo_path) {
+    return <img className={className} src={`/uploads/${listing.organizer_photo_path}`} alt="" />;
+  }
+  const letters = listing.organizer_name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0])
+    .join('')
+    .toUpperCase();
+  return (
+    <span className={`${className} empty`} aria-hidden="true">
+      {letters}
+    </span>
+  );
 }
 
 export default function GigDetail() {
@@ -271,35 +291,18 @@ export default function GigDetail() {
 
             {tab === 'organizer' && (
               <div className="krew-gd-panel" role="tabpanel">
-                <h2 className="krew-gd-org-name">{listing.organizer_name}</h2>
-                {hasRecord ? (
-                  <ul className="krew-gd-org-stats">
-                    <li>
-                      <BadgeCheck size={26} strokeWidth={1.25} aria-hidden="true" />
-                      <span className="krew-gd-org-stat-value">{record.confirmed_job_count}</span>
-                      <span className="krew-gd-org-stat-label">
-                        {record.confirmed_job_count === 1 ? 'job' : 'jobs'} paid and confirmed
-                      </span>
-                    </li>
-                    <li>
-                      <Clock size={26} strokeWidth={1.25} aria-hidden="true" />
-                      <span className="krew-gd-org-stat-value">{record.on_time_percentage}%</span>
-                      <span className="krew-gd-org-stat-label">paid on or before the due date</span>
-                    </li>
-                    {record.median_days_to_payment !== null && record.median_days_to_payment !== undefined && (
-                      <li>
-                        <Timer size={26} strokeWidth={1.25} aria-hidden="true" />
-                        <span className="krew-gd-org-stat-value">
-                          {record.median_days_to_payment <= 0
-                            ? 'On time'
-                            : `${record.median_days_to_payment} ${record.median_days_to_payment === 1 ? 'day' : 'days'}`}
-                        </span>
-                        <span className="krew-gd-org-stat-label">
-                          {record.median_days_to_payment <= 0 ? 'typical payment timing' : 'typically paid after the due date'}
-                        </span>
-                      </li>
+                <div className="krew-gd-org-head">
+                  <OrganizerAvatar listing={listing} className="krew-gd-org-avatar" />
+                  <div>
+                    <h2 className="krew-gd-org-name">{listing.organizer_name}</h2>
+                    {listing.organizer_contact_name && listing.organizer_contact_name !== listing.organizer_name && (
+                      <p className="krew-gd-org-contact">Run by {listing.organizer_contact_name}</p>
                     )}
-                  </ul>
+                  </div>
+                </div>
+                {listing.organizer_bio && <p className="krew-gd-org-bio">{listing.organizer_bio}</p>}
+                {hasRecord ? (
+                  <PaymentRecord record={record} />
                 ) : (
                   <p className="krew-gd-description">
                     <span className="krew-status-pill new">New here</span> {listing.organizer_name} hasn't had a job confirmed on
@@ -327,7 +330,10 @@ export default function GigDetail() {
 
             <div className="krew-gd-org-mini">
               <span className="krew-gd-org-mini-label">Posted by</span>
-              <strong>{listing.organizer_name}</strong>
+              <span className="krew-gd-org-mini-who">
+                <OrganizerAvatar listing={listing} className="krew-gd-org-mini-avatar" />
+                <strong>{listing.organizer_name}</strong>
+              </span>
               <span className="krew-gd-org-mini-record">
                 {hasRecord ? (
                   <>
@@ -354,7 +360,7 @@ export default function GigDetail() {
                 Browse all gigs <ArrowRight size={15} strokeWidth={2} />
               </Link>
             </div>
-            <div className="krew-gd-more-grid">
+            <div className="krew-gd-more-grid" data-reveal-children>
               {moreGigs.map((gig) => (
                 <Link to={`/gigs/${gig.id}`} className="krew-gd-more-card" key={gig.id}>
                   <ListingPhoto listing={gig} className="krew-gd-more-photo" />

@@ -85,6 +85,9 @@ const profilePhotosPath = path.join(UPLOAD_ROOT, 'profile-photos');
 app.use('/uploads/profile-photos', express.static(profilePhotosPath, uploadStaticOptions));
 const portfolioPhotosPath = path.join(UPLOAD_ROOT, 'portfolio-photos');
 app.use('/uploads/portfolio-photos', express.static(portfolioPhotosPath, uploadStaticOptions));
+// Cover photos (routes/users.js) - the banner on a crew member's public profile.
+const coverPhotosPath = path.join(UPLOAD_ROOT, 'cover-photos');
+app.use('/uploads/cover-photos', express.static(coverPhotosPath, uploadStaticOptions));
 // Listing photos (routes/listings.js) - shown on the public Find Work page, so public too.
 const listingPhotosPath = path.join(UPLOAD_ROOT, 'listing-photos');
 app.use('/uploads/listing-photos', express.static(listingPhotosPath, uploadStaticOptions));

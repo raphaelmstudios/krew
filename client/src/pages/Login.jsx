@@ -3,8 +3,26 @@ import { Link } from 'react-router-dom';
 import { Phone, Lock, Eye, EyeOff } from 'lucide-react';
 import AuthLayout from '../components/AuthLayout.jsx';
 
+// Offers to save this phone number and password in the browser's own password manager
+// (Chrome, Edge and others support this). Next time, clicking the phone field shows a
+// dropdown of saved accounts, and picking one fills in both fields. KREW itself never keeps
+// a copy - the browser stores it, protected by the device's own lock.
+// Browsers without this (Safari, Firefox) still offer to save, from the autocomplete hints
+// on the fields below.
+function rememberLogin(phone, password) {
+  if (typeof window.PasswordCredential !== 'function' || !navigator.credentials?.store) return;
+  try {
+    const credential = new window.PasswordCredential({ id: phone, password, name: phone });
+    navigator.credentials.store(credential).catch(() => {});
+  } catch {
+    // Not allowed here (e.g. inside a private window) - nothing to do.
+  }
+}
+
 // Login page component. Renders a form for the user to log in with their phone number and password.
 // On successful login, calls the onLoggedIn callback with the user data.
+// The autoComplete="username" / "current-password" hints are what let the browser's password
+// manager recognise this as a log in form, offer its saved accounts and fill them in.
 export default function Login({ onLoggedIn, heading = 'Log in', subhead = '', showSignupLink = true }) {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
@@ -29,6 +47,7 @@ export default function Login({ onLoggedIn, heading = 'Log in', subhead = '', sh
         return;
       }
 
+      rememberLogin(phone.trim(), password);
       onLoggedIn(data);
     } catch {
       // fetch itself throws when there's no network connection at all.
@@ -48,14 +67,17 @@ export default function Login({ onLoggedIn, heading = 'Log in', subhead = '', sh
       <div className="krew-card">
         {banner && <div className={`krew-form-banner ${banner.type}`}>{banner.text}</div>}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} method="post">
           <div className="krew-field">
             <label className="krew-field-label" htmlFor="login-phone">Phone Number</label>
             <div className="krew-field-input-wrap">
               <span className="krew-field-input-icon" aria-hidden="true"><Phone size={17} strokeWidth={1.75} /></span>
               <input
                 id="login-phone"
+                name="username"
                 type="tel"
+                inputMode="tel"
+                autoComplete="username"
                 className="krew-field-input"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
@@ -73,6 +95,8 @@ export default function Login({ onLoggedIn, heading = 'Log in', subhead = '', sh
               <span className="krew-field-input-icon" aria-hidden="true"><Lock size={17} strokeWidth={1.75} /></span>
               <input
                 id="login-password"
+                name="password"
+                autoComplete="current-password"
                 type={showPassword ? 'text' : 'password'}
                 className="krew-field-input"
                 value={password}
@@ -103,4 +127,4 @@ export default function Login({ onLoggedIn, heading = 'Log in', subhead = '', sh
       </div>
     </AuthLayout>
   );
-}
+}

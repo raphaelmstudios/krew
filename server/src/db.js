@@ -97,6 +97,25 @@ try {
   if (!err.message.includes('duplicate column name')) throw err;
 }
 
+// A wide cover photo for the top of a crew member's public profile - the banner behind
+// their name. Optional: without one, the page uses their first portfolio photo, and
+// without that, the plain plum brand banner.
+try {
+  db.exec(`ALTER TABLE users ADD COLUMN cover_photo_path TEXT;`);
+} catch (err) {
+  if (!err.message.includes('duplicate column name')) throw err;
+}
+
+// Organizers only: the events company or brand they hire under (e.g. "Bloomfield
+// Celebrations"). Shown on their gigs instead of their personal name when it's set; the
+// person's own name stays on the account for jobs, payments and admin. Organizers write
+// their own short bio in the same bio column crew members use.
+try {
+  db.exec(`ALTER TABLE users ADD COLUMN company_name TEXT;`);
+} catch (err) {
+  if (!err.message.includes('duplicate column name')) throw err;
+}
+
 //sessions
 // One row per logged-in device. The token is a long random string, stored in an
 // httpOnly cookie so JavaScript on the page can never read it, only the browser

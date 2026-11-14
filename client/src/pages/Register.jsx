@@ -130,6 +130,7 @@ export default function Register({ onRegistered }) {
                   <input
                     id="name"
                     type="text"
+                    autoComplete="name"
                     className={`krew-field-input ${fieldErrors.name ? 'has-error' : ''}`}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -145,7 +146,10 @@ export default function Register({ onRegistered }) {
                   <span className="krew-field-input-icon" aria-hidden="true"><Phone size={17} strokeWidth={1.75} /></span>
                   <input
                     id="phone"
+                    name="username"
                     type="tel"
+                    inputMode="tel"
+                    autoComplete="username"
                     className={`krew-field-input ${fieldErrors.phone ? 'has-error' : ''}`}
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
@@ -161,6 +165,8 @@ export default function Register({ onRegistered }) {
                   <span className="krew-field-input-icon" aria-hidden="true"><Lock size={17} strokeWidth={1.75} /></span>
                   <input
                     id="password"
+                    name="new-password"
+                    autoComplete="new-password"
                     type={showPassword ? 'text' : 'password'}
                     className={`krew-field-input ${fieldErrors.password ? 'has-error' : ''}`}
                     value={password}
@@ -200,4 +206,4 @@ export default function Register({ onRegistered }) {
       </div>
     </AuthLayout>
   );
-}
+}

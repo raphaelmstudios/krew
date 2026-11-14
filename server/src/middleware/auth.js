@@ -32,7 +32,7 @@ export function findSessionUser(req, res) {
   const user = db
     .prepare(
       `SELECT id, name, phone, role, verification_status, availability_status,
-              profile_photo_path, professional_role, skills, years_experience, bio,
+              profile_photo_path, cover_photo_path, company_name, professional_role, skills, years_experience, bio,
               (id_document_path IS NOT NULL AND selfie_path IS NOT NULL) AS has_documents
        FROM users WHERE id = ?`
     )
@@ -71,4 +71,4 @@ export function requireRole(role) {
 
 export const requireAdmin = requireRole('admin');
 
-export { SESSION_COOKIE_NAME };
+export { SESSION_COOKIE_NAME };

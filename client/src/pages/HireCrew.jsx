@@ -73,7 +73,7 @@ export default function HireCrew() {
 
       <section className="krew-hc-hero">
         <div className="krew-hc-hero-inner">
-          <div className="krew-hc-hero-copy">
+          <div className="krew-hc-hero-copy" data-reveal-children>
             <p className="krew-home-section-label">Nairobi's event crew</p>
             <h1>
               Hire the right <em>crew for your next project.</em>
@@ -142,7 +142,7 @@ export default function HireCrew() {
         )}
 
         {filtered && filtered.length > 0 && (
-          <div className="krew-hc-grid">
+          <div className="krew-hc-grid" data-reveal-children>
             {filtered.map((crewMember) => (
               <CrewCard crewMember={crewMember} key={crewMember.id} />
             ))}

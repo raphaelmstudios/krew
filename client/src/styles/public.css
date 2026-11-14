@@ -7,6 +7,28 @@
   z-index: 20;
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
+  transition: background-color var(--motion-base) var(--motion-ease), box-shadow var(--motion-slow) var(--motion-ease);
+}
+
+/* Once the page scrolls: frosted glass over the content, with a soft shadow */
+.krew-public-nav.is-scrolled {
+  background: color-mix(in srgb, var(--color-surface) 84%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  backdrop-filter: blur(14px) saturate(1.4);
+  box-shadow: var(--shadow-md);
+}
+
+/* Reading progress - a thin violet line along the bar's bottom edge */
+.krew-public-nav-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--color-brand);
+  transform: scaleX(0);
+  transform-origin: left;
+  pointer-events: none;
 }
 
 .krew-public-nav-inner {
@@ -23,7 +45,8 @@
   flex-shrink: 0;
 }
 
-/* Nav links with the magnetic highlight that follows the cursor */
+/* Nav links with the blob that follows the cursor (PublicNav.jsx moves it - its position,
+   width and stretch are set from a spring there; only its colour and press are CSS). */
 .krew-public-nav-links {
   position: relative;
   display: flex;
@@ -31,20 +54,36 @@
   gap: 4px;
 }
 
-.krew-public-nav-highlight {
+.krew-public-nav-blob {
   position: absolute;
   top: 2px;
   bottom: 2px;
-  border-radius: var(--radius-md);
+  left: 0;
+  width: 0;
+  border-radius: 12px;
   background: var(--color-brand-bg);
-  transition: left var(--motion-base) var(--motion-ease), width var(--motion-base) var(--motion-ease), opacity var(--motion-fast) var(--motion-ease);
+  opacity: 0;
   pointer-events: none;
+  transform-origin: center;
+  will-change: transform, width;
+  transition:
+    opacity var(--motion-base) var(--motion-ease),
+    background-color 280ms var(--motion-ease),
+    scale 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .krew-public-nav-highlight {
-    transition: opacity var(--motion-fast) linear;
-  }
+.krew-public-nav-blob.is-visible {
+  opacity: 1;
+}
+
+/* Pressed, and resting on the page you're on: filled violet */
+.krew-public-nav-blob.is-filled {
+  background: var(--color-brand);
+}
+
+/* Pressed: squashes flat and wide, then springs back (the scale transition overshoots) */
+.krew-public-nav-blob.is-pressed {
+  scale: 1.06 0.84;
 }
 
 .krew-public-nav-link {
@@ -56,6 +95,7 @@
   color: var(--color-text-soft);
   text-decoration: none;
   white-space: nowrap;
+  transition: color 240ms var(--motion-ease);
 }
 
 .krew-public-nav-link:hover,
@@ -63,12 +103,25 @@
   color: var(--color-text);
 }
 
-:root[data-theme='dark'] .krew-public-nav-highlight {
+.krew-public-nav-links .krew-public-nav-link.is-on-fill {
+  color: var(--color-text-on-brand);
+}
+
+/* The current page's link, for when the blob is somewhere else */
+.krew-public-nav-link[aria-current='page'] {
+  color: var(--color-text);
+}
+
+.krew-public-nav-mobile-link[aria-current='page'] {
+  color: var(--color-brand-text);
+}
+
+:root[data-theme='dark'] .krew-public-nav-blob:not(.is-filled) {
   background: var(--color-surface-selected);
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) .krew-public-nav-highlight {
+  :root:not([data-theme='light']) .krew-public-nav-blob:not(.is-filled) {
     background: var(--color-surface-selected);
   }
 }
@@ -1800,38 +1853,66 @@
   font-family: var(--font-display);
   font-size: 26px;
   font-weight: 600;
-  margin: 0 0 18px 0;
-}
-
-/* Organizer stats - bare line icons, a big number and a plain-language label */
-.krew-gd-org-stats {
-  list-style: none;
   margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 28px;
 }
 
-.krew-gd-org-stats li {
+/* Organizer tab header: logo (or initials), company name, and the person who runs it */
+.krew-gd-org-head {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  color: var(--color-brand-text);
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
-.krew-gd-org-stat-value {
+.krew-gd-org-avatar,
+.krew-gd-org-mini-avatar {
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+}
+
+.krew-gd-org-avatar {
+  width: 60px;
+  height: 60px;
+}
+
+.krew-gd-org-mini-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+}
+
+.krew-gd-org-avatar.empty,
+.krew-gd-org-mini-avatar.empty {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-ink-plum);
+  color: var(--color-warm-ivory);
   font-family: var(--font-display);
-  font-size: 30px;
   font-weight: 600;
-  color: var(--color-text);
-  margin-top: 6px;
 }
 
-.krew-gd-org-stat-label {
+.krew-gd-org-avatar.empty {
+  font-size: 22px;
+}
+
+.krew-gd-org-mini-avatar.empty {
+  font-size: 13px;
+}
+
+.krew-gd-org-contact {
+  margin: 4px 0 0 0;
   font-size: 13.5px;
-  line-height: 1.4;
   color: var(--color-text-soft);
+}
+
+.krew-gd-org-bio {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--color-text-soft);
+  max-width: 620px;
+  margin: 0 0 24px 0;
 }
 
 /* Apply panel */
@@ -1942,6 +2023,13 @@
   font-size: 16px;
 }
 
+.krew-gd-org-mini-who {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0 2px 0;
+}
+
 .krew-gd-org-mini-record {
   display: inline-flex;
   align-items: center;
@@ -2031,11 +2119,6 @@
 
   .krew-gd-photo {
     border-radius: var(--radius-lg);
-  }
-
-  .krew-gd-org-stats {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 20px;
   }
 
   .krew-gd-more {
@@ -2228,6 +2311,64 @@
 
 .krew-cp-hero-btn.primary:hover {
   background: #FFFFFF;
+}
+
+label.krew-cp-hero-btn {
+  position: relative;
+}
+
+label.krew-cp-hero-btn[aria-disabled='true'] {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+label.krew-cp-hero-btn:focus-within {
+  outline: 2px solid var(--color-warm-ivory);
+  outline-offset: 3px;
+}
+
+/* An upload error on the owner's own profile banner */
+.krew-cp-cover-error {
+  margin: 14px 0 0 0;
+  max-width: 460px;
+}
+
+/* Cover photo preview in the crew dashboard's Profile section - a short version of the
+   profile banner, with its change and remove buttons on top. */
+.krew-cover-preview {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  min-height: 170px;
+  margin-top: 14px;
+  padding: 18px;
+  border-radius: var(--radius-lg);
+  background-color: var(--color-ink-plum);
+  background-size: cover;
+  background-position: center 35%;
+}
+
+.krew-cover-preview-shard {
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 34%;
+  background: var(--color-electric-violet);
+  clip-path: polygon(62% 0, 100% 0, 100% 100%, 18% 100%);
+  opacity: 0.6;
+}
+
+.krew-cover-preview:not(.empty) .krew-cover-preview-shard {
+  opacity: 0.45;
+}
+
+.krew-cover-preview-actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 /* Body - the portrait column pulls up over the hero */

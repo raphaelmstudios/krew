@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { CircleCheck, CircleDashed, BadgeCheck, Scale, TriangleAlert, ArrowRight } from 'lucide-react';
 import ListingPhoto from '../components/ListingPhoto.jsx';
 import PaymentConfirmedMoment, { shouldAutoOpen, releaseAutoOpen } from '../components/PaymentConfirmedMoment.jsx';
+import AmountInput, { formatAmount } from '../components/AmountInput.jsx';
 
 // JobCard component.
 // One job between an organizer and a crew member, shown on both sides' dashboards (Payments for
@@ -236,15 +237,12 @@ export default function JobCard({ job, viewerRole, onConfirmed }) {
           <div className="krew-jc-form-row">
             <span className="krew-jc-input">
               <span aria-hidden="true">KES</span>
-              <input
+              <AmountInput
                 id={`confirm-amount-${job.id}`}
-                type="number"
-                min="1"
-                step="1"
                 className="krew-field-input"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder={String(job.amount)}
+                onValueChange={setAmount}
+                placeholder={formatAmount(job.amount)}
                 autoFocus
               />
             </span>

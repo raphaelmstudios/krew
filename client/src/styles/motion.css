@@ -1,0 +1,503 @@
+/* ===================================================================================== */
+/* Motion - every animation on the public site in one place.                             */
+/*                                                                                       */
+/* Entrance and scroll animations only run under html.krew-motion, which motion.js adds  */
+/* when the visitor hasn't asked their device for reduced motion. Without it, everything  */
+/* simply shows. Hover and press effects are always on, and the reduced-motion rule in   */
+/* index.css shortens them to nothing for anyone who asks.                               */
+/*                                                                                       */
+/* Easing: --ease-out-expo for things arriving, --ease-spring for things that should      */
+/* overshoot a touch and settle (buttons, icons), --ease-in-out for wipes.               */
+/*                                                                                       */
+/* Timing rule: anything that answers the visitor (hover, press, an error) starts at     */
+/* once and finishes in under 400ms, so the site feels like it reacts instantly. Things   */
+/* leaving are a little slower than things arriving - in fast, out gently.               */
+/* ===================================================================================== */
+
+:root {
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.18, 1);
+}
+
+/* --- Page arrival ------------------------------------------------------------------- */
+.krew-motion .krew-public-page {
+  animation: krew-fade-in 420ms var(--motion-ease) backwards;
+}
+
+@keyframes krew-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* --- Scroll reveals (data-reveal / data-reveal-children, see motion.js) ------------- */
+.krew-motion [data-reveal]:not([data-revealed]) {
+  opacity: 0;
+}
+
+.krew-motion [data-reveal][data-revealed] {
+  animation: krew-reveal 900ms var(--ease-out-expo) var(--reveal-delay, 0ms) backwards;
+}
+
+@keyframes krew-reveal {
+  from {
+    opacity: 0;
+    translate: 0 32px;
+  }
+}
+
+/* --- Hero headline: words rise out of a mask one after another --------------------- */
+.krew-word {
+  display: inline-block;
+}
+
+.krew-motion .krew-word {
+  overflow: hidden;
+  vertical-align: top;
+  /* room for descenders and the italic's lean, taken back with the negative margin */
+  padding: 0 0.08em 0.14em 0.02em;
+  margin: 0 -0.08em -0.14em -0.02em;
+}
+
+.krew-word-inner {
+  display: inline-block;
+}
+
+.krew-motion .krew-word-inner {
+  transform-origin: left bottom;
+  animation: krew-word-rise 1100ms var(--ease-out-expo) calc(140ms + var(--i, 0) * 70ms) backwards;
+}
+
+@keyframes krew-word-rise {
+  from {
+    transform: translateY(115%) rotate(7deg);
+  }
+}
+
+/* The short violet rule under the headline draws itself in, then the text and buttons follow */
+.krew-motion .krew-hero-rule {
+  transform-origin: left;
+  animation: krew-draw 900ms var(--ease-in-out) 720ms backwards;
+}
+
+@keyframes krew-draw {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+.krew-motion .krew-hero-sub {
+  animation: krew-rise 1000ms var(--ease-out-expo) 820ms backwards;
+}
+
+.krew-motion .krew-hero-ctas {
+  animation: krew-rise 1000ms var(--ease-out-expo) 940ms backwards;
+}
+
+@keyframes krew-rise {
+  from {
+    opacity: 0;
+    translate: 0 20px;
+  }
+}
+
+/* --- Hero photos: a violet curtain wipes off, the photo settles, the shards slide in --- */
+.krew-motion .krew-hero-visual::after,
+.krew-motion .krew-fw-hero-visual::after,
+.krew-motion .krew-hc-hero-visual::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: var(--color-electric-violet);
+  transform: scaleX(0);
+  transform-origin: right;
+  pointer-events: none;
+  animation: krew-curtain 1250ms var(--ease-in-out) 80ms backwards;
+}
+
+@keyframes krew-curtain {
+  from {
+    transform: scaleX(1);
+  }
+}
+
+.krew-motion .krew-hero-photo,
+.krew-motion .krew-fw-hero-photo,
+.krew-motion .krew-hc-hero-photo {
+  animation: krew-settle 2000ms var(--ease-out-expo) 160ms backwards;
+}
+
+@keyframes krew-settle {
+  from {
+    transform: scale(1.2);
+  }
+}
+
+.krew-motion .krew-hero-shard-1,
+.krew-motion .krew-fw-hero-shard-1,
+.krew-motion .krew-hc-hero-shard-1 {
+  animation: krew-shard-in 1300ms var(--ease-out-expo) 760ms backwards;
+}
+
+.krew-motion .krew-hero-shard-2,
+.krew-motion .krew-fw-hero-shard-2,
+.krew-motion .krew-hc-hero-shard-2 {
+  animation: krew-shard-in 1300ms var(--ease-out-expo) 880ms backwards;
+}
+
+.krew-motion .krew-hero-shard-3 {
+  animation: krew-shard-in-top 1300ms var(--ease-out-expo) 1000ms backwards;
+}
+
+/* The shards travel on a curve rather than a straight line - mostly upward first, then
+   sliding across - the way something thrown would land. */
+@keyframes krew-shard-in {
+  from {
+    opacity: 0;
+    transform: translate(-48px, 96px);
+  }
+  55% {
+    opacity: 1;
+    transform: translate(-30px, 14px);
+  }
+}
+
+@keyframes krew-shard-in-top {
+  from {
+    opacity: 0;
+    transform: translate(48px, -64px);
+  }
+  55% {
+    opacity: 1;
+    transform: translate(30px, -10px);
+  }
+}
+
+/* On wide screens the hero photo drifts slower than the page as you scroll (data-parallax),
+   so it's made taller than its frame to never show an edge. */
+@media (min-width: 861px) {
+  .krew-motion .krew-hero-photo {
+    inset: -80px 0;
+  }
+}
+
+/* --- Buttons -------------------------------------------------------------------------- */
+/* Both buttons lift on hover, lean toward the cursor (data-magnetic), press in slightly,
+   and spread a ripple from where they're pressed. `translate` and `scale` are separate CSS
+   properties from `transform`, so these never fight a component's own transforms. */
+.krew-button-primary,
+.krew-button-secondary {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  translate: var(--mx, 0px) calc(var(--my, 0px) + var(--lift, 0px));
+  /* Leaving: settles back gently, and the press springs back past its shape and settles
+     (follow-through). */
+  transition:
+    background-color var(--motion-base) var(--motion-ease),
+    border-color var(--motion-base) var(--motion-ease),
+    color var(--motion-base) var(--motion-ease),
+    box-shadow 360ms var(--motion-ease),
+    translate 420ms var(--ease-spring),
+    scale 420ms var(--ease-spring);
+}
+
+/* Arriving: quicker, so the button answers the cursor straight away */
+.krew-button-primary:hover:not(:disabled),
+.krew-button-secondary:hover:not(:disabled) {
+  --lift: -2px;
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease),
+    box-shadow 220ms var(--motion-ease),
+    translate 260ms var(--ease-spring),
+    scale 420ms var(--ease-spring);
+}
+
+.krew-button-primary:hover:not(:disabled) {
+  box-shadow: 0 14px 26px -14px rgba(109, 59, 145, 0.85);
+}
+
+/* Pressed: squashes - a little wider and shorter, like something soft being pushed - in
+   under 100ms, then springs back out when released. */
+.krew-button-primary:active:not(:disabled),
+.krew-button-secondary:active:not(:disabled) {
+  --lift: 0px;
+  scale: 1.03 0.92;
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    translate 90ms var(--motion-ease),
+    scale 90ms var(--motion-ease);
+}
+
+/* Primary: a band of light sweeps across once on hover (a flat translucent band, no gradient) */
+.krew-button-primary::after {
+  content: '';
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  left: 0;
+  width: 34%;
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateX(-180%) skewX(-22deg);
+  pointer-events: none;
+}
+
+.krew-button-primary:hover:not(:disabled)::after {
+  animation: krew-shine 900ms var(--motion-ease);
+}
+
+@keyframes krew-shine {
+  to {
+    transform: translateX(420%) skewX(-22deg);
+  }
+}
+
+/* Secondary: a lavender fill wipes in from the left, and back out to the right */
+.krew-button-secondary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--color-surface-selected);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 380ms var(--ease-in-out);
+  pointer-events: none;
+}
+
+.krew-button-secondary:hover:not(:disabled)::before {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* Arrows in buttons and text links pull back a touch first (the wind-up), then shoot
+   forward past where they stop, and settle */
+.krew-button-inline svg,
+.krew-text-link svg {
+  transition: translate 380ms var(--ease-spring);
+}
+
+.krew-button-inline:hover svg,
+.krew-text-link:hover svg {
+  translate: 4px 0;
+  animation: krew-arrow-windup 440ms var(--motion-ease);
+}
+
+@keyframes krew-arrow-windup {
+  0% {
+    translate: 0 0;
+  }
+  28% {
+    translate: -3px 0;
+  }
+  70% {
+    translate: 7px 0;
+  }
+  100% {
+    translate: 4px 0;
+  }
+}
+
+/* Text links: the underline runs out to the right and draws back in from the left */
+.krew-text-link {
+  text-decoration: none;
+  background: linear-gradient(currentColor, currentColor) left bottom / 100% 1.5px no-repeat;
+  padding-bottom: 2px;
+}
+
+.krew-text-link:hover {
+  gap: 6px;
+  animation: krew-underline 760ms var(--ease-in-out);
+}
+
+@keyframes krew-underline {
+  0% {
+    background-size: 100% 1.5px;
+    background-position: right bottom;
+  }
+  45% {
+    background-size: 0% 1.5px;
+    background-position: right bottom;
+  }
+  46% {
+    background-size: 0% 1.5px;
+    background-position: left bottom;
+  }
+  100% {
+    background-size: 100% 1.5px;
+    background-position: left bottom;
+  }
+}
+
+/* Click ripple (added by motion.js) */
+.krew-ripple {
+  position: absolute;
+  z-index: 0;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0;
+  transform: scale(0);
+  pointer-events: none;
+  animation: krew-ripple 700ms var(--ease-out-expo);
+}
+
+@keyframes krew-ripple {
+  from {
+    transform: scale(0);
+    opacity: 0.26;
+  }
+  to {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+/* --- Cards -------------------------------------------------------------------------- */
+/* How It Works: the icon lifts and tips when its card is hovered (secondary action), a beat
+   after the card itself moves (overlapping action) */
+.krew-trust-icon {
+  transition: translate 420ms var(--ease-spring), rotate 420ms var(--ease-spring);
+}
+
+.krew-trust-card:hover .krew-trust-icon {
+  translate: 0 -5px;
+  rotate: -8deg;
+  transition-delay: 60ms;
+}
+
+/* Crew cards: the photo eases in a beat after the card lifts, and overshoots slightly */
+.krew-hc-card:hover .krew-hc-card-photo img {
+  transition: transform 520ms var(--ease-spring) 60ms;
+}
+
+/* 3D tilt - the card tips toward the cursor (motion.js sets --rx/--ry), so it reads as a
+   real object with depth rather than a flat rectangle. Desktop with a mouse only. */
+.krew-motion .krew-trust-card,
+.krew-motion .krew-hc-card {
+  transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(var(--card-lift, 0px));
+  transition:
+    border-color var(--motion-fast) var(--motion-ease),
+    box-shadow var(--motion-base) var(--motion-ease),
+    transform 300ms var(--ease-out-expo),
+    opacity 300ms var(--motion-ease),
+    filter 300ms var(--motion-ease);
+}
+
+.krew-motion .krew-trust-card:hover {
+  --card-lift: -4px;
+  transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(var(--card-lift));
+}
+
+.krew-motion .krew-hc-card:hover {
+  --card-lift: -3px;
+  transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(var(--card-lift));
+}
+
+/* Staging: while one card is hovered, the others in its group step back, so attention
+   lands on the one you're looking at. */
+@media (hover: hover) and (pointer: fine) {
+  .krew-home-trust-grid:has(.krew-trust-card:hover) .krew-trust-card:not(:hover),
+  .krew-hc-grid:has(.krew-hc-card:hover) .krew-hc-card:not(:hover) {
+    opacity: 0.6;
+    filter: saturate(0.6);
+  }
+}
+
+/* --- Bigger hit areas ------------------------------------------------------------------ */
+/* Small icon buttons get an invisible margin that still counts as the button, so they're
+   easy to hit with a thumb or a quick mouse movement - at least 44px across - without
+   making them look any bigger. */
+.krew-info-tooltip-trigger,
+.krew-theme-toggle,
+.krew-notif-bell,
+.krew-shell-menu,
+.krew-shell-close,
+.krew-public-nav-toggle {
+  position: relative;
+}
+
+.krew-info-tooltip-trigger::before,
+.krew-theme-toggle::before,
+.krew-notif-bell::before,
+.krew-shell-menu::before,
+.krew-shell-close::before,
+.krew-public-nav-toggle::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+}
+
+.krew-info-tooltip-trigger::before {
+  inset: -12px;
+}
+
+/* --- Theme switch ---------------------------------------------------------------------- */
+.krew-theme-toggle-icon {
+  display: inline-flex;
+}
+
+.krew-theme-toggle-icon.is-turning {
+  animation: krew-icon-turn 600ms var(--ease-spring) backwards;
+}
+
+@keyframes krew-icon-turn {
+  from {
+    opacity: 0;
+    transform: rotate(-140deg) scale(0.4);
+  }
+}
+
+/* The new theme spreads from the switch in a circle (ThemeToggle.jsx). During the switch,
+   colour transitions are paused so the new theme is drawn in one go. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+.krew-theme-switching *,
+.krew-theme-switching *::before,
+.krew-theme-switching *::after {
+  transition: none !important;
+}
+
+/* --- Phone menu ------------------------------------------------------------------------ */
+.krew-public-nav-toggle-icon {
+  display: flex;
+}
+
+.krew-public-nav-toggle[aria-expanded='true'] .krew-public-nav-toggle-icon {
+  animation: krew-icon-turn 450ms var(--ease-spring) backwards;
+}
+
+.krew-motion .krew-public-nav-mobile {
+  animation: krew-menu-in 360ms var(--ease-out-expo) backwards;
+}
+
+.krew-motion .krew-public-nav-mobile > * {
+  animation: krew-rise 520ms var(--ease-out-expo) backwards;
+}
+
+.krew-motion .krew-public-nav-mobile > :nth-child(2) { animation-delay: 40ms; }
+.krew-motion .krew-public-nav-mobile > :nth-child(3) { animation-delay: 80ms; }
+.krew-motion .krew-public-nav-mobile > :nth-child(4) { animation-delay: 120ms; }
+.krew-motion .krew-public-nav-mobile > :nth-child(5) { animation-delay: 160ms; }
+
+@keyframes krew-menu-in {
+  from {
+    opacity: 0;
+    translate: 0 -10px;
+  }
+}
+
+/* --- Printing: show everything ---------------------------------------------------------- */
+@media print {
+  .krew-motion [data-reveal] {
+    opacity: 1 !important;
+    animation: none !important;
+  }
+}

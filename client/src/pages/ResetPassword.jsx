@@ -78,7 +78,7 @@ export default function ResetPassword() {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="0712345678"
-                    autoComplete="tel"
+                    autoComplete="username"
                     required
                   />
                 </div>

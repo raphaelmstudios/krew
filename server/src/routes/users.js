@@ -17,6 +17,7 @@ const MAX_PROFESSIONAL_ROLE_LENGTH = 60;
 const MAX_SKILLS = 8;
 const MAX_SKILL_LENGTH = 30;
 const MAX_BIO_LENGTH = 400;
+const MAX_COMPANY_NAME_LENGTH = 80;
 const WORK_HISTORY_LIMIT = 10; // most recent confirmed jobs shown on a public crew profile
 
 // Profile photos (shown publicly on the crew directory) are a separate, later upload
@@ -80,6 +81,29 @@ const uploadPortfolioImage = multer({
   },
   limits: { fileSize: MAX_PHOTO_SIZE },
 }).single('portfolio_photo');
+
+// Cover photos - the wide banner at the top of a crew member's public profile. One per
+// person, replaced on each upload, same checks and limits as the profile photo. Served
+// publicly (index.js), since the whole point is that visitors see it.
+const COVER_PHOTOS_DIR = path.join(PHOTO_UPLOAD_ROOT, 'cover-photos');
+fs.mkdirSync(COVER_PHOTOS_DIR, { recursive: true });
+
+const uploadCoverPhoto = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, COVER_PHOTOS_DIR),
+    filename: (req, file, cb) => {
+      cb(null, `user-${req.user.id}-cover-${Date.now()}${extensionFor(file.mimetype)}`);
+    },
+  }),
+  fileFilter: (req, file, cb) => {
+    if (!ALLOWED_PHOTO_TYPES.includes(file.mimetype)) {
+      cb(new Error('UNSUPPORTED_FILE_TYPE'));
+      return;
+    }
+    cb(null, true);
+  },
+  limits: { fileSize: MAX_PHOTO_SIZE },
+}).single('cover_photo');
 
 // Splits the comma-separated skills column back into an array for the frontend - the
 // reverse of the .join(',') done in POST /me/profile above.
@@ -295,6 +319,64 @@ usersRouter.post('/me/photo', requireAuth, (req, res) => {
   });
 });
 
+// A crew member sets (or replaces) the cover photo on their public profile.
+usersRouter.post('/me/cover', requireRole('crew_member'), (req, res) => {
+  uploadCoverPhoto(req, res, (uploadErr) => {
+    if (uploadErr) {
+      if (uploadErr.message === 'UNSUPPORTED_FILE_TYPE') {
+        return res.status(400).json({ error: 'Please upload a JPG or PNG file.' });
+      }
+      if (uploadErr.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: 'Your cover photo must be smaller than 5MB.' });
+      }
+      console.error('Cover photo upload failed:', uploadErr);
+      return res.status(500).json({ error: 'Something went wrong. Please try again later.' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ error: 'Choose a photo to upload.' });
+    }
+    if (!verifySavedFiles([req.file])) {
+      return res.status(400).json({ error: "That file isn't a real JPG or PNG photo." });
+    }
+
+    const relativePath = `cover-photos/${req.file.filename}`;
+    const previous = db.prepare(`SELECT cover_photo_path FROM users WHERE id = ?`).get(req.user.id);
+    db.prepare(`UPDATE users SET cover_photo_path = ? WHERE id = ?`).run(relativePath, req.user.id);
+    if (previous?.cover_photo_path) {
+      fs.unlink(path.join(PHOTO_UPLOAD_ROOT, previous.cover_photo_path), () => {});
+    }
+    res.json({ cover_photo_path: relativePath });
+  });
+});
+
+// Removes the cover photo - the profile goes back to the first portfolio photo, or the
+// plain brand banner.
+usersRouter.delete('/me/cover', requireRole('crew_member'), (req, res) => {
+  const previous = db.prepare(`SELECT cover_photo_path FROM users WHERE id = ?`).get(req.user.id);
+  db.prepare(`UPDATE users SET cover_photo_path = NULL WHERE id = ?`).run(req.user.id);
+  if (previous?.cover_photo_path) {
+    fs.unlink(path.join(PHOTO_UPLOAD_ROOT, previous.cover_photo_path), () => {});
+  }
+  res.json({ cover_photo_path: null });
+});
+
+// An organizer's public details: the events company or brand they hire under, and a short
+// bio. Both show on their gigs (Find Work and each gig's Organizer tab). Their logo or photo
+// uses the same POST /me/photo upload as everyone else.
+usersRouter.post('/me/organizer-profile', requireRole('organizer'), (req, res) => {
+  const { company_name, bio } = req.body;
+  const companyValue = typeof company_name === 'string' ? company_name.trim() : '';
+  const bioValue = typeof bio === 'string' ? bio.trim() : '';
+  if (companyValue.length > MAX_COMPANY_NAME_LENGTH) {
+    return res.status(400).json({ error: `Company or brand name must be ${MAX_COMPANY_NAME_LENGTH} characters or fewer.` });
+  }
+  if (bioValue.length > MAX_BIO_LENGTH) {
+    return res.status(400).json({ error: `Bio must be ${MAX_BIO_LENGTH} characters or fewer.` });
+  }
+  db.prepare(`UPDATE users SET company_name = ?, bio = ? WHERE id = ?`).run(companyValue || null, bioValue || null, req.user.id);
+  res.json({ company_name: companyValue || null, bio: bioValue || null });
+});
+
 // SQLite stores datetime('now') as "YYYY-MM-DD HH:MM:SS" with no timezone marker, even though it's actually UTC. Some JS engines will read that as local time instead, so this makes the UTC reading explicit rather than relying on parsing behaviour that can differ by platform.
 function parseUtcTimestamp(value) {
   return new Date(`${value.replace(' ', 'T')}Z`);
@@ -316,7 +398,14 @@ function median(values) {
 // payment actually happened, since that's the moment the two sides actually agreed.
 // Organizers with no confirmed jobs yet get null stats instead of a misleading 0%, since
 // that's a different situation from an organizer with an actual bad record.
-export function computeOrganizerRecord(organizerId) {
+//
+// With { includeRecent: true } it also returns recent_payments: the organizer's latest
+// confirmed payments (up to RECENT_PAYMENTS_LIMIT, oldest first), each with when it was paid
+// and how many days early (negative) or late (positive) that was. Only dates and timing -
+// never amounts or who was paid - so it's safe to show crew on a gig's page.
+const RECENT_PAYMENTS_LIMIT = 10;
+
+export function computeOrganizerRecord(organizerId, { includeRecent = false } = {}) {
   const confirmedJobs = db
     .prepare(
       `SELECT due_date, organizer_confirmed_at, crew_confirmed_at
@@ -326,25 +415,44 @@ export function computeOrganizerRecord(organizerId) {
     .all(organizerId);
 
   if (confirmedJobs.length === 0) {
-    return { confirmed_job_count: 0, on_time_percentage: null, median_days_to_payment: null };
+    return {
+      confirmed_job_count: 0,
+      on_time_count: 0,
+      on_time_percentage: null,
+      median_days_to_payment: null,
+      ...(includeRecent ? { recent_payments: [] } : {}),
+    };
   }
 
-  const daysToPayment = confirmedJobs.map((job) => {
+  const millisecondsPerDay = 1000 * 60 * 60 * 24;
+  const payments = confirmedJobs.map((job) => {
     const paidAt =
       parseUtcTimestamp(job.organizer_confirmed_at) > parseUtcTimestamp(job.crew_confirmed_at)
         ? job.organizer_confirmed_at
         : job.crew_confirmed_at;
-    const millisecondsPerDay = 1000 * 60 * 60 * 24;
-    return (parseUtcTimestamp(paidAt) - new Date(job.due_date)) / millisecondsPerDay;
+    return { paidAt, days: (parseUtcTimestamp(paidAt) - new Date(job.due_date)) / millisecondsPerDay };
   });
+  const daysToPayment = payments.map((payment) => payment.days);
 
   const onTimeCount = daysToPayment.filter((days) => days <= 0).length;
 
-  return {
+  const record = {
     confirmed_job_count: confirmedJobs.length,
+    on_time_count: onTimeCount,
     on_time_percentage: Math.round((onTimeCount / confirmedJobs.length) * 100),
     median_days_to_payment: Math.round(median(daysToPayment) * 10) / 10,
   };
+  if (includeRecent) {
+    record.recent_payments = payments
+      .sort((a, b) => parseUtcTimestamp(a.paidAt) - parseUtcTimestamp(b.paidAt))
+      .slice(-RECENT_PAYMENTS_LIMIT)
+      .map((payment) => ({
+        paid_on: payment.paidAt.slice(0, 10),
+        days: Math.round(payment.days * 10) / 10,
+        on_time: payment.days <= 0,
+      }));
+  }
+  return record;
 }
 
 // Anyone logged in can look up an organizer's payment record this way, so a crew member can check it before applying to a listing or accepting a direct hire.
@@ -358,7 +466,7 @@ usersRouter.get('/:id/organizer-record', requireAuth, (req, res) => {
     return res.status(404).json({ error: 'No organizer found with that id.' });
   }
 
-  res.json(computeOrganizerRecord(organizerId));
+  res.json(computeOrganizerRecord(organizerId, { includeRecent: true }));
 });
 
 // The actual math behind a crew member's completed jobs count, pulled out on its own so
@@ -401,7 +509,7 @@ usersRouter.get('/:id/public-profile', (req, res) => {
 
   const crewMember = db
     .prepare(
-      `SELECT id, name, profile_photo_path, availability_status, professional_role, skills, years_experience, bio
+      `SELECT id, name, profile_photo_path, cover_photo_path, availability_status, professional_role, skills, years_experience, bio
        FROM users
        WHERE id = ? AND role = 'crew_member' AND verification_status = 'approved'`
     )
@@ -438,4 +546,4 @@ usersRouter.get('/:id/public-profile', (req, res) => {
     work_history: workHistory,
     ...computeCrewRecord(crewMemberId),
   });
-});
+});

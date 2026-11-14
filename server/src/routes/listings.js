@@ -293,7 +293,7 @@ listingsRouter.get('/open', requireRole('crew_member'), (req, res) => {
   const listings = db
     .prepare(
       `SELECT l.id, l.amount, l.due_date, l.job_description, l.title, l.category, l.location, l.created_at, l.photo_path,
-              org.id AS organizer_id, org.name AS organizer_name,
+              org.id AS organizer_id, COALESCE(NULLIF(org.company_name, ''), org.name) AS organizer_name,
               EXISTS(
                 SELECT 1 FROM job_applications a WHERE a.listing_id = l.id AND a.crew_member_id = ?
               ) AS already_applied
@@ -326,7 +326,7 @@ listingsRouter.get('/public', (req, res) => {
   const listings = db
     .prepare(
       `SELECT l.id, l.amount, l.due_date, l.job_description, l.title, l.category, l.location, l.created_at, l.photo_path,
-              l.organizer_id, org.name AS organizer_name
+              l.organizer_id, COALESCE(NULLIF(org.company_name, ''), org.name) AS organizer_name, org.profile_photo_path AS organizer_photo_path
        FROM job_listings l
        JOIN users org ON org.id = l.organizer_id
        WHERE l.status = 'open'
@@ -342,8 +342,11 @@ listingsRouter.get('/public', (req, res) => {
 });
 
 // --- anyone: a single open listing's public detail, for the gig-detail page ---
-// Same shape as GET /public above (organizer_name included, nothing else about the
-// organizer's account), just for one listing instead of the whole list. A cancelled,
+// Same shape as GET /public above, plus what the organizer chose to make public for the
+// gig's Organizer tab: their own name, their bio and their logo or photo. Never a phone
+// number or anything else about the account. (organizer_name on the routes in this file is
+// the organizer's company or brand when they've set one, otherwise their own name.)
+// Just for one listing instead of the whole list. A cancelled,
 // filled, or non-existent listing id all come back as a 404 rather than leaking which
 // one it is.
 listingsRouter.get('/public/:id', (req, res) => {
@@ -351,7 +354,8 @@ listingsRouter.get('/public/:id', (req, res) => {
   const listing = db
     .prepare(
       `SELECT l.id, l.amount, l.due_date, l.job_description, l.title, l.category, l.location, l.created_at, l.photo_path,
-              l.organizer_id, org.name AS organizer_name
+              l.organizer_id, COALESCE(NULLIF(org.company_name, ''), org.name) AS organizer_name, org.name AS organizer_contact_name,
+              org.bio AS organizer_bio, org.profile_photo_path AS organizer_photo_path
        FROM job_listings l
        JOIN users org ON org.id = l.organizer_id
        WHERE l.id = ? AND l.status = 'open'`
@@ -363,7 +367,7 @@ listingsRouter.get('/public/:id', (req, res) => {
   }
 
   const { organizer_id, ...rest } = listing;
-  res.json({ ...rest, organizer_record: computeOrganizerRecord(organizer_id) });
+  res.json({ ...rest, organizer_record: computeOrganizerRecord(organizer_id, { includeRecent: true }) });
 });
 
 // --- crew: apply to an open listing ---
@@ -411,7 +415,7 @@ listingsRouter.get('/mine-applications', requireRole('crew_member'), (req, res) 
     .prepare(
       `SELECT a.id, a.status, a.created_at,
               l.id AS listing_id, l.amount, l.due_date, l.job_description, l.title, l.category, l.location, l.photo_path, l.status AS listing_status,
-              org.name AS organizer_name
+              COALESCE(NULLIF(org.company_name, ''), org.name) AS organizer_name
        FROM job_applications a
        JOIN job_listings l ON l.id = a.listing_id
        JOIN users org ON org.id = l.organizer_id
@@ -420,4 +424,4 @@ listingsRouter.get('/mine-applications', requireRole('crew_member'), (req, res) 
     )
     .all(req.user.id);
   res.json(applications);
-});
+});

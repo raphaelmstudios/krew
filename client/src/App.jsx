@@ -24,6 +24,7 @@ import './styles/forms.css';
 import './styles/admin.css';
 import './styles/dashboard.css';
 import './styles/public.css';
+import './styles/motion.css';
 
 // The sign-up flow is three small steps: register, then verify identity,
 // then wait for admin approval. Lives at /register now that "/" is the real
@@ -101,7 +102,7 @@ function LoginRoute() {
     <Login
       heading="Log in to KREW"
       subhead="Sign in to post jobs and manage your account."
-      onLoggedIn={() => navigate('/dashboard')}
+      onLoggedIn={(user) => navigate(user.role === 'admin' ? '/admin' : '/dashboard')}
     />
   );
 }
@@ -121,7 +122,8 @@ export default function App() {
             role={['organizer', 'crew_member']}
             loginHeading="Log in to KREW"
             loginSubhead="Sign in to post jobs and manage your account."
-            forbiddenMessage="Admins don't have a dashboard yet — try /admin instead."
+            forbiddenMessage="This page is for organizers and crew."
+            redirects={{ admin: '/admin' }}
           >
             {({ user, onLogout }) => <Dashboard user={user} onLogout={onLogout} />}
           </RoleGate>
