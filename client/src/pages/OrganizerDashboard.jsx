@@ -80,6 +80,12 @@ function timeAgo(value) {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
+// Posted in the last 24 hours - marked "New" on the overview.
+function isNewListing(listing) {
+  const posted = new Date(`${listing.created_at.replace(' ', 'T')}Z`).getTime();
+  return Date.now() - posted < 24 * 60 * 60 * 1000;
+}
+
 export default function OrganizerDashboard({ user, onLogout }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const requested = searchParams.get('section');
@@ -96,6 +102,7 @@ export default function OrganizerDashboard({ user, onLogout }) {
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
   const [photoUploadingId, setPhotoUploadingId] = useState(null);
+  const [showPastGigs, setShowPastGigs] = useState(false);
   const [profilePhotoPath, setProfilePhotoPath] = useState(user.profile_photo_path);
   const shellUser = { ...user, profile_photo_path: profilePhotoPath };
 
@@ -263,13 +270,66 @@ export default function OrganizerDashboard({ user, onLogout }) {
   const openListings = listings ? listings.filter((listing) => listing.status === 'open') : [];
   const waitingApplicants = openListings.reduce((sum, listing) => sum + listing.pending_applicant_count, 0);
   const jobsToConfirm = jobs ? jobs.filter((job) => job.status === 'pending' && !job.organizer_confirmed_at).length : 0;
-  const featuredListing = [...openListings].sort((a, b) => b.pending_applicant_count - a.pending_applicant_count)[0];
+  // Newest first (the server already sends them that way), so a gig shows up on the
+  // overview the moment it's posted.
+  const featuredListing = openListings[0];
+  const pastListings = listings ? listings.filter((listing) => listing.status !== 'open') : [];
   const firstName = user.name.split(' ')[0];
 
   const navItems = SECTIONS.map((item) => ({
     ...item,
     badge: item.key === 'gigs' && waitingApplicants ? waitingApplicants : item.key === 'payments' && jobsToConfirm ? jobsToConfirm : null,
   }));
+
+  // One gig on the My Gigs list - open ones can be managed, past ones are just a record.
+  function renderGig(listing) {
+    return (
+      <li className="krew-db-gig" key={listing.id}>
+        <ListingPhoto listing={listing} className="krew-db-gig-photo" />
+        <div className="krew-db-gig-main">
+          {listing.status === 'open' ? (
+            <Link to={`/gigs/${listing.id}`} className="krew-db-gig-title">{listing.title || 'Untitled listing'}</Link>
+          ) : (
+            <span className="krew-db-gig-title">{listing.title || 'Untitled listing'}</span>
+          )}
+          <span className="krew-db-gig-meta">
+            <span>{listing.location}</span>
+            <span>Due {formatDate(listing.due_date)}</span>
+          </span>
+          <span className="krew-db-gig-org">
+            {listing.status === 'open'
+              ? `${listing.pending_applicant_count} ${listing.pending_applicant_count === 1 ? 'applicant' : 'applicants'} waiting`
+              : listing.status === 'filled'
+              ? 'Filled - see Payments'
+              : 'Cancelled'}
+          </span>
+          {listing.status === 'open' && (
+            <span className="krew-db-gig-actions">
+              <button type="button" className="krew-dash-text-btn" onClick={() => setSelectedListing(listing)}>
+                View applicants
+              </button>
+              <label className="krew-dash-text-btn krew-dash-photo-btn">
+                {photoUploadingId === listing.id ? 'Uploading…' : listing.photo_path ? 'Change photo' : 'Add photo'}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png"
+                  onChange={(e) => handleListingPhotoChange(listing.id, e)}
+                  disabled={photoUploadingId !== null}
+                />
+              </label>
+              <button type="button" className="krew-dash-text-btn danger" onClick={() => handleCancel(listing.id)}>
+                Cancel gig
+              </button>
+            </span>
+          )}
+        </div>
+        <div className="krew-db-gig-side">
+          <span className="krew-db-gig-amount">KES {Number(listing.amount).toLocaleString()}</span>
+          <span className={`krew-status-pill ${listing.status}`}>{listing.status}</span>
+        </div>
+      </li>
+    );
+  }
 
   if (!approved) {
     return (
@@ -319,6 +379,19 @@ export default function OrganizerDashboard({ user, onLogout }) {
                     ? 'Nothing open right now - post a gig and crew can start applying.'
                     : `${waitingApplicants} ${waitingApplicants === 1 ? 'applicant' : 'applicants'} waiting for your decision.`}
                 </p>
+                {openListings.length > 0 && (
+                  <ul className="krew-db-upcoming-gigs">
+                    {openListings.slice(0, 3).map((listing) => (
+                      <li key={listing.id}>
+                        <Link to={`/gigs/${listing.id}`}>{listing.title || 'Untitled listing'}</Link>
+                        {isNewListing(listing) && <span className="krew-db-new-pill">New</span>}
+                        <span className="krew-db-upcoming-gig-count">
+                          {listing.pending_applicant_count} {listing.pending_applicant_count === 1 ? 'applicant' : 'applicants'}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
                 <button
                   type="button"
                   className="krew-db-upcoming-link"
@@ -421,7 +494,7 @@ export default function OrganizerDashboard({ user, onLogout }) {
             <div>
               <h1>My gigs</h1>
               <p>
-                Everything you've posted.
+                Your open gigs, newest first.
                 {waitingApplicants > 0 ? ` ${waitingApplicants} ${waitingApplicants === 1 ? 'applicant is' : 'applicants are'} waiting.` : ''}
               </p>
             </div>
@@ -442,54 +515,27 @@ export default function OrganizerDashboard({ user, onLogout }) {
           )}
 
           {listings && listings.length > 0 && (
-            <ul className="krew-db-gigs">
-              {listings.map((listing) => (
-                <li className="krew-db-gig" key={listing.id}>
-                  <ListingPhoto listing={listing} className="krew-db-gig-photo" />
-                  <div className="krew-db-gig-main">
-                    {listing.status === 'open' ? (
-                      <Link to={`/gigs/${listing.id}`} className="krew-db-gig-title">{listing.title || 'Untitled listing'}</Link>
-                    ) : (
-                      <span className="krew-db-gig-title">{listing.title || 'Untitled listing'}</span>
-                    )}
-                    <span className="krew-db-gig-meta">
-                      <span>{listing.location}</span>
-                      <span>Due {formatDate(listing.due_date)}</span>
-                    </span>
-                    <span className="krew-db-gig-org">
-                      {listing.status === 'open'
-                        ? `${listing.pending_applicant_count} ${listing.pending_applicant_count === 1 ? 'applicant' : 'applicants'} waiting`
-                        : listing.status === 'filled'
-                        ? 'Filled - see Payments'
-                        : 'Cancelled'}
-                    </span>
-                    {listing.status === 'open' && (
-                      <span className="krew-db-gig-actions">
-                        <button type="button" className="krew-dash-text-btn" onClick={() => setSelectedListing(listing)}>
-                          View applicants
-                        </button>
-                        <label className="krew-dash-text-btn krew-dash-photo-btn">
-                          {photoUploadingId === listing.id ? 'Uploading…' : listing.photo_path ? 'Change photo' : 'Add photo'}
-                          <input
-                            type="file"
-                            accept="image/jpeg,image/png"
-                            onChange={(e) => handleListingPhotoChange(listing.id, e)}
-                            disabled={photoUploadingId !== null}
-                          />
-                        </label>
-                        <button type="button" className="krew-dash-text-btn danger" onClick={() => handleCancel(listing.id)}>
-                          Cancel gig
-                        </button>
-                      </span>
-                    )}
-                  </div>
-                  <div className="krew-db-gig-side">
-                    <span className="krew-db-gig-amount">KES {Number(listing.amount).toLocaleString()}</span>
-                    <span className={`krew-status-pill ${listing.status}`}>{listing.status}</span>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <>
+              {openListings.length === 0 ? (
+                <p className="krew-db-empty">No open gigs right now.</p>
+              ) : (
+                <ul className="krew-db-gigs">{openListings.map(renderGig)}</ul>
+              )}
+
+              {pastListings.length > 0 && (
+                <div className="krew-db-past-gigs">
+                  <button
+                    type="button"
+                    className="krew-dash-text-btn krew-db-past-toggle"
+                    onClick={() => setShowPastGigs((current) => !current)}
+                    aria-expanded={showPastGigs}
+                  >
+                    {showPastGigs ? 'Hide' : 'Show'} {pastListings.length} past {pastListings.length === 1 ? 'gig' : 'gigs'} (filled or cancelled)
+                  </button>
+                  {showPastGigs && <ul className="krew-db-gigs">{pastListings.map(renderGig)}</ul>}
+                </div>
+              )}
+            </>
           )}
         </>
       )}

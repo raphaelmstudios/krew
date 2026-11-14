@@ -121,6 +121,15 @@ listingsRouter.post('/', requireRole('organizer'), (req, res) => {
     )
     .run(organizer.id, amountNumber, due_date, description, cleanTitle, category, cleanLocation);
 
+  // Shows up in the organizer's own Recent activity, so a new gig is visible on their
+  // dashboard straight away, with a link to its public page.
+  createNotification(
+    organizer.id,
+    'listing_posted',
+    `Your gig "${cleanTitle}" is live on Find Work.`,
+    `/gigs/${result.lastInsertRowid}`
+  );
+
   res.status(201).json({
     id: result.lastInsertRowid,
     organizer_id: organizer.id,

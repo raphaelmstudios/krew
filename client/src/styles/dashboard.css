@@ -1019,6 +1019,65 @@ section.krew-db-card ~ section.krew-db-card {
   opacity: 0.35;
 }
 
+/* Organizer overview: the newest open gigs under the count, so a gig shows up here the moment
+   it's posted */
+.krew-db-upcoming .krew-db-upcoming-gigs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 18px 0;
+}
+
+.krew-db-upcoming .krew-db-upcoming-gigs li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  font-size: 14px;
+}
+
+.krew-db-upcoming-gigs a {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-warm-ivory);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.krew-db-upcoming-gigs a:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.krew-db-upcoming-gig-count {
+  flex-shrink: 0;
+  margin-left: auto;
+  font-size: 13px;
+  color: rgba(243, 240, 233, 0.65);
+}
+
+.krew-db-new-pill {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--color-soft-violet);
+  color: var(--color-ink-plum);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+/* My Gigs: past (filled or cancelled) gigs sit behind a toggle under the open ones */
+.krew-db-past-gigs {
+  margin-top: 22px;
+}
+
+.krew-db-past-toggle {
+  margin-bottom: 14px;
+}
+
 /* Rows - applications etc. */
 .krew-db-rows {
   list-style: none;
