@@ -1437,40 +1437,6 @@ section.krew-db-card ~ section.krew-db-card {
   color: var(--color-text-faint);
 }
 
-/* Payment record stats */
-.krew-db-stats {
-  list-style: none;
-  margin: 0 0 14px 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.krew-db-stats li {
-  display: grid;
-  grid-template-columns: 24px 112px minmax(0, 1fr);
-  align-items: center;
-  gap: 14px;
-}
-
-.krew-db-stats li svg {
-  color: var(--color-brand-text);
-}
-
-.krew-db-stats strong {
-  font-family: var(--font-display);
-  font-size: 24px;
-  font-weight: 600;
-  line-height: 1;
-  white-space: nowrap;
-}
-
-.krew-db-stats span {
-  font-size: 13.5px;
-  color: var(--color-text-soft);
-}
-
 .krew-db-card .krew-db-link-btn {
   display: inline-flex;
   align-items: center;
@@ -2625,16 +2591,6 @@ body.krew-modal-open {
 
   .krew-db-row-main strong {
     white-space: normal;
-  }
-
-  /* Payment record: a narrower number column so the labels line up and don't wrap early */
-  .krew-db-stats li {
-    grid-template-columns: 24px 84px minmax(0, 1fr);
-    gap: 12px;
-  }
-
-  .krew-db-stats strong {
-    font-size: 20px;
   }
 
   /* Forms inside the shell: a little less padding so fields get the width */

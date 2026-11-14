@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { ArrowRight, HandCoins, Fingerprint, ScrollText } from 'lucide-react';
 import PublicNav from '../components/PublicNav.jsx';
 import PublicFooter from '../components/PublicFooter.jsx';
+import SplitWords from '../components/SplitWords.jsx';
 import usePageMeta from '../usePageMeta.js';
 import { PAGE_META } from '../pageMeta.js';
 
@@ -28,7 +29,7 @@ const PHOTOS = {
 // Photos below the fold are only fetched when they're about to scroll into view (300px
 // early) - the hero passes eager so it starts loading straight away. Until then the slot
 // shows its plum background, same as when a photo is missing.
-function PhotoSlot({ photo, className = '', label, eager = false }) {
+function PhotoSlot({ photo, className = '', label, eager = false, ...rest }) {
   const ref = useRef(null);
   const [visible, setVisible] = useState(eager);
 
@@ -58,6 +59,7 @@ function PhotoSlot({ photo, className = '', label, eager = false }) {
       style={{ backgroundImage: visible ? `url('${photo.src}')` : undefined, backgroundPosition: photo.focus }}
       role="img"
       aria-label={label}
+      {...rest}
     />
   );
 }
@@ -81,18 +83,24 @@ export default function Home() {
       <section className="krew-hero">
         <div className="krew-hero-inner">
           <div className="krew-hero-copy">
-            <h1>
-              Every great moment has a <em>crew</em> behind it.
+            <h1 aria-label="Every great moment has a crew behind it.">
+              <span aria-hidden="true">
+                <SplitWords text="Every great moment has a" />{' '}
+                <em>
+                  <SplitWords text="crew" start={5} />
+                </em>{' '}
+                <SplitWords text="behind it." start={6} />
+              </span>
             </h1>
             <span className="krew-hero-rule" aria-hidden="true" />
             <p className="krew-hero-sub">
               Find skilled event crew or land paid gigs in Nairobi - with every payment tracked until it's confirmed.
             </p>
             <div className="krew-hero-ctas">
-              <Link to="/find-work" className="krew-button-primary krew-button-inline">
+              <Link to="/find-work" className="krew-button-primary krew-button-inline" data-magnetic>
                 Find Work <ArrowRight size={16} strokeWidth={2} />
               </Link>
-              <Link to="/hire-crew" className="krew-button-secondary krew-button-inline">
+              <Link to="/hire-crew" className="krew-button-secondary krew-button-inline" data-magnetic>
                 Hire Crew <ArrowRight size={16} strokeWidth={2} />
               </Link>
             </div>
@@ -100,15 +108,15 @@ export default function Home() {
         </div>
 
         <div className="krew-hero-visual">
-          <PhotoSlot photo={PHOTOS.hero} className="krew-hero-photo" label="Musicians performing on stage" eager />
-          <span className="krew-shard krew-hero-shard-1" aria-hidden="true" />
-          <span className="krew-shard krew-hero-shard-2" aria-hidden="true" />
-          <span className="krew-shard krew-hero-shard-3" aria-hidden="true" />
+          <PhotoSlot photo={PHOTOS.hero} className="krew-hero-photo" label="Musicians performing on stage" eager data-parallax="0.12" />
+          <span className="krew-shard krew-hero-shard-1" aria-hidden="true" data-parallax="0.22" data-parallax-clamp="down" />
+          <span className="krew-shard krew-hero-shard-2" aria-hidden="true" data-parallax="0.32" data-parallax-clamp="down" />
+          <span className="krew-shard krew-hero-shard-3" aria-hidden="true" data-parallax="0.08" data-parallax-clamp="down" />
         </div>
       </section>
 
       <section id="about" className="krew-home-people">
-        <div className="krew-home-people-copy">
+        <div className="krew-home-people-copy" data-reveal-children>
           <h2>The people behind events.</h2>
           <p>
             From concerts to conferences, KREW powers creativity. Bartenders, security, ushers, photographers and
@@ -119,13 +127,13 @@ export default function Home() {
             Learn More <ArrowRight size={15} strokeWidth={2} />
           </a>
         </div>
-        <div className="krew-home-people-photos">
-          <PhotoSlot photo={PHOTOS.people1} className="krew-home-people-photo first" label="Sound technician at a control desk" />
-          <PhotoSlot photo={PHOTOS.people2} className="krew-home-people-photo second" label="Lighting technician adjusting a stage light" />
+        <div className="krew-home-people-photos" data-reveal>
+          <PhotoSlot photo={PHOTOS.people1} className="krew-home-people-photo first" label="Sound technician at a control desk" data-parallax="-0.05" />
+          <PhotoSlot photo={PHOTOS.people2} className="krew-home-people-photo second" label="Lighting technician adjusting a stage light" data-parallax="0.07" />
         </div>
       </section>
 
-      <section id="how-it-works" className="krew-home-section">
+      <section id="how-it-works" className="krew-home-section" data-reveal-children>
         <p className="krew-home-section-label">How It Works</p>
         <h2>Organizers post the job. Crew apply. Both sides see each other's track record first.</h2>
         <p className="krew-home-section-body">
@@ -135,7 +143,7 @@ export default function Home() {
           member's completed job count are both visible before anyone agrees to anything.
         </p>
 
-        <div className="krew-home-trust-grid">
+        <div className="krew-home-trust-grid" data-reveal-children>
           <div className="krew-trust-card light">
             <HandCoins className="krew-trust-icon" size={38} strokeWidth={1.3} aria-hidden="true" />
             <h3>Real payment records</h3>
@@ -171,7 +179,7 @@ export default function Home() {
       <section className="krew-home-band">
         <span className="krew-shard krew-band-shard-1" aria-hidden="true" />
         <span className="krew-shard krew-band-shard-2" aria-hidden="true" />
-        <div className="krew-home-band-inner">
+        <div className="krew-home-band-inner" data-reveal-children>
           <p className="krew-home-section-label">Professional reputation</p>
           <h2>
             Your work history follows you, not just your <em>word</em>.
@@ -185,7 +193,7 @@ export default function Home() {
       </section>
 
       <section className="krew-home-section">
-        <div className="krew-home-cta-split">
+        <div className="krew-home-cta-split" data-reveal-children>
           <div className="krew-home-cta-card crew">
             <PhotoSlot photo={PHOTOS.crewCard} className="krew-home-cta-photo" label="Performer on stage with a live band" />
             <div className="krew-home-cta-body">
@@ -228,4 +236,4 @@ export default function Home() {
       <PublicFooter />
     </div>
   );
-}
+}

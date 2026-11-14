@@ -7,14 +7,14 @@ import {
   Users,
   Wallet,
   ArrowRight,
-  BadgeCheck,
-  Clock,
-  Timer,
+  Building2,
 } from 'lucide-react';
 import PostListingForm from './PostListingForm.jsx';
 import ListingApplicants from './ListingApplicants.jsx';
 import HireForm from './HireForm.jsx';
 import JobCard from './JobCard.jsx';
+import PaymentRecord from '../components/PaymentRecord.jsx';
+import OrganizerProfileForm from './OrganizerProfileForm.jsx';
 import DashboardShell from '../components/DashboardShell.jsx';
 import { notificationIcon } from '../components/NotificationBell.jsx';
 import PilotSurveyBanner from '../components/PilotSurveyBanner.jsx';
@@ -24,12 +24,13 @@ import InfoTooltip from '../components/InfoTooltip.jsx';
 import ListingPhoto from '../components/ListingPhoto.jsx';
 import { initials } from '../components/CrewCard.jsx';
 
-// The organizer dashboard, in the moodboard's sidebar layout (DashboardShell.jsx). Five sections:
+// The organizer dashboard, in the moodboard's sidebar layout (DashboardShell.jsx). Six sections:
 // - Overview: a greeting, active gigs, recent activity (their notifications) and their own payment record - what crew see.
 // - Post a Gig: the post-a-job form.
 // - My Gigs: their listings - view and accept applicants, add a photo, cancel.
 // - Find Crew: every approved crew member, with View profile and Hire (a direct hire, no listing needed).
 // - Payments: every job they're part of, where they confirm what they paid.
+// - Profile: their company or brand name, logo and bio - what crew see on their gigs.
 // The section lives in the URL (?section=...) so a refresh or a shared link lands in the same place.
 
 const SECTIONS = [
@@ -38,6 +39,7 @@ const SECTIONS = [
   { key: 'gigs', label: 'My Gigs', icon: Briefcase },
   { key: 'crew', label: 'Find Crew', icon: Users },
   { key: 'payments', label: 'Payments', icon: Wallet },
+  { key: 'profile', label: 'Profile', icon: Building2 },
 ];
 
 // Turns a crew member's completed jobs count into something to show on a crew directory
@@ -94,6 +96,8 @@ export default function OrganizerDashboard({ user, onLogout }) {
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
   const [photoUploadingId, setPhotoUploadingId] = useState(null);
+  const [profilePhotoPath, setProfilePhotoPath] = useState(user.profile_photo_path);
+  const shellUser = { ...user, profile_photo_path: profilePhotoPath };
 
   const approved = user.verification_status === 'approved';
 
@@ -269,7 +273,7 @@ export default function OrganizerDashboard({ user, onLogout }) {
 
   if (!approved) {
     return (
-      <DashboardShell user={user} navItems={[SECTIONS[0]]} active="overview" onNavigate={() => {}} onLogout={onLogout}>
+      <DashboardShell user={shellUser} navItems={[SECTIONS[0]]} active="overview" onNavigate={() => {}} onLogout={onLogout}>
         <div className="krew-db-head">
           <h1>Welcome, {firstName}</h1>
           <p>Your account is still waiting on admin approval. Once you're approved, you'll be able to post gigs and hire crew here.</p>
@@ -290,7 +294,7 @@ export default function OrganizerDashboard({ user, onLogout }) {
   }
 
   return (
-    <DashboardShell user={user} navItems={navItems} active={section} onNavigate={goTo} onLogout={onLogout}>
+    <DashboardShell user={shellUser} navItems={navItems} active={section} onNavigate={goTo} onLogout={onLogout}>
       {error && <div className="krew-form-banner error">{error}</div>}
       {notice && <div className="krew-form-banner success">{notice}</div>}
 
@@ -374,31 +378,7 @@ export default function OrganizerDashboard({ user, onLogout }) {
                   record builds up here - and crew see it before they apply.
                 </p>
               )}
-              {record && record.confirmed_job_count > 0 && (
-                <ul className="krew-db-stats">
-                  <li>
-                    <BadgeCheck size={24} strokeWidth={1.3} aria-hidden="true" />
-                    <strong>{record.confirmed_job_count}</strong>
-                    <span>{record.confirmed_job_count === 1 ? 'job' : 'jobs'} paid and confirmed</span>
-                  </li>
-                  <li>
-                    <Clock size={24} strokeWidth={1.3} aria-hidden="true" />
-                    <strong>{record.on_time_percentage}%</strong>
-                    <span>paid on or before the due date</span>
-                  </li>
-                  {record.median_days_to_payment !== null && record.median_days_to_payment !== undefined && (
-                    <li>
-                      <Timer size={24} strokeWidth={1.3} aria-hidden="true" />
-                      <strong>
-                        {record.median_days_to_payment <= 0
-                          ? 'On time'
-                          : `${record.median_days_to_payment} ${record.median_days_to_payment === 1 ? 'day' : 'days'}`}
-                      </strong>
-                      <span>{record.median_days_to_payment <= 0 ? 'typical payment timing' : 'typically late'}</span>
-                    </li>
-                  )}
-                </ul>
-              )}
+              {record && record.confirmed_job_count > 0 && <PaymentRecord record={record} />}
               {jobsToConfirm > 0 && (
                 <button type="button" className="krew-text-link krew-db-link-btn" onClick={() => goTo('payments')}>
                   {jobsToConfirm} {jobsToConfirm === 1 ? 'payment' : 'payments'} to confirm <ArrowRight size={15} strokeWidth={2} />
@@ -605,6 +585,16 @@ export default function OrganizerDashboard({ user, onLogout }) {
               ))}
             </div>
           )}
+        </>
+      )}
+
+      {section === 'profile' && (
+        <>
+          <div className="krew-db-head">
+            <h1>Profile</h1>
+            <p>Crew see this on every gig you post, next to your payment record.</p>
+          </div>
+          <OrganizerProfileForm user={user} photoPath={profilePhotoPath} onPhotoChange={setProfilePhotoPath} />
         </>
       )}
     </DashboardShell>

@@ -21,6 +21,7 @@ import DashboardShell from '../components/DashboardShell.jsx';
 import ListingPhoto from '../components/ListingPhoto.jsx';
 import usePageMeta from '../usePageMeta.js';
 import { PAGE_META, sectionTitle } from '../pageMeta.js';
+import AmountInput from '../components/AmountInput.jsx';
 
 // Admin screen, in the moodboard's sidebar layout (panel 9, DashboardShell.jsx). Four sections:
 // - Overview: the two queues that need a person (account approvals, open disputes) plus headline numbers.
@@ -609,13 +610,11 @@ export default function Admin({ user, onLogout }) {
                           <label className="krew-field-label" htmlFor={`final-amount-${dispute.id}`}>Final amount</label>
                           <span className="krew-jc-input">
                             <span aria-hidden="true">KES</span>
-                            <input
+                            <AmountInput
                               id={`final-amount-${dispute.id}`}
-                              type="number"
-                              min="0"
                               className="krew-field-input"
                               value={finalAmount}
-                              onChange={(e) => setFinalAmount(e.target.value)}
+                              onValueChange={setFinalAmount}
                             />
                           </span>
                         </div>

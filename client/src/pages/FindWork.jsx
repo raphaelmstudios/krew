@@ -8,6 +8,7 @@ import ListingPhoto from '../components/ListingPhoto.jsx';
 import usePageMeta from '../usePageMeta.js';
 import { PAGE_META } from '../pageMeta.js';
 import SkeletonCards from '../components/SkeletonCards.jsx';
+import AmountInput from '../components/AmountInput.jsx';
 
 // The public Find Work page, laid out like the moodboard's Find Work panel: a hero with a
 // big search bar, a filter sidebar (category, location, date, pay), category tabs with
@@ -163,7 +164,7 @@ export default function FindWork() {
 
       <section className="krew-fw-hero">
         <div className="krew-fw-hero-inner">
-          <div className="krew-fw-hero-copy">
+          <div className="krew-fw-hero-copy" data-reveal-children>
             <p className="krew-home-section-label">Open gigs in Nairobi</p>
             <h1>Find Work</h1>
             <p className="krew-fw-hero-sub">
@@ -260,22 +261,18 @@ export default function FindWork() {
           <fieldset className="krew-fw-filter-group">
             <legend>Pay (KES)</legend>
             <div className="krew-fw-pay">
-              <input
-                type="number"
-                min="0"
+              <AmountInput
                 className="krew-field-input"
                 value={minAmount}
-                onChange={(e) => setMinAmount(e.target.value)}
+                onValueChange={setMinAmount}
                 placeholder="Min"
                 aria-label="Minimum pay in KES"
               />
               <span aria-hidden="true">-</span>
-              <input
-                type="number"
-                min="0"
+              <AmountInput
                 className="krew-field-input"
                 value={maxAmount}
-                onChange={(e) => setMaxAmount(e.target.value)}
+                onValueChange={setMaxAmount}
                 placeholder="Max"
                 aria-label="Maximum pay in KES"
               />
@@ -333,7 +330,7 @@ export default function FindWork() {
           )}
 
           {filtered && filtered.length > 0 && (
-            <div className="krew-fw-list">
+            <div className="krew-fw-list" data-reveal-children>
               {filtered.map((listing) => (
                 <Link to={`/gigs/${listing.id}`} className="krew-fw-card" key={listing.id}>
                   <ListingPhoto listing={listing} className="krew-fw-card-photo" />

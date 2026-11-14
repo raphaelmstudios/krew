@@ -18,6 +18,7 @@ import InfoTooltip from '../components/InfoTooltip.jsx';
 import CrewCard, { initials } from '../components/CrewCard.jsx';
 import { categoryIcon } from '../components/ListingPhoto.jsx';
 import HireForm from './HireForm.jsx';
+import { useCoverPhoto, CoverPhotoButton } from '../components/CoverPhoto.jsx';
 import usePageMeta from '../usePageMeta.js';
 import { PAGE_META, NOT_FOUND_META, crewMeta } from '../pageMeta.js';
 
@@ -56,6 +57,7 @@ export default function CrewProfile() {
   const [lightboxIndex, setLightboxIndex] = useState(null); // null = closed
   const [linkCopied, setLinkCopied] = useState(false);
   const [hireStep, setHireStep] = useState(null); // null = closed, 'form' = hiring, 'done' = hire created
+  const cover = useCoverPhoto(null); // the owner can change their cover photo right here
 
   usePageMeta(profile ? crewMeta(profile) : notFound ? NOT_FOUND_META : PAGE_META['/hire-crew']);
 
@@ -80,6 +82,7 @@ export default function CrewProfile() {
           return;
         }
         setProfile(data);
+        cover.setCoverPath(data.cover_photo_path);
       })
       .catch(() => {
         if (!cancelled) setError('Could not reach the server.');
@@ -141,8 +144,9 @@ export default function CrewProfile() {
   const portfolio = profile?.portfolio || [];
   const workHistory = profile?.work_history || [];
   const visiblePortfolio = showAllPortfolio ? portfolio : portfolio.slice(0, PORTFOLIO_PREVIEW_COUNT);
-  // The cover uses the crew member's first portfolio photo, or the plum brand panel if they have none.
-  const coverImage = portfolio[0]?.image_path;
+  // The banner uses the crew member's own cover photo, then their first portfolio photo, then
+  // the plain plum brand panel.
+  const coverImage = cover.coverPath || portfolio[0]?.image_path;
   const available = profile?.availability_status === 'available';
 
   if (!profile) {
@@ -201,9 +205,12 @@ export default function CrewProfile() {
             </ul>
             <div className="krew-cp-hero-actions">
               {isOwnProfile && (
-                <Link to="/dashboard" className="krew-cp-hero-btn primary">
-                  <Pencil size={15} strokeWidth={2} /> Edit Profile
-                </Link>
+                <>
+                  <Link to="/dashboard?section=profile" className="krew-cp-hero-btn primary">
+                    <Pencil size={15} strokeWidth={2} /> Edit Profile
+                  </Link>
+                  <CoverPhotoButton cover={cover} className="krew-cp-hero-btn" />
+                </>
               )}
               {canHire && (
                 <button type="button" className="krew-cp-hero-btn primary" onClick={() => setHireStep('form')}>
@@ -225,6 +232,7 @@ export default function CrewProfile() {
                 {linkCopied ? 'Link copied' : 'Copy profile link'}
               </button>
             </div>
+            {isOwnProfile && cover.error && <div className="krew-form-banner error krew-cp-cover-error">{cover.error}</div>}
           </div>
         </div>
       </section>
@@ -278,7 +286,7 @@ export default function CrewProfile() {
                 )}
               </p>
             ) : (
-              <div className="krew-cp-portfolio-grid">
+              <div className="krew-cp-portfolio-grid" data-reveal-children>
                 {visiblePortfolio.map((image, index) => (
                   <button
                     type="button"
@@ -338,7 +346,7 @@ export default function CrewProfile() {
               Browse all crew <ArrowRight size={15} strokeWidth={2} />
             </Link>
           </div>
-          <div className="krew-hc-grid">
+          <div className="krew-hc-grid" data-reveal-children>
             {moreCrew.map((crewMember) => (
               <CrewCard crewMember={crewMember} key={crewMember.id} />
             ))}

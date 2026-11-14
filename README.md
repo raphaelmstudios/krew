@@ -19,7 +19,7 @@ KREW keeps track of payments. It does not send, hold or receive money. Organizer
 * Browse open gigs on Find Work, with filters for category, location, date and pay.
 * See each organizer's payment record before applying: how many jobs they have paid and had confirmed, and how often they paid on time.
 * Apply to gigs and follow each application from your dashboard.
-* Build a public profile with a photo, your role, skills, years of experience, a short bio and portfolio photos.
+* Build a public profile with a photo, a cover photo, your role, skills, years of experience, a short bio and portfolio photos.
 * Every confirmed job appears in your verified work history, which organizers can see.
 * Set yourself as available or currently working.
 
@@ -29,6 +29,7 @@ KREW keeps track of payments. It does not send, hold or receive money. Organizer
 * Review applicants, open their profiles and accept the one you want.
 * Hire crew directly from Find Crew or from a crew profile, without posting a gig first.
 * Confirm what you paid. Your on time payment record builds up from these confirmations.
+* Add your company or brand name, a logo and a short bio. Crew see them on every gig you post.
 
 ### For admins
 
@@ -125,16 +126,22 @@ cd server
 node scripts/seed_demo_data.cjs
 ```
 
-Every demo account uses the password `krewdemo2026`:
+Every demo account uses the password `krewdemo2026`. Every person, company and event in the demo data is made up.
 
 | Phone | Account |
 | --- | --- |
 | 0711000001 | Admin |
-| 0711000002 | Organizer with a payment record (Wanjiru Kamau) |
-| 0711000003 | New organizer (Otieno Mwangi) |
-| 0711000004 | Crew with completed jobs (Achieng Odhiambo) |
-| 0711000005 | New crew (Mutiso Kyalo) |
+| 0711000002 | Organizer: Bloomfield Celebrations (Wanjiru Kamau), always pays on time |
+| 0711000003 | New organizer: Lakeside Live Sessions (Otieno Mwangi) |
+| 0711000007 | Organizer: Mvua Festival Co. (Akinyi Njoroge) |
+| 0711000008 | Organizer: Kilele Corporate Events (Kiprono Langat), sometimes pays late |
+| 0711000009 | Organizer: Anga Rooftop Socials (Halima Abdi) |
+| 0711000004 | Crew with 14 completed jobs (Achieng Odhiambo, photographer) |
+| 0711000005 | New crew (Mutiso Kyalo, bartender) |
 | 0711000006 | Crew waiting for approval (Nafula Wekesa) |
+| 0711000010 to 0711000017 | Eight more crew, from 1 to 11 completed jobs |
+
+The demo also has 12 open gigs with applicants, jobs waiting for payment confirmation, and a dispute for the admin to settle.
 
 The admin logs in at http://localhost:5173/admin.
 

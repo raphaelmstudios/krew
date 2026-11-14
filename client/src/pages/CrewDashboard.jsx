@@ -22,6 +22,7 @@ import usePageMeta from '../usePageMeta.js';
 import { PAGE_META, sectionTitle } from '../pageMeta.js';
 import InfoTooltip from '../components/InfoTooltip.jsx';
 import ListingPhoto from '../components/ListingPhoto.jsx';
+import { useCoverPhoto, CoverPhotoCard } from '../components/CoverPhoto.jsx';
 
 const MAX_PORTFOLIO_IMAGES = 12;
 
@@ -30,7 +31,7 @@ const MAX_PORTFOLIO_IMAGES = 12;
 // - Find Gigs: open job listings to apply to.
 // - Applications: every application and where it stands.
 // - My Jobs: the jobs they're actually confirmed for (from either path), where they confirm their own side of the payment.
-// - Profile: photo, role, skills, experience, bio, portfolio and availability - everything organizers see on the public profile.
+// - Profile: photo, role, skills, experience, bio, cover photo, portfolio and availability - everything organizers see on the public profile.
 // The section lives in the URL (?section=...) so a refresh or a shared link lands in the same place.
 
 const SECTIONS = [
@@ -115,6 +116,7 @@ export default function CrewDashboard({ user, onLogout }) {
   // own - the public /users/:id/public-profile bundle already includes it, and since it's
   // public it works just as well fetched for one's own id here.
   const [portfolio, setPortfolio] = useState(null);
+  const cover = useCoverPhoto(user.cover_photo_path, { loadCurrent: true });
   const [portfolioUploading, setPortfolioUploading] = useState(false);
   const [portfolioBanner, setPortfolioBanner] = useState(null);
   const [deletingPortfolioId, setDeletingPortfolioId] = useState(null);
@@ -757,12 +759,14 @@ export default function CrewDashboard({ user, onLogout }) {
             </div>
           </section>
 
+          <CoverPhotoCard cover={cover} fallbackPath={portfolio?.[0]?.image_path} />
+
           <section className="krew-db-card">
             <div className="krew-db-card-head">
               <h2>Portfolio</h2>
               {portfolio && <span className="krew-db-card-note">{portfolio.length} of {MAX_PORTFOLIO_IMAGES} photos</span>}
             </div>
-            <p className="krew-db-card-sub">Work samples shown on your public profile. The first one is also your profile's cover.</p>
+            <p className="krew-db-card-sub">Work samples shown on your public profile.</p>
 
             {portfolioBanner && <div className={`krew-form-banner ${portfolioBanner.type}`}>{portfolioBanner.text}</div>}
 

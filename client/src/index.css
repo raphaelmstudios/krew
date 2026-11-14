@@ -611,3 +611,234 @@ summary {
 .krew-legal-body li strong {
   color: var(--color-text);
 }
+
+/* ===================================================================== */
+/* Payment record (PaymentRecord.jsx) - organizer dashboard and gig page */
+/* On time and late each have a colour and an icon (check / clock) plus */
+/* a legend, so neither depends on colour alone. Colours checked for     */
+/* colour-blind separation and contrast in both themes.                  */
+/* ===================================================================== */
+.krew-prec {
+  --prec-on: #6D3B91;
+  --prec-on-ink: #FFFFFF;
+  --prec-late: #905D0A;
+  --prec-late-ink: #FFFFFF;
+  --prec-track: var(--color-lavender-mist);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 560px; /* keeps the meter, marks and legend lined up on wide pages */
+}
+
+:root[data-theme='dark'] .krew-prec {
+  --prec-on: #9B6BC4;
+  --prec-late: #C2841F;
+  --prec-late-ink: var(--color-ink-plum);
+  --prec-track: var(--color-surface-selected);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .krew-prec {
+    --prec-on: #9B6BC4;
+    --prec-late: #C2841F;
+    --prec-late-ink: var(--color-ink-plum);
+    --prec-track: var(--color-surface-selected);
+  }
+}
+
+.krew-prec-hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.krew-prec-figure {
+  font-family: var(--font-body);
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--color-text);
+}
+
+.krew-prec-figure-label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.krew-prec-figure-sub {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--color-text-soft);
+}
+
+.krew-prec-meter {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--prec-track);
+  overflow: hidden;
+}
+
+.krew-prec-meter > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--prec-on);
+  transform-origin: left;
+}
+
+.krew-motion .krew-prec-meter > span {
+  animation: krew-meter-fill 1100ms cubic-bezier(0.16, 1, 0.3, 1) 150ms backwards;
+}
+
+@keyframes krew-meter-fill {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+.krew-prec-recent-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.krew-prec-recent-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-soft);
+}
+
+.krew-prec-legend {
+  display: inline-flex;
+  gap: 14px;
+  font-size: 12.5px;
+  color: var(--color-text-soft);
+}
+
+.krew-prec-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.krew-prec-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--prec-on);
+}
+
+.krew-prec-legend i.late {
+  background: var(--prec-late);
+}
+
+.krew-prec-cells {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 4px;
+}
+
+.krew-prec-cells li {
+  position: relative;
+  flex: 1 1 0;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  background: var(--prec-on);
+  color: var(--prec-on-ink);
+  cursor: default;
+  transition: translate 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.krew-prec-cells li.late {
+  background: var(--prec-late);
+  color: var(--prec-late-ink);
+}
+
+.krew-prec-cells li:hover,
+.krew-prec-cells li:focus-visible {
+  translate: 0 -2px;
+}
+
+.krew-prec-cells li:focus-visible {
+  outline: 2px solid var(--color-text);
+  outline-offset: 2px;
+}
+
+/* The mark's detail on hover or focus. Only drawn while shown (so a hidden tip never
+   widens the page on a phone), anchored to the left on the first half of the row and to the
+   right on the second, so it never runs off the card. */
+.krew-prec-cells li:hover::after,
+.krew-prec-cells li:focus-visible::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 5;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--color-ink-plum);
+  color: var(--color-warm-ivory);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: var(--shadow-md);
+  pointer-events: none;
+  animation: krew-tip-in 160ms ease-out;
+}
+
+.krew-prec-cells li:nth-child(n + 6):hover::after,
+.krew-prec-cells li:nth-child(n + 6):focus-visible::after {
+  left: auto;
+  right: 0;
+}
+
+@keyframes krew-tip-in {
+  from {
+    opacity: 0;
+    translate: 0 4px;
+  }
+}
+
+.krew-prec-ends {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 11.5px;
+  color: var(--color-text-faint);
+}
+
+.krew-prec-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.krew-prec-facts dt {
+  font-size: 12.5px;
+  color: var(--color-text-soft);
+}
+
+.krew-prec-facts dd {
+  margin: 4px 0 0 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text);
+}

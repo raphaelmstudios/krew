@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import AmountInput from '../components/AmountInput.jsx';
 
 // A form for hiring a specific crew member with a job posting.
 // The organizer specifies the amount, due date, and an optional job description. 
@@ -62,15 +63,12 @@ export default function HireForm({ crewMember, onCreated, onCancel }) {
       <form onSubmit={handleSubmit}>
         <div className="krew-field">
           <label className="krew-field-label" htmlFor="hire-amount">Amount (KES)</label>
-          <input
+          <AmountInput
             id="hire-amount"
-            type="number"
-            min="1"
-            step="1"
             className="krew-field-input"
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="e.g. 5000"
+            onValueChange={setAmount}
+            placeholder="e.g. 5,000"
           />
         </div>
 
@@ -108,4 +106,4 @@ export default function HireForm({ crewMember, onCreated, onCancel }) {
       </form>
     </div>
   );
-}
+}

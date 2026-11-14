@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ImagePlus } from 'lucide-react';
+import AmountInput from '../components/AmountInput.jsx';
 
 // The fixed category list a listing can be filed under - mirrors
 // LISTING_CATEGORIES in server/src/routes/listings.js. Kept as its own constant
@@ -176,15 +177,12 @@ export default function PostListingForm({ onCreated, onCancel }) {
 
         <div className="krew-field">
           <label className="krew-field-label" htmlFor="amount">Amount (KES)</label>
-          <input
+          <AmountInput
             id="amount"
-            type="number"
-            min="1"
-            step="1"
             className="krew-field-input"
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="e.g. 5000"
+            onValueChange={setAmount}
+            placeholder="e.g. 5,000"
           />
         </div>
 
@@ -248,4 +246,4 @@ export default function PostListingForm({ onCreated, onCancel }) {
       </form>
     </div>
   );
-}
+}
