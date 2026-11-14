@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, FileText, UserRoundCheck, Scale, Clock, Wallet, BadgeCheck, KeyRound } from 'lucide-react';
+import { Bell, FileText, UserRoundCheck, Scale, Clock, Wallet, BadgeCheck, KeyRound, Megaphone } from 'lucide-react';
 
 // Parse a date string from the server (assumed to be in UTC) into a JavaScript Date object.
 // The server sends dates in the format "YYYY-MM-DD HH:MM:SS", which is not directly parseable by Date.parse() in all browsers, so we replace the space with 'T' and append 'Z' to indicate UTC.
@@ -30,6 +30,7 @@ export function notificationIcon(type = '') {
   if (type.startsWith('payment')) return Wallet;
   if (type === 'account_approved') return BadgeCheck;
   if (type.startsWith('password')) return KeyRound;
+  if (type === 'listing_posted') return Megaphone;
   return Bell;
 }
 

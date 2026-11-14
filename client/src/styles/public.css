@@ -221,109 +221,296 @@
   background-repeat: no-repeat;
 }
 
-/* Homepage hero - copy on the left, photo cut on a diagonal bleeding off the right edge */
-.krew-hero {
-  position: relative;
-  overflow: hidden;
-  min-height: 580px;
-  display: flex;
-  align-items: center;
-}
-
-.krew-hero-inner {
-  position: relative;
-  z-index: 2;
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 72px 32px;
-}
-
-.krew-hero-copy {
-  max-width: 500px;
-}
-
-.krew-hero-copy h1 {
-  font-family: var(--font-display);
-  font-size: 58px;
-  line-height: 1.04;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  margin: 0;
-  color: var(--color-text);
-}
-
-.krew-hero-copy h1 em,
+/* The italic word in the reputation band's heading */
 .krew-home-band h2 em {
   font-style: italic;
   color: var(--color-brand-text);
 }
 
-.krew-hero-rule {
-  display: block;
-  width: 56px;
-  height: 3px;
-  border-radius: 2px;
-  background: var(--color-brand);
-  margin: 26px 0 22px 0;
+/* Homepage hero - the headline and the two main buttons centred over a moving, curved row
+   of event photos and crew roles (HeroCarousel.jsx sets each card's turn and size as it
+   moves; everything else is here). */
+.krew-hx {
+  position: relative;
+  overflow: hidden;
+  padding: 76px 0 64px 0;
+  text-align: center;
 }
 
-.krew-hero-sub {
+.krew-hx-copy {
+  position: relative;
+  z-index: 2;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.krew-hx-copy h1 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin: 0;
+  color: var(--color-text);
+}
+
+.krew-hx-line-serif {
+  font-family: var(--font-display);
+  font-size: 54px;
+  font-weight: 300;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+}
+
+.krew-hx-line-sans {
+  font-family: var(--font-body);
+  font-size: 62px;
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.04em;
+}
+
+.krew-hx-line-sans em {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--color-brand-text);
+}
+
+.krew-hx-sub {
+  max-width: 520px;
+  margin: 22px auto 30px auto;
   font-size: 17px;
   line-height: 1.6;
   color: var(--color-text-soft);
-  max-width: 420px;
-  margin: 0 0 30px 0;
 }
 
-.krew-hero-ctas {
+.krew-hx-ctas {
   display: flex;
+  justify-content: center;
   gap: 12px;
   flex-wrap: wrap;
 }
 
-.krew-hero-visual {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 52%;
-  clip-path: polygon(16% 0, 100% 0, 100% 100%, 0 100%);
+.krew-hx-carousel {
+  position: relative;
+  margin-top: 44px;
 }
 
-.krew-hero-photo {
+/* Room above and below for the edge cards, which grow; the ends fade out */
+.krew-hx-viewport {
+  overflow: hidden;
+  padding: 44px 0;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%);
+}
+
+.krew-hx-track {
+  position: relative;
+  display: flex;
+  gap: 18px;
+  width: max-content;
+  will-change: transform;
+}
+
+.krew-hx-slot {
+  flex: none;
+}
+
+.krew-hx-card {
+  position: relative;
+  display: block;
+  width: 210px;
+  height: 272px;
+  overflow: hidden;
+  border-radius: 18px;
+  text-decoration: none;
+  box-shadow: var(--shadow-md);
+  will-change: transform;
+}
+
+.krew-hx-card-photo {
   position: absolute;
   inset: 0;
+  background-color: var(--color-photo-empty);
+  background-size: cover;
+  transition: transform 700ms var(--ease-out-expo, ease-out);
 }
 
-.krew-hero-shard-1 {
-  left: 0;
-  bottom: 0;
-  width: 46%;
-  height: 58%;
+.krew-hx-card:hover .krew-hx-card-photo {
+  transform: scale(1.07);
+}
+
+.krew-hx-card-label {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  z-index: 2;
+  padding: 7px 12px;
+  border-radius: var(--radius-md);
+  background: rgba(33, 22, 43, 0.72);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  color: var(--color-warm-ivory);
+  font-size: 13px;
+  font-weight: 600;
+  transition: translate 300ms var(--ease-spring, ease-out);
+}
+
+.krew-hx-card:hover .krew-hx-card-label {
+  translate: 0 -3px;
+}
+
+/* Role cards: a flat brand panel, a shard and the role's line icon */
+.krew-hx-card.role {
+  background: var(--color-ink-plum);
+}
+
+.krew-hx-card.role.violet {
   background: var(--color-electric-violet);
-  clip-path: polygon(0 100%, 52% 0, 100% 0, 48% 100%);
-  opacity: 0.85;
 }
 
-.krew-hero-shard-2 {
-  left: 30%;
+.krew-hx-card.role.lavender {
+  background: var(--color-lavender-mist);
+}
+
+/* In dark mode the page itself is plum, so plum cards step up a shade to stand out */
+:root[data-theme='dark'] .krew-hx-card.role.plum {
+  background: var(--color-surface-selected);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .krew-hx-card.role.plum {
+    background: var(--color-surface-selected);
+  }
+}
+
+.krew-hx-card-shard {
+  right: 0;
+  top: 0;
   bottom: 0;
-  width: 30%;
-  height: 34%;
-  background: var(--color-soft-violet);
-  clip-path: polygon(0 100%, 60% 0, 100% 0, 40% 100%);
+  width: 58%;
+  background: var(--color-electric-violet);
+  clip-path: polygon(60% 0, 100% 0, 100% 100%, 0 100%);
   opacity: 0.55;
 }
 
-.krew-hero-shard-3 {
-  right: 0;
-  top: 0;
-  width: 26%;
-  height: 30%;
-  background: var(--color-lavender-mist);
-  clip-path: polygon(45% 0, 100% 0, 100% 100%);
-  opacity: 0.25;
+.krew-hx-card.role.violet .krew-hx-card-shard {
+  background: var(--color-soft-violet);
+  opacity: 0.4;
+}
+
+.krew-hx-card.role.lavender .krew-hx-card-shard {
+  background: var(--color-soft-violet);
+  opacity: 0.5;
+}
+
+.krew-hx-card-icon {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  width: 66px;
+  height: 66px;
+  translate: -50% -50%;
+  color: var(--color-soft-violet);
+  transition: scale 400ms var(--ease-spring, ease-out), rotate 400ms var(--ease-spring, ease-out);
+}
+
+.krew-hx-card.role.violet .krew-hx-card-icon {
+  color: var(--color-warm-ivory);
+}
+
+.krew-hx-card.role.lavender .krew-hx-card-icon {
+  color: var(--color-ink-plum);
+}
+
+.krew-hx-card.role:hover .krew-hx-card-icon {
+  scale: 1.1;
+  rotate: -6deg;
+}
+
+.krew-hx-pause {
+  position: absolute;
+  right: max(24px, calc(50% - 576px));
+  bottom: -30px; /* just under the row, clear of the cards */
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-card);
+  color: var(--color-text-soft);
+  cursor: pointer;
+  transition: color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease);
+}
+
+.krew-hx-pause:hover {
+  color: var(--color-text);
+  border-color: var(--color-text-soft);
+}
+
+@media (max-width: 860px) {
+  .krew-hx {
+    padding: 44px 0 52px 0;
+  }
+
+  .krew-hx-copy {
+    padding: 0 20px;
+  }
+
+  .krew-hx-line-serif {
+    font-size: 31px;
+  }
+
+  .krew-hx-line-sans {
+    font-size: 33px;
+  }
+
+  .krew-hx-sub {
+    font-size: 15.5px;
+    margin: 16px auto 24px auto;
+  }
+
+  .krew-hx-carousel {
+    margin-top: 24px;
+  }
+
+  .krew-hx-viewport {
+    padding: 28px 0;
+  }
+
+  .krew-hx-track {
+    gap: 12px;
+  }
+
+  .krew-hx-card {
+    width: 148px;
+    height: 194px;
+    border-radius: 14px;
+  }
+
+  .krew-hx-card-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .krew-hx-card-label {
+    left: 9px;
+    bottom: 9px;
+    padding: 5px 9px;
+    font-size: 12px;
+  }
+
+  .krew-hx-pause {
+    right: 16px;
+    bottom: -26px;
+    width: 32px;
+    height: 32px;
+  }
 }
 
 /* "The people behind events" - copy on the left, two staggered photos on the right */
@@ -823,26 +1010,6 @@
 }
 
 @media (max-width: 860px) {
-  .krew-hero {
-    flex-direction: column;
-    align-items: stretch;
-    min-height: 0;
-  }
-
-  .krew-hero-inner {
-    padding: 44px 20px 32px 20px;
-  }
-
-  .krew-hero-copy h1 {
-    font-size: 40px;
-  }
-
-  .krew-hero-visual {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 4 / 3;
-    clip-path: polygon(14% 0, 100% 0, 100% 100%, 0 100%);
-  }
 
   .krew-home-people {
     grid-template-columns: 1fr;

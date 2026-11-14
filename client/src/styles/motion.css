@@ -75,24 +75,24 @@
   }
 }
 
-/* The short violet rule under the headline draws itself in, then the text and buttons follow */
-.krew-motion .krew-hero-rule {
-  transform-origin: left;
-  animation: krew-draw 900ms var(--ease-in-out) 720ms backwards;
+/* Homepage hero: after the headline, the text, buttons and moving cards follow in turn */
+.krew-motion .krew-hx-sub {
+  animation: krew-rise 1000ms var(--ease-out-expo) 620ms backwards;
 }
 
-@keyframes krew-draw {
+.krew-motion .krew-hx-ctas {
+  animation: krew-rise 1000ms var(--ease-out-expo) 740ms backwards;
+}
+
+.krew-motion .krew-hx-carousel {
+  animation: krew-rise-far 1400ms var(--ease-out-expo) 820ms backwards;
+}
+
+@keyframes krew-rise-far {
   from {
-    transform: scaleX(0);
+    opacity: 0;
+    translate: 0 60px;
   }
-}
-
-.krew-motion .krew-hero-sub {
-  animation: krew-rise 1000ms var(--ease-out-expo) 820ms backwards;
-}
-
-.krew-motion .krew-hero-ctas {
-  animation: krew-rise 1000ms var(--ease-out-expo) 940ms backwards;
 }
 
 @keyframes krew-rise {
@@ -102,8 +102,8 @@
   }
 }
 
-/* --- Hero photos: a violet curtain wipes off, the photo settles, the shards slide in --- */
-.krew-motion .krew-hero-visual::after,
+/* --- Find Work and Hire Crew hero photos: a violet curtain wipes off, the photo settles,
+   the shards slide in --- */
 .krew-motion .krew-fw-hero-visual::after,
 .krew-motion .krew-hc-hero-visual::after {
   content: '';
@@ -123,7 +123,6 @@
   }
 }
 
-.krew-motion .krew-hero-photo,
 .krew-motion .krew-fw-hero-photo,
 .krew-motion .krew-hc-hero-photo {
   animation: krew-settle 2000ms var(--ease-out-expo) 160ms backwards;
@@ -135,20 +134,14 @@
   }
 }
 
-.krew-motion .krew-hero-shard-1,
 .krew-motion .krew-fw-hero-shard-1,
 .krew-motion .krew-hc-hero-shard-1 {
   animation: krew-shard-in 1300ms var(--ease-out-expo) 760ms backwards;
 }
 
-.krew-motion .krew-hero-shard-2,
 .krew-motion .krew-fw-hero-shard-2,
 .krew-motion .krew-hc-hero-shard-2 {
   animation: krew-shard-in 1300ms var(--ease-out-expo) 880ms backwards;
-}
-
-.krew-motion .krew-hero-shard-3 {
-  animation: krew-shard-in-top 1300ms var(--ease-out-expo) 1000ms backwards;
 }
 
 /* The shards travel on a curve rather than a straight line - mostly upward first, then
@@ -161,25 +154,6 @@
   55% {
     opacity: 1;
     transform: translate(-30px, 14px);
-  }
-}
-
-@keyframes krew-shard-in-top {
-  from {
-    opacity: 0;
-    transform: translate(48px, -64px);
-  }
-  55% {
-    opacity: 1;
-    transform: translate(30px, -10px);
-  }
-}
-
-/* On wide screens the hero photo drifts slower than the page as you scroll (data-parallax),
-   so it's made taller than its frame to never show an edge. */
-@media (min-width: 861px) {
-  .krew-motion .krew-hero-photo {
-    inset: -80px 0;
   }
 }
 
