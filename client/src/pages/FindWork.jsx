@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Search, MapPin, CalendarDays, ArrowRight, SlidersHorizontal, X } from 'lucide-react';
 import PublicNav from '../components/PublicNav.jsx';
 import PublicFooter from '../components/PublicFooter.jsx';
@@ -70,7 +70,13 @@ export default function FindWork() {
   const [error, setError] = useState(null);
 
   const [search, setSearch] = useState('');
-  const [categories, setCategories] = useState([]); // empty = all
+  // A link can open Find Work already filtered to one category (/find-work?category=Security),
+  // as the homepage's role cards do.
+  const [searchParams] = useSearchParams();
+  const [categories, setCategories] = useState(() => {
+    const requested = searchParams.get('category');
+    return LISTING_CATEGORIES.includes(requested) ? [requested] : [];
+  }); // empty = all
   const [location, setLocation] = useState(''); // empty = any
   const [dateRange, setDateRange] = useState('any');
   const [minAmount, setMinAmount] = useState('');

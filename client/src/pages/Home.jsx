@@ -4,22 +4,23 @@ import { ArrowRight, HandCoins, Fingerprint, ScrollText } from 'lucide-react';
 import PublicNav from '../components/PublicNav.jsx';
 import PublicFooter from '../components/PublicFooter.jsx';
 import SplitWords from '../components/SplitWords.jsx';
+import HeroCarousel from '../components/HeroCarousel.jsx';
 import usePageMeta from '../usePageMeta.js';
 import { PAGE_META } from '../pageMeta.js';
 
-// The homepage itself, which is a single-page scroll with multiple sections, laid out to match
-// the moodboard's Homepage panel: the hero with a photo cut on a diagonal on the right, "The
-// people behind events" with two staggered photos, then How It Works, the reputation band,
-// the two sign-up cards, and the shared footer.
+// The homepage: a single-page scroll.
+// - The hero: the headline and the Find Work / Hire Crew buttons centred, over a moving,
+//   curved row of event photos and crew roles (HeroCarousel.jsx).
+// - How It Works, with the three trust cards, straight after it.
+// - "The people behind events" (the About link), the purple reputation band, the two sign-up
+//   cards and the shared footer.
 //
-// Photos are slots, not hardcoded images - each one looks for a file in client/public/images/home/
-// (see PHOTOS below). Until that file exists the slot just shows the brand's plum panel with the
-// diagonal shards, so nothing looks broken while the photos are still being designed.
+// Photos below the hero are slots, not hardcoded images - each one looks for a file in
+// client/public/images/home/ (see PHOTOS below). Until that file exists the slot just shows
+// the brand's plum panel, so nothing looks broken while photos are still being designed.
 // Each photo also has a focus point (CSS background-position) so its subject stays in frame
-// when the slot crops it - e.g. the portrait-shaped "people" slots only show a slice of a
-// landscape photo, so the focus is pushed toward where the person actually is.
+// when the slot crops it.
 const PHOTOS = {
-  hero: { src: '/images/home/hero.webp', focus: '30% 20%' },
   people1: { src: '/images/home/people-1.webp', focus: '90% center' },
   people2: { src: '/images/home/people-2.webp', focus: '85% center' },
   crewCard: { src: '/images/home/crew-card.webp', focus: 'center 62%' },
@@ -27,7 +28,7 @@ const PHOTOS = {
 };
 
 // Photos below the fold are only fetched when they're about to scroll into view (300px
-// early) - the hero passes eager so it starts loading straight away. Until then the slot
+// early) - pass eager for a photo near the top so it starts loading straight away. Until then the slot
 // shows its plum background, same as when a photo is missing.
 function PhotoSlot({ photo, className = '', label, eager = false, ...rest }) {
   const ref = useRef(null);
@@ -80,57 +81,34 @@ export default function Home() {
     <div className="krew-public-page">
       <PublicNav />
 
-      <section className="krew-hero">
-        <div className="krew-hero-inner">
-          <div className="krew-hero-copy">
-            <h1 aria-label="Every great moment has a crew behind it.">
-              <span aria-hidden="true">
-                <SplitWords text="Every great moment has a" />{' '}
-                <em>
-                  <SplitWords text="crew" start={5} />
-                </em>{' '}
-                <SplitWords text="behind it." start={6} />
-              </span>
-            </h1>
-            <span className="krew-hero-rule" aria-hidden="true" />
-            <p className="krew-hero-sub">
-              Find skilled event crew or land paid gigs in Nairobi - with every payment tracked until it's confirmed.
-            </p>
-            <div className="krew-hero-ctas">
-              <Link to="/find-work" className="krew-button-primary krew-button-inline" data-magnetic>
-                Find Work <ArrowRight size={16} strokeWidth={2} />
-              </Link>
-              <Link to="/hire-crew" className="krew-button-secondary krew-button-inline" data-magnetic>
-                Hire Crew <ArrowRight size={16} strokeWidth={2} />
-              </Link>
-            </div>
+      <section className="krew-hx">
+        <div className="krew-hx-copy">
+          <h1 aria-label="Every great moment has a crew behind it.">
+            <span className="krew-hx-line-serif" aria-hidden="true">
+              <SplitWords text="Every great moment" />
+            </span>
+            <span className="krew-hx-line-sans" aria-hidden="true">
+              <SplitWords text="has a" start={3} />{' '}
+              <em>
+                <SplitWords text="crew" start={5} />
+              </em>{' '}
+              <SplitWords text="behind it." start={6} />
+            </span>
+          </h1>
+          <p className="krew-hx-sub">
+            Find skilled event crew or land paid gigs in Nairobi, with every payment tracked until both sides confirm it.
+          </p>
+          <div className="krew-hx-ctas">
+            <Link to="/find-work" className="krew-button-primary krew-button-inline" data-magnetic>
+              Find Work <ArrowRight size={16} strokeWidth={2} />
+            </Link>
+            <Link to="/hire-crew" className="krew-button-secondary krew-button-inline" data-magnetic>
+              Hire Crew <ArrowRight size={16} strokeWidth={2} />
+            </Link>
           </div>
         </div>
 
-        <div className="krew-hero-visual">
-          <PhotoSlot photo={PHOTOS.hero} className="krew-hero-photo" label="Musicians performing on stage" eager data-parallax="0.12" />
-          <span className="krew-shard krew-hero-shard-1" aria-hidden="true" data-parallax="0.22" data-parallax-clamp="down" />
-          <span className="krew-shard krew-hero-shard-2" aria-hidden="true" data-parallax="0.32" data-parallax-clamp="down" />
-          <span className="krew-shard krew-hero-shard-3" aria-hidden="true" data-parallax="0.08" data-parallax-clamp="down" />
-        </div>
-      </section>
-
-      <section id="about" className="krew-home-people">
-        <div className="krew-home-people-copy" data-reveal-children>
-          <h2>The people behind events.</h2>
-          <p>
-            From concerts to conferences, KREW powers creativity. Bartenders, security, ushers, photographers and
-            sound engineers - the crew most guests never notice - finally get a proper place to find paid work, and
-            organizers get a place to find them.
-          </p>
-          <a href="#how-it-works" className="krew-text-link">
-            Learn More <ArrowRight size={15} strokeWidth={2} />
-          </a>
-        </div>
-        <div className="krew-home-people-photos" data-reveal>
-          <PhotoSlot photo={PHOTOS.people1} className="krew-home-people-photo first" label="Sound technician at a control desk" data-parallax="-0.05" />
-          <PhotoSlot photo={PHOTOS.people2} className="krew-home-people-photo second" label="Lighting technician adjusting a stage light" data-parallax="0.07" />
-        </div>
+        <HeroCarousel />
       </section>
 
       <section id="how-it-works" className="krew-home-section" data-reveal-children>
@@ -173,6 +151,24 @@ export default function Home() {
             </p>
             <span className="krew-trust-notch"><span className="krew-trust-tag">03 · Disputes</span></span>
           </div>
+        </div>
+      </section>
+
+      <section id="about" className="krew-home-people">
+        <div className="krew-home-people-copy" data-reveal-children>
+          <h2>The people behind events.</h2>
+          <p>
+            From concerts to conferences, KREW powers creativity. Bartenders, security, ushers, photographers and
+            sound engineers - the crew most guests never notice - finally get a proper place to find paid work, and
+            organizers get a place to find them.
+          </p>
+          <a href="#how-it-works" className="krew-text-link">
+            Learn More <ArrowRight size={15} strokeWidth={2} />
+          </a>
+        </div>
+        <div className="krew-home-people-photos" data-reveal>
+          <PhotoSlot photo={PHOTOS.people1} className="krew-home-people-photo first" label="Sound technician at a control desk" data-parallax="-0.05" />
+          <PhotoSlot photo={PHOTOS.people2} className="krew-home-people-photo second" label="Lighting technician adjusting a stage light" data-parallax="0.07" />
         </div>
       </section>
 
