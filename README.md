@@ -169,7 +169,66 @@ Settings go in a file called `server/.env`. Copy `server/.env.example` to start.
 
 ## Deploying
 
-The project is set up for [Render](https://render.com) with the `render.yaml` file in this folder.
+KREW keeps its database and uploaded photos as files on disk, so it needs a host that keeps files between restarts. Hosts that only run short functions, like Vercel and Netlify, can't run it as it is.
+
+### On Fly.io (recommended for the pilot)
+
+Fly.io runs KREW on one small machine that never sleeps, with a 1 GB volume that keeps the database and photos. The settings are in `fly.toml` and `Dockerfile` in this folder. At this size it usually costs a few dollars a month, and Fly doesn't charge invoices under $5, but check the estimate in your Fly dashboard after the first few days.
+
+1. Create an account at [fly.io](https://fly.io). Fly may ask for a payment card.
+2. Install the Fly command line tool. In WSL or on Mac or Linux:
+   ```bash
+   curl -L https://fly.io/install.sh | sh
+   ```
+   In Windows PowerShell:
+   ```powershell
+   iwr https://fly.io/install.ps1 -useb | iex
+   ```
+3. Log in:
+   ```bash
+   fly auth login
+   ```
+4. Open `fly.toml` and check the app name on the line `app = "krew"`. It becomes your address (`krew.fly.dev`) and must be unique on Fly, so change it if it's taken. Then, in the project folder, create the app with the same name:
+   ```bash
+   fly apps create krew
+   ```
+5. Create the volume that keeps your data, in Johannesburg (the closest region to Nairobi):
+   ```bash
+   fly volumes create krew_data --region jnb --size 1
+   ```
+6. Set your admin account. These are kept private by Fly and never stored in Git:
+   ```bash
+   fly secrets set ADMIN_NAME="Your Name" ADMIN_PHONE="0712345678" ADMIN_PASSWORD="a strong password"
+   ```
+7. Deploy:
+   ```bash
+   fly deploy --ha=false
+   ```
+8. Check that exactly one machine is running:
+   ```bash
+   fly status
+   ```
+   KREW must run on **one machine only**. Each machine gets its own volume, so a second machine would have its own empty database. If you see two, run `fly scale count 1`.
+9. Open the site:
+   ```bash
+   fly open
+   ```
+
+**Updating the live site.** After you change the code, run `fly deploy --ha=false` again. The database and photos on the volume are kept.
+
+**Your own domain.** To use a domain you own (for example a `.tech` domain), run `fly certs add yourdomain.tech`. Fly shows the DNS records to add where the domain is registered, then sets up HTTPS by itself.
+
+**Demo data or an empty start.** The live site starts with an empty database, which is right for a real pilot: real people should never see made up organizers or jobs. For a demo site instead, set `SEED_DEMO_DATA = "true"` in `fly.toml` and add a private demo password with `fly secrets set DEMO_PASSWORD="something private"` before the first deploy. Demo data is only loaded into an empty database.
+
+**Backups.** To make a copy of the database and download it to your computer:
+```bash
+fly ssh console -C "node /app/server/scripts/backup_database.cjs"
+fly ssh sftp get /data/krew-backup.db krew-backup.db
+```
+
+### On Render
+
+The project also works on [Render](https://render.com) with the `render.yaml` file in this folder.
 
 1. Push the code to GitHub.
 2. In Render, choose **New**, then **Blueprint**, and pick this repository.
@@ -180,7 +239,7 @@ The project is set up for [Render](https://render.com) with the `render.yaml` fi
 
 **Important about the free plan.** Render's free plan deletes the database and all uploaded photos whenever the service restarts, is redeployed, or goes to sleep after 15 minutes without visitors. To make demos still work, the server reloads the demo data every time it starts with an empty database, and creates your admin account again. This is fine for showing KREW to people. It is not fine for a real pilot, because anything people add is lost.
 
-**For a real pilot,** use a paid Render plan with a persistent disk mounted at `/var/data`, and set:
+**For a real pilot on Render,** use a paid plan with a persistent disk mounted at `/var/data`, and set:
 
 ```
 DATABASE_PATH=/var/data/krew.db
@@ -212,8 +271,10 @@ server/            The server (Express)
   src/routes/      The API, grouped by area
   src/db.js        Database tables
   src/security.js  Security checks shared by the whole server
-  scripts/         Demo data, reset and admin account scripts
+  scripts/         Demo data, reset, admin account and backup scripts
 render.yaml        Settings for deploying to Render
+fly.toml           Settings for deploying to Fly.io
+Dockerfile         How Fly.io builds KREW
 ```
 
 ## Not built yet
