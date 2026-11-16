@@ -32,6 +32,11 @@ ENV NODE_ENV=production \
     UPLOADS_DIR=/data/uploads
 
 COPY --from=build /app/client/dist client/dist
+# The server also reads the page titles and descriptions from the website's source
+# (server/src/pageMeta.js imports client/src/pageMeta.js), plus the website's package.json,
+# which tells Node that file is a modern JavaScript module.
+COPY --from=build /app/client/package.json client/package.json
+COPY --from=build /app/client/src/pageMeta.js client/src/pageMeta.js
 COPY --from=build /app/server server
 
 # The database and uploaded photos live on the volume mounted at /data, never in the image,
