@@ -32,39 +32,45 @@ const IV_LENGTH = 12;
 const TAG_LENGTH = 16;
 export const HEADER_LENGTH = MAGIC.length + SALT_LENGTH + IV_LENGTH;
 
+// A setting's value with any spaces or line breaks around it removed - easy to paste by
+// accident into a hosting dashboard, and enough to make a bucket name or key not match.
+function setting(name) {
+  return (process.env[name] || '').trim();
+}
+
 // Returns the settings, or null when backups aren't set up. A half-finished setup is reported
 // once, so a missing setting doesn't silently mean "no backups".
 let warned = false;
 export function backupConfig() {
-  const missing = REQUIRED_SETTINGS.filter((name) => !process.env[name]);
+  const missing = REQUIRED_SETTINGS.filter((name) => !setting(name));
   if (missing.length === REQUIRED_SETTINGS.length) return null;
   if (missing.length > 0) {
     if (!warned) console.error(`Backups are OFF - missing settings: ${missing.join(', ')}.`);
     warned = true;
     return null;
   }
-  if (process.env.BACKUP_ENCRYPTION_KEY.length < MIN_KEY_LENGTH) {
+  if (setting('BACKUP_ENCRYPTION_KEY').length < MIN_KEY_LENGTH) {
     if (!warned) console.error(`Backups are OFF - BACKUP_ENCRYPTION_KEY must be at least ${MIN_KEY_LENGTH} characters.`);
     warned = true;
     return null;
   }
-  const prefix = (process.env.BACKUP_PREFIX || 'krew-backups').replace(/\/+$/, '');
+  const prefix = (setting('BACKUP_PREFIX') || 'krew-backups').replace(/\/+$/, '');
   return {
-    bucket: process.env.BACKUP_S3_BUCKET,
-    passphrase: process.env.BACKUP_ENCRYPTION_KEY,
+    bucket: setting('BACKUP_S3_BUCKET'),
+    passphrase: setting('BACKUP_ENCRYPTION_KEY'),
     latestKey: `${prefix}/latest.krewbackup`,
     dailyPrefix: `${prefix}/daily/`,
     client: new S3Client({
-      endpoint: process.env.BACKUP_S3_ENDPOINT,
-      region: process.env.BACKUP_S3_REGION,
+      endpoint: setting('BACKUP_S3_ENDPOINT'),
+      region: setting('BACKUP_S3_REGION'),
       forcePathStyle: true, // bucket in the path, which every S3-compatible service accepts
       // Plain uploads without the newer extra checksums, which many S3-compatible services
       // (Backblaze B2 among them) don't support. Backups carry their own check (see MAGIC).
       requestChecksumCalculation: 'WHEN_REQUIRED',
       responseChecksumValidation: 'WHEN_REQUIRED',
       credentials: {
-        accessKeyId: process.env.BACKUP_S3_ACCESS_KEY_ID,
-        secretAccessKey: process.env.BACKUP_S3_SECRET_ACCESS_KEY,
+        accessKeyId: setting('BACKUP_S3_ACCESS_KEY_ID'),
+        secretAccessKey: setting('BACKUP_S3_SECRET_ACCESS_KEY'),
       },
     }),
   };
