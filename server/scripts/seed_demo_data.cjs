@@ -1,9 +1,19 @@
 // Fills an empty KREW database with demo data, so every page has something real-looking on
-// it: 5 organizers (each an events company with a bio), 10 approved crew members with bios,
-// skills and different amounts of completed work, 1 crew member waiting for approval, open
-// gigs with applicants, jobs waiting for payment confirmation, and a dispute for the admin.
+// it: 5 organizers (each an events company with a logo and a bio), 10 approved crew members
+// with bios, skills and different amounts of completed work, 1 crew member waiting for
+// approval, open gigs with full descriptions and applicants, jobs waiting for payment
+// confirmation, and a dispute for the admin.
 //
+// Run it on an empty database (npm run demo resets and seeds in one go - see the README).
 // Every person, company and event here is made up for the demo.
+//
+// Pictures come from scripts/seed-assets/ (kept in the repository, so anyone who clones it
+// gets them) and are copied into the uploads folder:
+// - each made-up company's logo (original designs, made for the demo);
+// - event photos on the gigs whose kind of work they actually show, plus covers and
+//   portfolios for the photographer and videographer, taken from KREW's own event photos.
+// Crew profile photos are left empty on purpose: putting a real person's face on a made-up
+// crew member would present that person as someone they're not. Cards show initials instead.
 //
 // Locally every demo account uses the password krewdemo2026.
 // On the live site (NODE_ENV=production) the demo accounts would be public, so this only runs
@@ -21,9 +31,12 @@ if (isProduction && (!process.env.DEMO_PASSWORD || process.env.DEMO_PASSWORD.len
 
 const Database = require('better-sqlite3');
 const bcrypt = require('bcrypt');
+const fs = require('fs');
 const path = require('path');
 
 const db = new Database(process.env.DATABASE_PATH || path.join(__dirname, '..', 'krew.db'));
+const UPLOAD_ROOT = process.env.UPLOADS_DIR || path.join(__dirname, '..', 'uploads');
+const ASSETS = path.join(__dirname, 'seed-assets');
 const DEMO_PASSWORD = process.env.DEMO_PASSWORD || 'krewdemo2026';
 const passwordHash = bcrypt.hashSync(DEMO_PASSWORD, 10);
 
@@ -56,6 +69,18 @@ function between(min, max, step = 1) {
   return min + Math.floor(random() * ((max - min) / step + 1)) * step;
 }
 
+// Copies one demo picture into the uploads folder and returns its path as the database stores
+// it (e.g. "listing-photos/demo-12-stage-show.jpg"). Every record gets its own copy, because
+// replacing a photo in the app deletes the old file.
+let imageCount = 0;
+function seedImage(folder, asset) {
+  imageCount += 1;
+  const fileName = `demo-${imageCount}-${path.basename(asset)}`;
+  fs.mkdirSync(path.join(UPLOAD_ROOT, folder), { recursive: true });
+  fs.copyFileSync(path.join(ASSETS, asset), path.join(UPLOAD_ROOT, folder, fileName));
+  return `${folder}/${fileName}`;
+}
+
 // Dates are stored the way SQLite's datetime('now') writes them: UTC, "YYYY-MM-DD HH:MM:SS".
 const DAY = 24 * 60 * 60 * 1000;
 function daysFromNow(days, hour = 12) {
@@ -72,9 +97,9 @@ function sqlDate(date) {
 
 const insertUserStatement = db.prepare(
   `INSERT INTO users (name, phone, password_hash, role, verification_status, company_name, bio,
-     professional_role, skills, years_experience, availability_status, created_at)
+     professional_role, skills, years_experience, availability_status, profile_photo_path, cover_photo_path, created_at)
    VALUES (@name, @phone, @password_hash, @role, @verification_status, @company_name, @bio,
-     @professional_role, @skills, @years_experience, @availability_status, @created_at)`
+     @professional_role, @skills, @years_experience, @availability_status, @profile_photo_path, @cover_photo_path, @created_at)`
 );
 function insertUser(user) {
   return insertUserStatement.run({
@@ -85,6 +110,8 @@ function insertUser(user) {
     skills: null,
     years_experience: null,
     availability_status: 'available',
+    profile_photo_path: null,
+    cover_photo_path: null,
     created_at: sqlDateTime(daysFromNow(-between(250, 320))),
     password_hash: passwordHash,
     ...user,
@@ -93,9 +120,10 @@ function insertUser(user) {
 }
 
 const insertListing = db.prepare(
-  `INSERT INTO job_listings (organizer_id, amount, due_date, job_description, title, category, location, status, created_at)
-   VALUES (@organizer_id, @amount, @due_date, @job_description, @title, @category, @location, @status, @created_at)`
+  `INSERT INTO job_listings (organizer_id, amount, due_date, job_description, title, category, location, status, photo_path, created_at)
+   VALUES (@organizer_id, @amount, @due_date, @job_description, @title, @category, @location, @status, @photo_path, @created_at)`
 );
+const insertPortfolioImage = db.prepare(`INSERT INTO portfolio_images (user_id, image_path, created_at) VALUES (?, ?, ?)`);
 const insertApplication = db.prepare(
   `INSERT INTO job_applications (listing_id, crew_member_id, status, created_at) VALUES (?, ?, ?, ?)`
 );
@@ -187,6 +215,7 @@ for (const organizer of ORGANIZERS) {
     role: 'organizer',
     company_name: organizer.company_name,
     bio: organizer.bio,
+    profile_photo_path: seedImage('profile-photos', `logos/${organizer.key}.png`),
   });
 }
 
@@ -204,6 +233,8 @@ const CREW = [
     years_experience: 6,
     pay: [9000, 15000],
     confirmedJobs: 14,
+    cover: 'concert-wide',
+    portfolio: ['concert-left', 'stage-performer', 'sax-player', 'concert-right', 'dj-hands', 'stage-band'],
     bio: "I shoot the moments people miss: the father's face during the first dance, the bartender mid-pour, the crowd the second the bass drops. Six years of weddings, festivals and launches, two cameras on me at all times, and edits in your inbox within 48 hours.",
   },
   {
@@ -230,6 +261,7 @@ const CREW = [
     years_experience: 9,
     pay: [10000, 18000],
     confirmedJobs: 11,
+    cover: 'sax-wide',
     availability_status: 'working',
     bio: "Nine years mixing everything from a 50-seat acoustic set to a 10,000-strong festival main stage. If the speech is clear, the drop hits and nobody notices the sound at all, I've done my job. I bring my own in-ear kit and a spare of everything.",
   },
@@ -297,6 +329,8 @@ const CREW = [
     years_experience: 2,
     pay: [10000, 16000],
     confirmedJobs: 3,
+    cover: 'stage-wide',
+    portfolio: ['stage-band', 'dj-hands', 'concert-right'],
     bio: "Event films that feel like the night did. I shoot handheld and from the air, and cut a 60-second reel by the next morning so your event is on Instagram while people are still talking about it.",
   },
   {
@@ -338,6 +372,14 @@ for (const crewMember of CREW) {
     years_experience: crewMember.years_experience,
     availability_status: crewMember.availability_status || 'available',
     bio: crewMember.bio,
+    cover_photo_path: crewMember.cover ? seedImage('cover-photos', `covers/${crewMember.cover}.jpg`) : null,
+  });
+  (crewMember.portfolio || []).forEach((asset, index) => {
+    insertPortfolioImage.run(
+      crewIds[crewMember.key],
+      seedImage('portfolio-photos', `portfolio/${asset}.jpg`),
+      sqlDateTime(daysFromNow(-200 + index * 20))
+    );
   });
 }
 
@@ -353,6 +395,30 @@ insertUser({
 const crewByKey = Object.fromEntries(CREW.map((crewMember) => [crewMember.key, crewMember]));
 const organizerByKey = Object.fromEntries(ORGANIZERS.map((organizer) => [organizer.key, organizer]));
 const ESTABLISHED_ORGANIZERS = ['bloomfield', 'mvua', 'kilele', 'anga'];
+
+// What each completed gig involved, written the way an organizer would post it.
+const JOB_DESCRIPTIONS = {
+  'Event photographer': (e, c) =>
+    `Photograph the ${e} for ${c}: arrivals, speeches, the dance floor and candid moments in between. 6pm to midnight. 150 edited photos within 48 hours, plus 20 previews the next morning for social media.`,
+  Bartender: (e, c) =>
+    `Serve at the main bar for the ${e} by ${c}. Beers, wines, spirits and two simple cocktails for about 200 guests. Stock, ice and glassware provided. Black shirt and black trousers, please.`,
+  'Sound engineer': (e, c) =>
+    `Run front of house sound for the ${e} by ${c}: soundcheck from 3pm, live mixing for the performers, and clear microphones for the speeches. PA and desk provided; bring your own in-ear monitors.`,
+  'Security lead': (e, c) =>
+    `Lead the security team at the ${e} for ${c}. Brief the guards, manage the gate and guest list checks, and keep the VIP area and backstage clear. First aid certificate preferred.`,
+  'Head usher': (e, c) =>
+    `Lead the ushering team at the ${e} for ${c}: run the registration desk, follow the seating plan, and look after VIP guests from arrival to departure. Smart formal wear.`,
+  Mixologist: (e, c) =>
+    `Design and serve two signature cocktails for the ${e} by ${c}, plus a mocktail. Bar setup from 2pm, service until 11pm. All ingredients provided; bring your own tools if you have them.`,
+  'Lighting technician': (e, c) =>
+    `Rig, programme and run the lighting for the ${e} by ${c}: warm uplighting during dinner and a full show for the party. Load-in at noon. DMX experience essential.`,
+  Videographer: (e, c) =>
+    `Film the ${e} for ${c}: a 3 to 5 minute highlight film and a 60-second reel for social media within 72 hours. Drone shots welcome where the venue allows.`,
+  'Stage setup crew': (e, c) =>
+    `Build and strike the stage, tents and seating for the ${e} by ${c}. Early start, heavy lifting, lunch on site. Safety boots required.`,
+  'Catering server': (e, c) =>
+    `Serve a plated three-course dinner and clear tables at the ${e} for ${c}, about 250 guests. Uniform provided. Food handling certificate preferred.`,
+};
 
 function amountFor(crewMember) {
   return between(crewMember.pay[0], crewMember.pay[1], 500);
@@ -370,7 +436,10 @@ for (const crewMember of CREW) {
     const amount = amountFor(crewMember);
     const eventDay = daysFromNow(-between(8, 260), 18);
     const title = `${crewMember.gigTitle}, ${event.name}`;
-    const description = `${crewMember.gigTitle} for a ${event.name} by ${organizer.company_name}.`;
+    const describe = JOB_DESCRIPTIONS[crewMember.gigTitle];
+    const description = describe
+      ? describe(event.name, organizer.company_name)
+      : `${crewMember.gigTitle} for a ${event.name} by ${organizer.company_name}.`;
 
     // Payment is due two days after the event. On time means both sides had confirmed it
     // by the start of that day (how the organizer record counts it, see routes/users.js);
@@ -395,6 +464,7 @@ for (const crewMember of CREW) {
         category: crewMember.category,
         location: event.location,
         status: 'filled',
+        photo_path: null,
         created_at: sqlDateTime(new Date(eventDay.getTime() - between(7, 21) * DAY)),
       }).lastInsertRowid;
       insertApplication.run(listingId, crewIds[crewMember.key], 'accepted', sqlDateTime(new Date(eventDay.getTime() - between(3, 6) * DAY)));
@@ -443,6 +513,7 @@ const OPEN_GIGS = [
   {
     organizer: 'lakeside',
     title: 'Sound engineer for an acoustic night',
+    photo: 'sound-desk',
     category: 'Sound & AV',
     location: 'Kilimani, Nairobi',
     amount: 9000,
@@ -453,6 +524,7 @@ const OPEN_GIGS = [
   {
     organizer: 'lakeside',
     title: 'Event photographer, jazz evening',
+    photo: 'jazz-evening',
     category: 'Photography & Videography',
     location: 'Kilimani, Nairobi',
     amount: 8000,
@@ -473,6 +545,7 @@ const OPEN_GIGS = [
   {
     organizer: 'mvua',
     title: 'Stage crew for festival load-in',
+    photo: 'concert-crowd',
     category: 'Event Setup & Teardown',
     location: 'Ngong Racecourse, Nairobi',
     amount: 5500,
@@ -483,6 +556,7 @@ const OPEN_GIGS = [
   {
     organizer: 'mvua',
     title: 'Lighting technician, Afro-house night',
+    photo: 'lighting-rig',
     category: 'Sound & AV',
     location: 'Westlands, Nairobi',
     amount: 12000,
@@ -533,6 +607,7 @@ const OPEN_GIGS = [
   {
     organizer: 'anga',
     title: 'Videographer for a brand activation',
+    photo: 'stage-show',
     category: 'Photography & Videography',
     location: 'Westlands, Nairobi',
     amount: 15000,
@@ -552,6 +627,7 @@ for (const gig of OPEN_GIGS) {
     category: gig.category,
     location: gig.location,
     status: 'open',
+    photo_path: gig.photo ? seedImage('listing-photos', `listings/${gig.photo}.jpg`) : null,
     created_at: sqlDateTime(daysFromNow(-between(1, 6))),
   }).lastInsertRowid;
   for (const applicant of gig.applicants) {

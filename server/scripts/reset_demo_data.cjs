@@ -1,5 +1,6 @@
 // This script is intended to be run from the command line to reset the demo database to a clean state.
-// It deletes all rows from every table in krew.db, effectively wiping out all user data, job listings, disputes, notifications, transactions, and crew portfolio photo records. The schema remains intact, but all data is removed. Photo files already uploaded to the server's uploads folder are not touched, only their database records go.
+// It deletes all rows from every table in krew.db, effectively wiping out all user data, job listings, disputes, notifications, transactions, and crew portfolio photo records. The schema remains intact, but all data is removed.
+// It also deletes the demo pictures the demo data script copied into the uploads folder (files named "demo-..."), so seeding again doesn't pile up copies. Photos that people uploaded themselves are not touched.
 
 // Safety: refuses to run on the live server. Wiping every row is a demo/testing tool - never something to run against the live site.
 if (process.env.NODE_ENV === 'production') {
@@ -8,6 +9,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 const Database = require('better-sqlite3');
+const fs = require('fs');
 const path = require('path');
 
 const CONFIRM_FLAG = '--yes-really-reset';
@@ -38,4 +40,18 @@ try {
   if (!err.message.includes('no such table')) throw err;
 }
 
-console.log('krew.db reset: every table is now empty, ready for a real pilot.');
+// Remove the demo pictures copied in by seed_demo_data.cjs.
+const uploadRoot = process.env.UPLOADS_DIR || path.join(__dirname, '..', 'uploads');
+let removed = 0;
+for (const folder of ['profile-photos', 'cover-photos', 'portfolio-photos', 'listing-photos']) {
+  const dir = path.join(uploadRoot, folder);
+  if (!fs.existsSync(dir)) continue;
+  for (const file of fs.readdirSync(dir)) {
+    if (file.startsWith('demo-')) {
+      fs.rmSync(path.join(dir, file));
+      removed += 1;
+    }
+  }
+}
+
+console.log(`krew.db reset: every table is now empty${removed ? `, and ${removed} demo pictures were removed` : ''}.`);

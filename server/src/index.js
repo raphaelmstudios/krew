@@ -14,6 +14,7 @@ import { usersRouter } from './routes/users.js';
 import { notificationsRouter } from './routes/notifications.js';
 import { startReminderScheduler } from './reminders.js';
 import { runStartupTasks } from './bootstrap.js';
+import { startBackups, backupStatus } from './backup.js';
 import { sendPageWithMeta } from './pageMeta.js';
 import { securityHeaders, requireHttps, sameOriginOnly, cleanBody, errorHandler } from './security.js';
 import { UPLOAD_ROOT } from './paths.js';
@@ -45,9 +46,16 @@ migrate();
 runStartupTasks();
 
 // Health check endpoint that confirms the server is functioning and the database is well connected.
+// Also says whether off-site backups are on and when the last one was saved (backup.js), so you
+// can check backups are working from a browser or an uptime checker.
 app.get('/api/health', (req, res) => {
   const row = db.prepare('SELECT 1 AS ok').get();
-  res.json({ status: 'ok', db: row.ok === 1 ? 'connected' : 'error' });
+  const backup = backupStatus();
+  res.json({
+    status: 'ok',
+    db: row.ok === 1 ? 'connected' : 'error',
+    backups: backup.enabled ? { on: true, lastSavedAt: backup.lastSuccessAt } : { on: false },
+  });
 });
 
 // Mounts the routers for authentication, user document management, admin operations, job
@@ -116,4 +124,6 @@ app.listen(PORT, () => {
   // Payment due-date reminder (FR7.1, see reminders.js) - started here rather than at
   // import time so it only ever runs against a server that's actually up and serving.
   startReminderScheduler();
+  // Off-site backups of the database and photos, when they're set up (backup.js).
+  startBackups();
 });
