@@ -42,4 +42,6 @@ COPY --from=build /app/server server
 # The database and uploaded photos live on the volume mounted at /data, never in the image,
 # so they survive every restart and redeploy.
 EXPOSE 8080
-CMD ["node", "server/src/index.js"]
+# start.js restores an off-site backup first when backups are set up (optional on Fly,
+# where the volume already keeps the data), then starts the server.
+CMD ["node", "server/src/start.js"]

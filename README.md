@@ -119,14 +119,16 @@ Open http://localhost:5173 in your browser.
 
 ### 5. Add demo data (optional)
 
-With the server running at least once, so the database exists:
+Start the server at least once first, so the database exists. Then stop it and run:
 
 ```bash
 cd server
-node scripts/seed_demo_data.cjs
+npm run demo
 ```
 
-Every demo account uses the password `krewdemo2026`. Every person, company and event in the demo data is made up.
+This empties the database and loads the demo data, with pictures: company logos, photos on gigs, and portfolios for the photographer and videographer. The pictures are kept in `server/scripts/seed-assets`, so they come with the code. Run `npm run demo` again at any time to go back to a fresh demo.
+
+Every demo account uses the password `krewdemo2026`. Every person, company and event in the demo data is made up, and crew profile photos are left empty on purpose so no real person's face appears on a made up profile.
 
 | Phone | Account |
 | --- | --- |
@@ -147,14 +149,14 @@ The admin logs in at http://localhost:5173/admin.
 
 ### Start again with an empty database
 
-This deletes every account, job and notification. Stop the server first, then run:
+This deletes every account, job and notification, and the demo pictures. Stop the server first, then run:
 
 ```bash
 cd server
-node scripts/reset_demo_data.cjs --yes-really-reset
+npm run reset
 ```
 
-Run the demo data script again afterwards if you want the demo accounts back.
+Run `npm run demo` afterwards if you want the demo accounts back.
 
 ### Create your own admin account
 
@@ -169,9 +171,50 @@ Settings go in a file called `server/.env`. Copy `server/.env.example` to start.
 
 ## Deploying
 
-KREW keeps its database and uploaded photos as files on disk, so it needs a host that keeps files between restarts. Hosts that only run short functions, like Vercel and Netlify, can't run it as it is.
+KREW keeps its database and uploaded photos as files on disk. There are two ways to run it online:
 
-### On Fly.io (recommended for the pilot)
+* **Render's free plan, with backups.** Free, and no payment card needed. Render wipes the disk whenever the service restarts or is redeployed, so KREW saves everything to free online storage and puts it back when it starts.
+* **Fly.io, with a permanent disk.** The simplest and most reliable, but Fly needs a payment card.
+
+Hosts that only run short functions, like Vercel and Netlify, can't run KREW as it is.
+
+### On Render's free plan, with backups
+
+**1. Make a free storage bucket for the backups (Backblaze B2, no card needed).**
+
+1. Sign up for **B2 Cloud Storage** at [backblaze.com](https://www.backblaze.com).
+2. Go to **Buckets**, choose **Create a Bucket**, give it a unique name (for example `krew-backups-yourname`) and keep it **Private**.
+3. On the new bucket, note the **Endpoint**, for example `s3.us-west-004.backblazeb2.com`. The middle part (`us-west-004`) is your region.
+4. Open the bucket's **Lifecycle Settings** and choose **Keep only the last version of the file**, so old copies don't pile up.
+5. Go to **Application Keys**, choose **Add a New Application Key**, allow it access to **only that bucket**, with **Read and Write**. Copy the **keyID** and **applicationKey** straight away, because the key is only shown once.
+
+**2. Create the service on Render.**
+
+1. Push the code to GitHub.
+2. In Render, choose **New**, then **Blueprint**, and pick this repository. It reads `render.yaml`.
+3. Render asks for these values:
+   * `ADMIN_NAME`, `ADMIN_PHONE` and `ADMIN_PASSWORD`: your own admin account.
+   * `SEED_DEMO_DATA`: `false` for a real pilot, `true` for a demo site.
+   * `DEMO_PASSWORD`: only for a demo site, the password for every demo account. Use something private, not `krewdemo2026`.
+   * `BACKUP_S3_ENDPOINT`: the bucket endpoint with `https://` in front, for example `https://s3.us-west-004.backblazeb2.com`.
+   * `BACKUP_S3_REGION`: the region, for example `us-west-004`.
+   * `BACKUP_S3_BUCKET`: the bucket name.
+   * `BACKUP_S3_ACCESS_KEY_ID` and `BACKUP_S3_SECRET_ACCESS_KEY`: the keyID and applicationKey.
+   * `BACKUP_ENCRYPTION_KEY`: a long private passphrase that you make up (16 characters or more). **Keep a copy somewhere safe.** Every backup is scrambled with it before it leaves the server, and without it the backups can't be restored.
+4. When it's running, open `https://your-app.onrender.com/api/health`. It should show `"backups":{"on":true,...}` with the time of the last backup.
+
+**3. Keep it awake.** Render's free plan puts the service to sleep after 15 minutes without visitors. A free scheduler can visit it every 10 minutes:
+
+1. Sign up at [`cron-job.org`](https://cron-job.org).
+2. Create a cron job for `https://your-app.onrender.com/api/health`, every 10 minutes.
+
+One service running all month fits inside Render's 750 free hours.
+
+**How the backups work.** Every 15 minutes KREW checks for changes and, if anything changed, saves the database and uploaded photos to the bucket. When Render stops the service for a restart or redeploy, KREW saves once more before stopping. When it starts on an empty disk, it downloads the latest backup and puts everything back before opening. Seven daily copies are kept as well. If a backup exists but can't be restored (the storage service is down, or the passphrase is wrong), KREW refuses to start rather than starting empty, and Render tries again.
+
+**Your own domain.** In Render, open the service's **Settings**, then **Custom Domains**, and add your domain. If the domain's DNS is on Cloudflare, add the record Render shows as **DNS only** (grey cloud), so Render can set up HTTPS.
+
+### On Fly.io
 
 Fly.io runs KREW on one small machine that never sleeps, with a 1 GB volume that keeps the database and photos. The settings are in `fly.toml` and `Dockerfile` in this folder. At this size it usually costs a few dollars a month, and Fly doesn't charge invoices under $5, but check the estimate in your Fly dashboard after the first few days.
 
@@ -226,29 +269,6 @@ fly ssh console -C "node /app/server/scripts/backup_database.cjs"
 fly ssh sftp get /data/krew-backup.db krew-backup.db
 ```
 
-### On Render
-
-The project also works on [Render](https://render.com) with the `render.yaml` file in this folder.
-
-1. Push the code to GitHub.
-2. In Render, choose **New**, then **Blueprint**, and pick this repository.
-3. Render asks for four private values:
-   * `DEMO_PASSWORD`: the password for every demo account on the live site. Use something private, not `krewdemo2026`.
-   * `ADMIN_NAME`, `ADMIN_PHONE` and `ADMIN_PASSWORD`: your own admin account.
-4. Render builds the website and starts the server. The first visit after it starts can take about a minute.
-
-**Important about the free plan.** Render's free plan deletes the database and all uploaded photos whenever the service restarts, is redeployed, or goes to sleep after 15 minutes without visitors. To make demos still work, the server reloads the demo data every time it starts with an empty database, and creates your admin account again. This is fine for showing KREW to people. It is not fine for a real pilot, because anything people add is lost.
-
-**For a real pilot on Render,** use a paid plan with a persistent disk mounted at `/var/data`, and set:
-
-```
-DATABASE_PATH=/var/data/krew.db
-UPLOADS_DIR=/var/data/uploads
-SEED_DEMO_DATA=false
-```
-
-Then the data stays when the service restarts or is redeployed.
-
 ## Security
 
 * Passwords are stored only as bcrypt hashes.
@@ -271,7 +291,8 @@ server/            The server (Express)
   src/routes/      The API, grouped by area
   src/db.js        Database tables
   src/security.js  Security checks shared by the whole server
-  scripts/         Demo data, reset, admin account and backup scripts
+  src/backup.js    Off-site backups (with backupStore.js and restore.js)
+  scripts/         Demo data (with its pictures in seed-assets), reset, admin account and backup scripts
 render.yaml        Settings for deploying to Render
 fly.toml           Settings for deploying to Fly.io
 Dockerfile         How Fly.io builds KREW

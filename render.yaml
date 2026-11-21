@@ -5,6 +5,8 @@ services:
     plan: free
     # --include=dev: with NODE_ENV=production npm would otherwise skip Vite, which the build needs.
     buildCommand: "cd client && npm install --include=dev && npm run build && cd ../server && npm install"
+    # npm start runs server/src/start.js: it puts back the latest off-site backup when the disk
+    # is empty (every restart and redeploy on the free plan), then starts KREW.
     startCommand: "cd server && npm start"
     healthCheckPath: /api/health
     envVars:
@@ -15,19 +17,32 @@ services:
       # better-sqlite3 needs Node 22 or newer.
       - key: NODE_VERSION
         value: "22"
-      # The free plan wipes the database whenever the service restarts or sleeps, so the demo
-      # accounts and jobs are loaded again each time it starts on an empty database
-      # (server/src/bootstrap.js). Set to false once you move to a paid plan with a disk.
-      - key: SEED_DEMO_DATA
-        value: "true"
-      # Private password for every demo account on the live site. Render asks for it when
-      # the Blueprint is created (sync: false = typed into the dashboard, never stored in Git).
-      - key: DEMO_PASSWORD
-        sync: false
       # Your own admin account, created at start-up if it doesn't exist yet.
       - key: ADMIN_NAME
         sync: false
       - key: ADMIN_PHONE
         sync: false
       - key: ADMIN_PASSWORD
+        sync: false
+      # "false" for a real pilot (start empty). "true" for a demo site: the demo accounts and jobs
+      # are loaded when the database is empty and no backup exists. See the README.
+      - key: SEED_DEMO_DATA
+        sync: false
+      # Only used when SEED_DEMO_DATA is "true": the private password for every demo account.
+      - key: DEMO_PASSWORD
+        sync: false
+      # Off-site backups (server/src/backup.js). The free plan wipes the disk on every restart
+      # and redeploy, so KREW saves the database and photos to S3-compatible storage (such as
+      # Backblaze B2) and restores them when it starts. All six are needed; see the README.
+      - key: BACKUP_S3_ENDPOINT
+        sync: false
+      - key: BACKUP_S3_REGION
+        sync: false
+      - key: BACKUP_S3_BUCKET
+        sync: false
+      - key: BACKUP_S3_ACCESS_KEY_ID
+        sync: false
+      - key: BACKUP_S3_SECRET_ACCESS_KEY
+        sync: false
+      - key: BACKUP_ENCRYPTION_KEY
         sync: false
