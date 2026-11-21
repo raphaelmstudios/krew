@@ -194,7 +194,7 @@ Hosts that only run short functions, like Vercel and Netlify, can't run KREW as 
 2. In Render, choose **New**, then **Blueprint**, and pick this repository. It reads `render.yaml`.
 3. Render asks for these values:
    * `ADMIN_NAME`, `ADMIN_PHONE` and `ADMIN_PASSWORD`: your own admin account.
-   * `SEED_DEMO_DATA`: `false` for a real pilot, `true` for a demo site.
+   * `SEED_DEMO_DATA`: `false` for a real pilot, `true` for a demo site. With `true`, the demo data is loaded the first time, and every later start gives the demo accounts any new pictures from `server/scripts/demo_pictures.cjs`, without touching photos uploaded in the app.
    * `DEMO_PASSWORD`: only for a demo site, the password for every demo account. Use something private, not `krewdemo2026`.
    * `BACKUP_S3_ENDPOINT`: the bucket endpoint with `https://` in front, for example `https://s3.us-west-004.backblazeb2.com`.
    * `BACKUP_S3_REGION`: the region, for example `us-west-004`.

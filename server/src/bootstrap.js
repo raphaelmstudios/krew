@@ -7,7 +7,9 @@
 //    exist yet. The same thing scripts/create-admin.js does by hand.
 // 2. SEED_DEMO_DATA=true - fills an EMPTY database with the demo accounts and jobs from
 //    scripts/seed_demo_data.cjs, using DEMO_PASSWORD as every demo account's password.
-//    A database that already has users is never touched.
+//    A database that already has users is never seeded again, but the demo accounts get any
+//    new pictures from scripts/demo_pictures.cjs (demoPictures.js) - photos people uploaded
+//    in the app are never replaced.
 
 import bcrypt from 'bcrypt';
 import path from 'node:path';
@@ -15,6 +17,7 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { db } from './db.js';
 import { normalizePhone } from './security.js';
+import { syncDemoPictures } from './demoPictures.js';
 
 const scriptsDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'scripts');
 
@@ -60,6 +63,12 @@ export function runStartupTasks() {
         });
       } catch {
         console.error('Demo data was not loaded (see the message above).');
+      }
+    } else {
+      try {
+        syncDemoPictures();
+      } catch (err) {
+        console.error(`Demo pictures were not updated: ${err.message}`);
       }
     }
   }
