@@ -24,7 +24,10 @@ if (isProduction && process.env.KREW_STARTUP_SEED !== '1') {
   console.error('Refusing to run by hand on the live server. Set SEED_DEMO_DATA=true instead - see the README.');
   process.exit(1);
 }
-if (isProduction && (!process.env.DEMO_PASSWORD || process.env.DEMO_PASSWORD.length < 8)) {
+// Spaces or line breaks around the password (easy to paste into a hosting dashboard by accident)
+// are ignored, so the password people type always matches.
+const DEMO_PASSWORD_SETTING = (process.env.DEMO_PASSWORD || '').trim();
+if (isProduction && DEMO_PASSWORD_SETTING.length < 8) {
   console.error('Refusing to seed: set DEMO_PASSWORD (8+ characters) so the live demo accounts have a private password.');
   process.exit(1);
 }
@@ -37,7 +40,7 @@ const path = require('path');
 const db = new Database(process.env.DATABASE_PATH || path.join(__dirname, '..', 'krew.db'));
 const UPLOAD_ROOT = process.env.UPLOADS_DIR || path.join(__dirname, '..', 'uploads');
 const ASSETS = path.join(__dirname, 'seed-assets');
-const DEMO_PASSWORD = process.env.DEMO_PASSWORD || 'krewdemo2026';
+const DEMO_PASSWORD = DEMO_PASSWORD_SETTING || 'krewdemo2026';
 const passwordHash = bcrypt.hashSync(DEMO_PASSWORD, 10);
 
 if (db.prepare(`SELECT COUNT(*) AS count FROM users`).get().count > 0) {

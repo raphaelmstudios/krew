@@ -44,7 +44,11 @@ export function createAdmin(name, phone, password) {
 }
 
 export function runStartupTasks() {
-  const { ADMIN_NAME, ADMIN_PHONE, ADMIN_PASSWORD, SEED_DEMO_DATA } = process.env;
+  // Spaces or line breaks around a value (easy to paste into a hosting dashboard by accident)
+  // are ignored, so the admin password people type always matches.
+  const [ADMIN_NAME, ADMIN_PHONE, ADMIN_PASSWORD, SEED_DEMO_DATA] = ['ADMIN_NAME', 'ADMIN_PHONE', 'ADMIN_PASSWORD', 'SEED_DEMO_DATA'].map(
+    (name) => (process.env[name] || '').trim()
+  );
 
   if (SEED_DEMO_DATA === 'true') {
     const { count } = db.prepare('SELECT COUNT(*) AS count FROM users').get();
