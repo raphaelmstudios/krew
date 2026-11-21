@@ -9,11 +9,13 @@
 //
 // Pictures come from scripts/seed-assets/ (kept in the repository, so anyone who clones it
 // gets them) and are copied into the uploads folder:
-// - each made-up company's logo (original designs, made for the demo);
+// - each made-up company's logo (original designs made for the demo, or free-licence images
+//   from Pixabay and Pexels in organizers/);
 // - event photos on the gigs whose kind of work they actually show, plus covers and
-//   portfolios for the photographer and videographer, taken from KREW's own event photos.
-// Crew profile photos are left empty on purpose: putting a real person's face on a made-up
-// crew member would present that person as someone they're not. Cards show initials instead.
+//   portfolios, taken from KREW's own event photos;
+// - crew profile photos, covers and portfolio pictures in crew/, all free-licence stock
+//   images from Pixabay and Pexels (not photos of anyone connected to KREW).
+// Mutiso, Esther and Achieng have no profile photo on purpose, so cards with initials show too.
 //
 // Locally every demo account uses the password krewdemo2026.
 // On the live site (NODE_ENV=production) the demo accounts would be public, so this only runs
@@ -171,6 +173,7 @@ const ORGANIZERS = [
     name: 'Akinyi Njoroge',
     phone: '0711000007',
     company_name: 'Mvua Festival Co.',
+    photo: 'organizers/mvua.jpg',
     bio: "Big outdoor music festivals and Afro-house nights for 2,000 to 15,000 people. Our weekends run on dozens of crew at once: stage, sound, bars, security and ushers. Rain or shine (hence the name), the show goes on and the crew gets paid.",
     latePaymentChance: 0.1,
     events: [
@@ -185,6 +188,7 @@ const ORGANIZERS = [
     name: 'Kiprono Langat',
     phone: '0711000008',
     company_name: 'Kilele Corporate Events',
+    photo: 'organizers/kilele.jpg',
     bio: "Conferences, product launches and end-of-year galas for companies in Nairobi. We care about the details: clean AV, sharp ushers and a stage that looks like a brand, not a hotel ballroom. Payments go through our finance team, so allow a few days at month end.",
     latePaymentChance: 0.35,
     events: [
@@ -199,6 +203,7 @@ const ORGANIZERS = [
     name: 'Halima Abdi',
     phone: '0711000009',
     company_name: 'Anga Rooftop Socials',
+    photo: 'organizers/anga.jpg',
     bio: "Sundowners, listening parties and brand activations on Nairobi's best rooftops. Small, stylish and fast-moving: we need crew who can set up a bar in an hour, keep the vibe right and pack down by midnight. Regulars get first call on every booking.",
     latePaymentChance: 0.05,
     events: [
@@ -218,7 +223,7 @@ for (const organizer of ORGANIZERS) {
     role: 'organizer',
     company_name: organizer.company_name,
     bio: organizer.bio,
-    profile_photo_path: seedImage('profile-photos', `logos/${organizer.key}.png`),
+    profile_photo_path: seedImage('profile-photos', organizer.photo || `logos/${organizer.key}.png`),
   });
 }
 
@@ -236,8 +241,10 @@ const CREW = [
     years_experience: 6,
     pay: [9000, 15000],
     confirmedJobs: 14,
-    cover: 'concert-wide',
-    portfolio: ['concert-left', 'stage-performer', 'sax-player', 'concert-right', 'dj-hands', 'stage-band'],
+    cover: 'covers/concert-wide.jpg',
+    portfolio: ['concert-left', 'stage-performer', 'sax-player', 'concert-right', 'dj-hands', 'stage-band'].map(
+      (name) => `portfolio/${name}.jpg`
+    ),
     bio: "I shoot the moments people miss: the father's face during the first dance, the bartender mid-pour, the crowd the second the bass drops. Six years of weddings, festivals and launches, two cameras on me at all times, and edits in your inbox within 48 hours.",
   },
   {
@@ -264,7 +271,7 @@ const CREW = [
     years_experience: 9,
     pay: [10000, 18000],
     confirmedJobs: 11,
-    cover: 'sax-wide',
+    photos: 'kevin',
     availability_status: 'working',
     bio: "Nine years mixing everything from a 50-seat acoustic set to a 10,000-strong festival main stage. If the speech is clear, the drop hits and nobody notices the sound at all, I've done my job. I bring my own in-ear kit and a spare of everything.",
   },
@@ -272,6 +279,7 @@ const CREW = [
     key: 'juma',
     name: 'Juma Hassan',
     phone: '0711000011',
+    photos: 'juma',
     professional_role: 'Security Lead',
     gigTitle: 'Security lead',
     category: 'Security',
@@ -285,6 +293,7 @@ const CREW = [
     key: 'faith',
     name: 'Faith Wambui',
     phone: '0711000012',
+    photos: 'faith',
     professional_role: 'Head Usher',
     gigTitle: 'Head usher',
     category: 'Ushering & Guest Services',
@@ -298,6 +307,7 @@ const CREW = [
     key: 'grace',
     name: 'Grace Muthoni',
     phone: '0711000013',
+    photos: 'grace',
     professional_role: 'Mixologist',
     gigTitle: 'Mixologist',
     category: 'Bar Service',
@@ -312,6 +322,8 @@ const CREW = [
     key: 'dennis',
     name: 'Dennis Ouma',
     phone: '0711000014',
+    photos: 'dennis',
+    portfolio: [1, 2, 3, 4].map((number) => `crew/dennis-portfolio-${number}.jpg`),
     professional_role: 'Lighting Technician',
     gigTitle: 'Lighting technician',
     category: 'Sound & AV',
@@ -332,14 +344,15 @@ const CREW = [
     years_experience: 2,
     pay: [10000, 16000],
     confirmedJobs: 3,
-    cover: 'stage-wide',
-    portfolio: ['stage-band', 'dj-hands', 'concert-right'],
+    photos: 'wairimu',
+    portfolio: ['stage-band', 'dj-hands', 'concert-right'].map((name) => `portfolio/${name}.jpg`),
     bio: "Event films that feel like the night did. I shoot handheld and from the air, and cut a 60-second reel by the next morning so your event is on Instagram while people are still talking about it.",
   },
   {
     key: 'collins',
     name: 'Collins Barasa',
     phone: '0711000016',
+    photos: 'collins',
     professional_role: 'Stage & Setup Crew',
     gigTitle: 'Stage setup crew',
     category: 'Event Setup & Teardown',
@@ -364,8 +377,10 @@ const CREW = [
   },
 ];
 
+// `photos: 'kevin'` means crew/kevin-profile.jpg and crew/kevin-cover.jpg.
 const crewIds = {};
 for (const crewMember of CREW) {
+  const cover = crewMember.photos ? `crew/${crewMember.photos}-cover.jpg` : crewMember.cover;
   crewIds[crewMember.key] = insertUser({
     name: crewMember.name,
     phone: crewMember.phone,
@@ -375,12 +390,13 @@ for (const crewMember of CREW) {
     years_experience: crewMember.years_experience,
     availability_status: crewMember.availability_status || 'available',
     bio: crewMember.bio,
-    cover_photo_path: crewMember.cover ? seedImage('cover-photos', `covers/${crewMember.cover}.jpg`) : null,
+    profile_photo_path: crewMember.photos ? seedImage('profile-photos', `crew/${crewMember.photos}-profile.jpg`) : null,
+    cover_photo_path: cover ? seedImage('cover-photos', cover) : null,
   });
   (crewMember.portfolio || []).forEach((asset, index) => {
     insertPortfolioImage.run(
       crewIds[crewMember.key],
-      seedImage('portfolio-photos', `portfolio/${asset}.jpg`),
+      seedImage('portfolio-photos', asset),
       sqlDateTime(daysFromNow(-200 + index * 20))
     );
   });

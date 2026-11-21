@@ -126,9 +126,9 @@ cd server
 npm run demo
 ```
 
-This empties the database and loads the demo data, with pictures: company logos, photos on gigs, and portfolios for the photographer and videographer. The pictures are kept in `server/scripts/seed-assets`, so they come with the code. Run `npm run demo` again at any time to go back to a fresh demo.
+This empties the database and loads the demo data, with pictures: company logos, crew profile photos and covers, photos on gigs, and portfolios. The pictures are kept in `server/scripts/seed-assets`, so they come with the code. Run `npm run demo` again at any time to go back to a fresh demo.
 
-Every demo account uses the password `krewdemo2026`. Every person, company and event in the demo data is made up, and crew profile photos are left empty on purpose so no real person's face appears on a made up profile.
+Every demo account uses the password `krewdemo2026`. Every person, company and event in the demo data is made up. The crew profile photos are free licence stock images from Pixabay and Pexels, not photos of anyone connected to KREW.
 
 | Phone | Account |
 | --- | --- |
