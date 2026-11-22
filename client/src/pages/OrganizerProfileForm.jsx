@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Building2 } from 'lucide-react';
+import { cropImage } from '../components/ImageCropDialog.jsx';
 
 const MAX_BIO_LENGTH = 400;
 
@@ -32,8 +33,12 @@ export default function OrganizerProfileForm({ user, photoPath, onPhotoChange })
   }, []);
 
   async function handlePhoto(event) {
-    const file = event.target.files[0];
+    const picked = event.target.files[0];
     event.target.value = '';
+    if (!picked) return;
+    // Logos are shown square (round on the dashboard), so they're framed square. PNG logos
+    // keep their transparent background.
+    const file = await cropImage(picked, { aspect: 1, title: 'Frame your logo', outputWidth: 800, keepTransparency: true });
     if (!file) return;
     setUploading(true);
     setBanner(null);
