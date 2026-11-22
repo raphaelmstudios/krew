@@ -7,6 +7,7 @@ import { db } from '../db.js';
 import { requireAuth, findSessionUser, SESSION_COOKIE_NAME } from '../middleware/auth.js';
 import { rateLimit, normalizePhone, text, LIMITS } from '../security.js';
 import { createNotification, notifyAdmins } from '../notifications.js';
+import { logChange } from '../audit.js';
 
 export const authRouter = express.Router();
 
@@ -104,6 +105,7 @@ authRouter.post('/register', registerLimit, (req, res) => {
         const result = db
       .prepare('INSERT INTO users (name, phone, password_hash, role) VALUES (?, ?, ?, ?)')
       .run(name, phone, passwordHash, role);
+        logChange(result.lastInsertRowid, 'account_created', 'user', result.lastInsertRowid, { role });
 
         // Signs the new account straight in, so the ID upload that follows is made as this
         // person (POST /api/users/:id/documents only accepts uploads for your own account).
@@ -270,6 +272,7 @@ authRouter.post('/reset-password', resetCodeLimitByPhone, (req, res) => {
         db.prepare(`UPDATE users SET password_hash = ? WHERE id = ?`).run(passwordHash, user.id);
         db.prepare(`UPDATE password_resets SET status = 'used', used_at = datetime('now') WHERE id = ?`).run(reset.id);
         db.prepare(`DELETE FROM sessions WHERE user_id = ?`).run(user.id);
+        logChange(user.id, 'password_reset_used', 'user', user.id);
     });
     applyReset();
     createNotification(user.id, 'password_changed', 'Your password was reset. If this wasn\'t you, contact a KREW admin straight away.');
@@ -297,6 +300,7 @@ authRouter.post('/change-password', requireAuth, (req, res) => {
     const newHash = bycrypt.hashSync(new_password, BYCRYPT_ROUNDS);
     db.prepare(`UPDATE users SET password_hash = ? WHERE id = ?`).run(newHash, req.user.id);
     db.prepare(`DELETE FROM sessions WHERE user_id = ? AND token != ?`).run(req.user.id, req.cookies[SESSION_COOKIE_NAME]);
+    logChange(req.user.id, 'password_changed', 'user', req.user.id);
     createNotification(req.user.id, 'password_changed', 'Your password was changed.');
 
     res.json({ ok: true });
@@ -308,4 +312,4 @@ authRouter.post('/change-password', requireAuth, (req, res) => {
 authRouter.get('/session', (req, res) => {
     const { user } = findSessionUser(req, res);
     res.json({ user: user || null });
-});
+});

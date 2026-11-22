@@ -27,9 +27,11 @@ const db = new Database(process.env.DATABASE_PATH || path.join(__dirname, '..', 
 // The schema remains intact, but all data is removed.
 // This is useful for resetting the demo environment to a clean state.
 // portfolio_images has to be in this list - it references users, so leaving it out makes the delete fail with a foreign key error as soon as any crew member has uploaded a portfolio photo.
-const tables = ['notifications', 'disputes', 'job_applications', 'transactions', 'job_listings', 'portfolio_images', 'password_resets', 'sessions', 'users'];
+// audit_log and data_requests are newer, so they're skipped on a database that doesn't have them yet.
+const tables = ['audit_log', 'data_requests', 'notifications', 'disputes', 'job_applications', 'transactions', 'job_listings', 'portfolio_images', 'password_resets', 'sessions', 'users'];
+const hasTable = db.prepare(`SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?`);
 for (const table of tables) {
-  db.prepare(`DELETE FROM ${table}`).run();
+  if (hasTable.get(table)) db.prepare(`DELETE FROM ${table}`).run();
 }
 
 // Resets the auto-incrementing primary key counters for all tables.
@@ -54,4 +56,4 @@ for (const folder of ['profile-photos', 'cover-photos', 'portfolio-photos', 'lis
   }
 }
 
-console.log(`krew.db reset: every table is now empty${removed ? `, and ${removed} demo pictures were removed` : ''}.`);
+console.log(`krew.db reset: every table is now empty${removed ? `, and ${removed} demo pictures were removed` : ''}.`);

@@ -16,18 +16,25 @@ import {
   CircleDashed,
   Megaphone,
   ChevronDown,
+  UserRoundX,
+  ScrollText,
 } from 'lucide-react';
 import DashboardShell from '../components/DashboardShell.jsx';
 import ListingPhoto from '../components/ListingPhoto.jsx';
 import usePageMeta from '../usePageMeta.js';
 import { PAGE_META, sectionTitle } from '../pageMeta.js';
 import AmountInput from '../components/AmountInput.jsx';
+import AdminDataRequests from '../components/AdminDataRequests.jsx';
+import AdminActivityLog from '../components/AdminActivityLog.jsx';
 
 // Admin screen, in the moodboard's sidebar layout (panel 9, DashboardShell.jsx). Four sections:
 // - Overview: the two queues that need a person (account approvals, open disputes) plus headline numbers.
 // - Account Approvals: accounts waiting on ID verification - view their ID and selfie, then approve or reject.
 // - Disputes: jobs either side flagged, with both confirmed amounts side by side, and the resolve form.
+// - Password resets: people who forgot their password, reset with a phone call.
+// - Data requests: people asking for their account to be deleted (AdminDataRequests.jsx).
 // - Analytics: live counts across people, gigs, jobs and disputes (GET /api/admin/stats).
+// - Change log: every change to jobs, payments, disputes and accounts (AdminActivityLog.jsx).
 // The moodboard also shows a Settings item; there are no admin settings in KREW yet, so it's left
 // out rather than linking to an empty page.
 // NOTE: this screen used to have no login checks; AdminGate.jsx requires a real admin session
@@ -38,7 +45,9 @@ const SECTIONS = [
   { key: 'approvals', label: 'Approvals', icon: UserRoundCheck },
   { key: 'disputes', label: 'Disputes', icon: Scale },
   { key: 'resets', label: 'Password resets', icon: KeyRound },
+  { key: 'data', label: 'Data requests', icon: UserRoundX },
   { key: 'analytics', label: 'Analytics', icon: ChartColumn },
+  { key: 'activity', label: 'Change log', icon: ScrollText },
 ];
 
 function initials(name) {
@@ -94,11 +103,18 @@ export default function Admin({ user, onLogout }) {
   const [issuedCodes, setIssuedCodes] = useState({});
   const [resetBusyId, setResetBusyId] = useState(null);
 
+  // How many account deletion requests are waiting (the section itself loads the details).
+  const [openDataRequests, setOpenDataRequests] = useState(0);
+
   useEffect(() => {
     loadPendingUsers();
     loadDisputes();
     loadStats();
     loadResets();
+    fetch('/api/admin/data-requests')
+      .then((response) => (response.ok ? response.json() : []))
+      .then((data) => setOpenDataRequests(data.filter((request) => request.status === 'open').length))
+      .catch(() => {});
   }, []);
 
   // A notification link can land straight on ?section=resets - load the latest requests then too.
@@ -268,6 +284,8 @@ export default function Admin({ user, onLogout }) {
         ? openDisputes.length
         : item.key === 'resets' && resets?.length
         ? resets.length
+        : item.key === 'data' && openDataRequests
+        ? openDataRequests
         : null,
   }));
 
@@ -388,7 +406,7 @@ export default function Admin({ user, onLogout }) {
   const loadingValue = '–';
 
   return (
-    <DashboardShell user={user || { name: 'Admin' }} navItems={navItems} active={section} onNavigate={goTo} onLogout={onLogout}>
+    <DashboardShell user={user || { name: 'Admin', role: 'admin' }} navItems={navItems} active={section} onNavigate={goTo} onLogout={onLogout}>
       {section === 'overview' && (
         <>
           <div className="krew-db-head">
@@ -767,6 +785,10 @@ export default function Admin({ user, onLogout }) {
           )}
         </>
       )}
+
+      {section === 'data' && <AdminDataRequests onChange={setOpenDataRequests} />}
+
+      {section === 'activity' && <AdminActivityLog />}
 
       {section === 'analytics' && (
         <>

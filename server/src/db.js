@@ -350,6 +350,52 @@ db.exec(`
     );`);
 db.exec(`CREATE INDEX IF NOT EXISTS idx_password_resets_user_id ON password_resets(user_id);`);
 
+//audit_log (NFR9)
+// The change log: one row for every change to a job, a payment, a dispute or an account's
+// trust status, with who made it and when. Rows are only ever added, never edited or
+// deleted, so the history stays complete (the SRS asks for at least 12 months). details is
+// a short JSON note of what changed, such as the amount before and after. actor_id is
+// empty for changes KREW makes by itself.
+db.exec(`
+    CREATE TABLE IF NOT EXISTS audit_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      actor_id INTEGER REFERENCES users(id),
+      action TEXT NOT NULL,
+      target_type TEXT NOT NULL,
+      target_id INTEGER,
+      details TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );`);
+db.exec(`CREATE INDEX IF NOT EXISTS idx_audit_log_target ON audit_log(target_type, target_id);`);
+
+//data_requests (NFR6)
+// A person asking for their account to be deleted, under Kenya's Data Protection Act.
+// A copy of their data is a download they get straight away (GET /api/users/me/data), but
+// deleting an account touches other people's job records, so an admin handles it: 'open'
+// until an admin deletes the account ('done') or explains why not ('declined'), or the
+// person changes their mind ('cancelled').
+db.exec(`
+    CREATE TABLE IF NOT EXISTS data_requests (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      kind TEXT NOT NULL DEFAULT 'delete' CHECK (kind IN ('delete')),
+      reason TEXT,
+      status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'done', 'declined', 'cancelled')),
+      response_note TEXT,
+      handled_by INTEGER REFERENCES users(id),
+      handled_at TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );`);
+db.exec(`CREATE INDEX IF NOT EXISTS idx_data_requests_user_id ON data_requests(user_id);`);
+
+// When an account was deleted at its owner's request. The row stays (other people's job
+// records point to it) but everything personal is cleared - see routes/admin.js.
+try {
+  db.exec(`ALTER TABLE users ADD COLUMN deleted_at TEXT;`);
+} catch (err) {
+  if (!err.message.includes('duplicate column name')) throw err;
+}
+
  // Housekeeping on every start: expired logins are deleted rather than left in the table
 // (they're refused anyway - see middleware/auth.js - this just keeps the table small).
 db.exec(`DELETE FROM sessions WHERE expires_at < strftime('%Y-%m-%dT%H:%M:%fZ', 'now');`);

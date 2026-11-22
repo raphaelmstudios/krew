@@ -9,6 +9,9 @@ import { db } from '../db.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { extensionFor, verifySavedFiles } from '../uploadSafety.js';
 import { UPLOAD_ROOT } from '../paths.js';
+import { logChange } from '../audit.js';
+import { text } from '../security.js';
+import { notifyAdmins } from '../notifications.js';
 
 export const usersRouter = express.Router();
 
@@ -408,7 +411,7 @@ const RECENT_PAYMENTS_LIMIT = 10;
 export function computeOrganizerRecord(organizerId, { includeRecent = false } = {}) {
   const confirmedJobs = db
     .prepare(
-      `SELECT due_date, organizer_confirmed_at, crew_confirmed_at
+      `SELECT amount, organizer_confirmed_amount, due_date, organizer_confirmed_at, crew_confirmed_at
        FROM transactions
        WHERE organizer_id = ? AND status = 'confirmed'`
     )
@@ -420,6 +423,8 @@ export function computeOrganizerRecord(organizerId, { includeRecent = false } = 
       on_time_count: 0,
       on_time_percentage: null,
       median_days_to_payment: null,
+      short_paid_count: 0,
+      short_paid_percentage: null,
       ...(includeRecent ? { recent_payments: [] } : {}),
     };
   }
@@ -435,12 +440,17 @@ export function computeOrganizerRecord(organizerId, { includeRecent = false } = 
   const daysToPayment = payments.map((payment) => payment.days);
 
   const onTimeCount = daysToPayment.filter((days) => days <= 0).length;
+  // Short payment frequency (FR3.2): jobs where the amount both sides confirmed was less than
+  // the amount agreed when the job was set up.
+  const shortPaidCount = confirmedJobs.filter((job) => Number(job.organizer_confirmed_amount) < Number(job.amount)).length;
 
   const record = {
     confirmed_job_count: confirmedJobs.length,
     on_time_count: onTimeCount,
     on_time_percentage: Math.round((onTimeCount / confirmedJobs.length) * 100),
     median_days_to_payment: Math.round(median(daysToPayment) * 10) / 10,
+    short_paid_count: shortPaidCount,
+    short_paid_percentage: Math.round((shortPaidCount / confirmedJobs.length) * 100),
   };
   if (includeRecent) {
     record.recent_payments = payments
@@ -546,4 +556,119 @@ usersRouter.get('/:id/public-profile', (req, res) => {
     work_history: workHistory,
     ...computeCrewRecord(crewMemberId),
   });
-});
+});
+
+// --- Your data (NFR6: Kenya's Data Protection Act) ------------------------------------------
+// A copy of everything KREW holds about you, as one file you can keep. Your ID document and
+// selfie are listed by file name only: they're sensitive, and stay on the server unless you
+// ask an admin for them.
+usersRouter.get('/me/data', requireAuth, (req, res) => {
+  const userId = req.user.id;
+  const account = db
+    .prepare(
+      `SELECT id, name, phone, role, verification_status, company_name, professional_role, skills, years_experience,
+              availability_status, bio, profile_photo_path, cover_photo_path, id_document_path, selfie_path, created_at
+       FROM users WHERE id = ?`
+    )
+    .get(userId);
+  const jobs = db
+    .prepare(
+      `SELECT t.id, t.amount, t.due_date, t.job_description, t.status, t.created_at, t.completed_at,
+              t.organizer_confirmed_at, t.organizer_confirmed_amount, t.crew_confirmed_at, t.crew_confirmed_amount,
+              org.name AS organizer_name, crew.name AS crew_member_name
+       FROM transactions t
+       JOIN users org ON org.id = t.organizer_id
+       JOIN users crew ON crew.id = t.crew_member_id
+       WHERE t.organizer_id = ? OR t.crew_member_id = ?
+       ORDER BY t.created_at`
+    )
+    .all(userId, userId);
+  const copy = {
+    exported_at: new Date().toISOString(),
+    about_this_file:
+      'Everything KREW stores about your account. Your ID document and selfie are listed by file name only; ask a KREW admin if you need the images.',
+    account: { ...account, skills: account.skills ? account.skills.split(',') : [] },
+    jobs,
+    gigs_posted: db
+      .prepare(`SELECT id, title, category, location, amount, due_date, job_description, status, created_at FROM job_listings WHERE organizer_id = ?`)
+      .all(userId),
+    applications: db
+      .prepare(
+        `SELECT a.id, a.status, a.created_at, l.title AS gig_title FROM job_applications a JOIN job_listings l ON l.id = a.listing_id WHERE a.crew_member_id = ?`
+      )
+      .all(userId),
+    disputes: db
+      .prepare(
+        `SELECT d.id, d.transaction_id AS job_id, d.reason, d.details, d.status, d.resolution_notes, d.created_at, d.resolved_at,
+                (d.raised_by = ?) AS raised_by_you
+         FROM disputes d JOIN transactions t ON t.id = d.transaction_id
+         WHERE t.organizer_id = ? OR t.crew_member_id = ?`
+      )
+      .all(userId, userId, userId),
+    portfolio_photos: db.prepare(`SELECT image_path, created_at FROM portfolio_images WHERE user_id = ?`).all(userId),
+    notifications: db.prepare(`SELECT type, message, read_at, created_at FROM notifications WHERE user_id = ? ORDER BY id`).all(userId),
+    deletion_requests: db.prepare(`SELECT reason, status, response_note, created_at, handled_at FROM data_requests WHERE user_id = ?`).all(userId),
+    change_log: db
+      .prepare(
+        `SELECT action, target_type, target_id, details, created_at FROM audit_log
+         WHERE actor_id = ? OR (target_type = 'user' AND target_id = ?) ORDER BY id`
+      )
+      .all(userId, userId)
+      .map((entry) => ({ ...entry, details: entry.details ? JSON.parse(entry.details) : null })),
+  };
+
+  logChange(userId, 'data_copy_downloaded', 'user', userId);
+  res.set('Cache-Control', 'no-store');
+  res.attachment(`krew-my-data-${new Date().toISOString().slice(0, 10)}.json`);
+  res.send(JSON.stringify(copy, null, 2));
+});
+
+const MAX_DELETION_REASON_LENGTH = 500;
+
+// Your latest account deletion request, if any - so the dialog can show where it's at.
+usersRouter.get('/me/deletion-request', requireAuth, (req, res) => {
+  const request = db
+    .prepare(`SELECT id, reason, status, response_note, created_at, handled_at FROM data_requests WHERE user_id = ? ORDER BY id DESC LIMIT 1`)
+    .get(req.user.id);
+  res.json(request || null);
+});
+
+// Asks for your account to be deleted. An admin handles it (see routes/admin.js).
+usersRouter.post('/me/deletion-request', requireAuth, (req, res) => {
+  if (req.user.role === 'admin') {
+    return res.status(400).json({ error: 'Admin accounts are removed by another admin, not through this form.' });
+  }
+  const cleanReason = text(req.body?.reason, MAX_DELETION_REASON_LENGTH);
+  if (cleanReason === null) {
+    return res.status(400).json({ error: `Keep the reason to ${MAX_DELETION_REASON_LENGTH} characters or fewer.` });
+  }
+  const open = db.prepare(`SELECT id FROM data_requests WHERE user_id = ? AND status = 'open'`).get(req.user.id);
+  if (open) {
+    return res.status(409).json({ error: 'You already have a deletion request waiting for an admin.' });
+  }
+  const result = db.transaction(() => {
+    const inserted = db
+      .prepare(`INSERT INTO data_requests (user_id, kind, reason) VALUES (?, 'delete', ?)`)
+      .run(req.user.id, cleanReason || null);
+    logChange(req.user.id, 'deletion_requested', 'user', req.user.id);
+    return inserted;
+  })();
+  notifyAdmins('deletion_requested', `${req.user.name} asked for their account to be deleted.`, '/admin?section=data');
+  const request = db
+    .prepare(`SELECT id, reason, status, response_note, created_at, handled_at FROM data_requests WHERE id = ?`)
+    .get(result.lastInsertRowid);
+  res.status(201).json(request);
+});
+
+// Changes your mind, while an admin hasn't handled the request yet.
+usersRouter.delete('/me/deletion-request', requireAuth, (req, res) => {
+  const result = db
+    .prepare(`UPDATE data_requests SET status = 'cancelled', handled_at = datetime('now') WHERE user_id = ? AND status = 'open'`)
+    .run(req.user.id);
+  if (result.changes === 0) {
+    return res.status(404).json({ error: 'There is no open deletion request to cancel.' });
+  }
+  logChange(req.user.id, 'deletion_cancelled', 'user', req.user.id);
+  res.json({ status: 'cancelled' });
+});
+

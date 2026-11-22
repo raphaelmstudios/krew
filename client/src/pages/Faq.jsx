@@ -85,6 +85,20 @@ export default function Faq() {
             job, and your phone number, stay private. See the <Link to="/privacy">Privacy Policy</Link> for the full
             breakdown of what's public and what isn't.
           </p>
+
+          <h2>What does "Paid less than agreed" mean?</h2>
+          <p>
+            It's part of an organizer's payment record: how many of their confirmed jobs were paid for less than the
+            amount agreed when the job was set up. Both sides have to confirm the lower amount for it to count, so it
+            reflects what really happened, not one person's word.
+          </p>
+
+          <h2>How do I get a copy of my data, or delete my account?</h2>
+          <p>
+            Open "Your data" in your dashboard menu. You can download everything KREW holds about you straight away, or
+            ask for your account to be deleted. An admin handles deletions and lets you know if anything needs sorting
+            out first, such as a job still in progress.
+          </p>
         </div>
 
         <p className="krew-legal-footer-link">
@@ -96,4 +110,4 @@ export default function Faq() {
       <PublicFooter />
     </div>
   );
-}
+}

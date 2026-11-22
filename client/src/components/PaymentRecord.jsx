@@ -4,7 +4,8 @@ import { Check, Clock } from 'lucide-react';
 // - the on-time rate as one big figure, with a meter under it,
 // - their latest payments as a row of marks, oldest to latest - a check for on time, a clock
 //   for late - so a run of late payments (or a recent turnaround) is visible at a glance,
-// - the job count and how early or late they usually pay.
+// - the job count, how early or late they usually pay, and how often they paid less than was
+//   agreed (short payments).
 // Used on the organizer's own dashboard and on each gig's Organizer tab, so crew see exactly
 // what the organizer sees. Everything comes from payments both sides confirmed.
 
@@ -30,6 +31,7 @@ export default function PaymentRecord({ record }) {
   const onTimeCount = record.on_time_count ?? Math.round((percentage / 100) * record.confirmed_job_count);
   const recent = record.recent_payments || [];
   const usual = record.median_days_to_payment;
+  const shortPaid = record.short_paid_count;
 
   return (
     <div className="krew-prec">
@@ -87,6 +89,14 @@ export default function PaymentRecord({ record }) {
           <div>
             <dt>Usually paid</dt>
             <dd>{timingPhrase(usual).replace(/^o/, 'O')}</dd>
+          </div>
+        )}
+        {shortPaid !== null && shortPaid !== undefined && record.confirmed_job_count > 0 && (
+          <div>
+            <dt>Paid less than agreed</dt>
+            <dd className={shortPaid > 0 ? 'short' : undefined}>
+              {shortPaid === 0 ? 'Never' : `${shortPaid} of ${plural(record.confirmed_job_count, 'job')}`}
+            </dd>
           </div>
         )}
       </dl>

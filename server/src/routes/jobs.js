@@ -5,6 +5,7 @@
 import express from 'express';
 import { db } from '../db.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
+import { logChange } from '../audit.js';
 import { createNotification, notifyAdmins } from '../notifications.js';
 import { text, LIMITS } from '../security.js';
 
@@ -67,6 +68,12 @@ jobsRouter.post('/', requireRole('organizer'), (req, res) => {
        VALUES (?, ?, ?, ?, ?, 'pending')`
     )
     .run(organizer.id, crewMemberId, amountNumber, due_date, description);
+  logChange(organizer.id, 'job_created', 'job', result.lastInsertRowid, {
+    crew_member_id: crewMemberId,
+    amount: amountNumber,
+    due_date,
+    how: 'direct hire',
+  });
 
   createNotification(
     crewMemberId,
@@ -175,6 +182,7 @@ jobsRouter.post('/:id/confirm', requireAuth, (req, res) => {
   // Both steps run as one database transaction, so a job can never end up with two matching
   // confirmations but a status that still says pending.
   const confirmAndMatch = db.transaction(() => {
+    const before = db.prepare(`SELECT ${side}_confirmed_amount AS amount FROM transactions WHERE id = ?`).get(transactionId);
     db.prepare(
       `UPDATE transactions SET ${side}_confirmed_at = datetime('now'), ${side}_confirmed_amount = ? WHERE id = ?`
     ).run(amountNumber, transactionId);
@@ -187,7 +195,16 @@ jobsRouter.post('/:id/confirm', requireAuth, (req, res) => {
          AND organizer_confirmed_amount = crew_confirmed_amount`
     ).run(transactionId);
 
-    return db.prepare(`SELECT * FROM transactions WHERE id = ?`).get(transactionId);
+    const after = db.prepare(`SELECT * FROM transactions WHERE id = ?`).get(transactionId);
+    logChange(req.user.id, 'payment_confirmed', 'job', transactionId, {
+      side,
+      amount: amountNumber,
+      ...(before.amount !== null ? { previous_amount: before.amount } : {}),
+    });
+    if (after.status === 'confirmed' && transaction.status !== 'confirmed') {
+      logChange(null, 'job_completed', 'job', transactionId, { amount: amountNumber });
+    }
+    return after;
   });
   const updated = confirmAndMatch();
 
@@ -286,6 +303,7 @@ jobsRouter.post('/:id/dispute', requireAuth, (req, res) => {
       `INSERT INTO disputes (transaction_id, raised_by, reason, details) VALUES (?, ?, ?, ?)`
     ).run(transactionId, req.user.id, trimmedReason, trimmedDetails);
     db.prepare(`UPDATE transactions SET status = 'disputed' WHERE id = ?`).run(transactionId);
+    logChange(req.user.id, 'dispute_raised', 'job', transactionId, { reason: trimmedReason, previous_status: transaction.status });
   });
   raiseDispute();
 
