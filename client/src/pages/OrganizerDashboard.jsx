@@ -53,7 +53,7 @@ export function formatCrewRecord(crewMember) {
     return (
       <>
         <span className="krew-status-pill new">New here</span>
-        <InfoTooltip text="New here means this crew member hasn't completed a job on KREW yet - everyone starts without a track record, it isn't a red flag." />
+        <InfoTooltip text="New here means this crew member hasn't completed a job on KREW yet. Everyone starts without a record, so it isn't a warning sign." />
       </>
     );
   }
@@ -255,7 +255,7 @@ export default function OrganizerDashboard({ user, onLogout }) {
 
   function handleApplicantsAccepted() {
     setSelectedListing(null);
-    setNotice('Applicant accepted - the job is now in Payments.');
+    setNotice('Applicant accepted. The job is now in Payments.');
     loadListings();
     loadJobs();
   }
@@ -263,7 +263,7 @@ export default function OrganizerDashboard({ user, onLogout }) {
   function handleHired() {
     setSelectedCrewMember(null);
     goTo('payments');
-    setNotice('Hire confirmed - the job is now in Payments.');
+    setNotice('Hire confirmed. The job is now in Payments.');
   }
 
   // --- derived data ---
@@ -300,7 +300,7 @@ export default function OrganizerDashboard({ user, onLogout }) {
             {listing.status === 'open'
               ? `${listing.pending_applicant_count} ${listing.pending_applicant_count === 1 ? 'applicant' : 'applicants'} waiting`
               : listing.status === 'filled'
-              ? 'Filled - see Payments'
+              ? 'Filled, see Payments'
               : 'Cancelled'}
           </span>
           {listing.status === 'open' && (
@@ -371,12 +371,12 @@ export default function OrganizerDashboard({ user, onLogout }) {
             <section className="krew-db-upcoming">
               <div className="krew-db-upcoming-copy">
                 <span className="krew-db-eyebrow">Active gigs</span>
-                <h2 className="krew-db-big-number">{listings === null ? '–' : openListings.length}</h2>
+                <h2 className="krew-db-big-number">{listings === null ? '…' : openListings.length}</h2>
                 <p className="krew-db-upcoming-meta">
                   {listings === null
                     ? 'Loading…'
                     : openListings.length === 0
-                    ? 'Nothing open right now - post a gig and crew can start applying.'
+                    ? 'Nothing open right now. Post a gig and crew can start applying.'
                     : `${waitingApplicants} ${waitingApplicants === 1 ? 'applicant' : 'applicants'} waiting for your decision.`}
                 </p>
                 {openListings.length > 0 && (
@@ -415,7 +415,7 @@ export default function OrganizerDashboard({ user, onLogout }) {
               {activity === null && <div className="krew-dash-loading-note" role="status">Loading…</div>}
               {activity && activity.length === 0 && (
                 <p className="krew-db-empty">
-                  Nothing yet - applications, hires and payment updates will show up here.{' '}
+                  Nothing yet. Applications, hires and payment updates will show up here.{' '}
                   <button type="button" className="krew-dash-text-btn" onClick={() => goTo('post')}>Post a gig</button>
                 </p>
               )}
@@ -441,14 +441,13 @@ export default function OrganizerDashboard({ user, onLogout }) {
               <div className="krew-db-card-head">
                 <h2>
                   Your payment record
-                  <InfoTooltip text="This is what crew see on every gig you post - worked out automatically from payments both sides confirmed, not a self-reported rating." />
+                  <InfoTooltip text="This is what crew see on every gig you post. KREW works it out from payments both sides confirmed. It is not a rating anyone gives themselves." />
                 </h2>
               </div>
               {record === null && <div className="krew-dash-loading-note" role="status">Loading…</div>}
               {record && record.confirmed_job_count === 0 && (
                 <p className="krew-db-empty">
-                  <span className="krew-status-pill new">New here</span> Once you've paid crew and both sides confirm, your on-time
-                  record builds up here - and crew see it before they apply.
+                  <span className="krew-status-pill new">New here</span> Once you've paid crew and both sides confirm, your on time record builds up here, and crew see it before they apply.
                 </p>
               )}
               {record && record.confirmed_job_count > 0 && <PaymentRecord record={record} />}
@@ -465,7 +464,7 @@ export default function OrganizerDashboard({ user, onLogout }) {
             <span className="krew-shard krew-db-banner-shard-2" aria-hidden="true" />
             <div>
               <h2>Find the perfect crew.</h2>
-              <p>Browse verified crew with real, payment-confirmed work records - and hire directly.</p>
+              <p>Browse verified crew with real records of paid, confirmed work, and hire them directly.</p>
             </div>
             <button type="button" className="krew-db-banner-link krew-db-link-btn" onClick={() => goTo('crew')}>
               Browse crew <ArrowRight size={15} strokeWidth={2} />
@@ -548,7 +547,7 @@ export default function OrganizerDashboard({ user, onLogout }) {
         <>
           <div className="krew-db-head">
             <h1>Find crew</h1>
-            <p>Every verified crew member. Hire someone directly - no listing needed - or open their profile first.</p>
+            <p>Every verified crew member. Hire someone directly without posting a gig, or open their profile first.</p>
           </div>
 
           {crewDirectory === null && !error && <div className="krew-dash-loading-note" role="status">Loading…</div>}
@@ -608,8 +607,7 @@ export default function OrganizerDashboard({ user, onLogout }) {
           <div className="krew-db-head">
             <h1>Payments</h1>
             <p>
-              Every job you've hired for. Once you've paid, confirm the amount here - when the crew member confirms the same
-              amount, it counts toward your on-time record.
+              Every job you've hired for. Once you've paid, confirm the amount here. When the crew member confirms the same amount, it counts toward your on time record.
             </p>
           </div>
 
@@ -617,7 +615,7 @@ export default function OrganizerDashboard({ user, onLogout }) {
 
           {jobs && jobs.length === 0 && (
             <div className="krew-dash-empty">
-              <p>No jobs yet - accept an applicant or hire someone from Find Crew and it'll show up here.</p>
+              <p>No jobs yet. Accept an applicant or hire someone from Find Crew, and it'll show up here.</p>
               <button type="button" className="krew-button-primary krew-button-inline" onClick={() => goTo('crew')}>
                 Find crew <ArrowRight size={16} strokeWidth={2} />
               </button>

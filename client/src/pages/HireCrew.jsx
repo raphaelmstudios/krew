@@ -79,7 +79,7 @@ export default function HireCrew() {
               Hire the right <em>crew for your next project.</em>
             </h1>
             <p className="krew-hc-hero-sub">
-              Explore talented professionals across Nairobi - each with a real record of completed, paid jobs.
+              Explore talented professionals across Nairobi, each with a real record of completed, paid jobs.
             </p>
             <div className="krew-hc-search">
               <Search size={19} strokeWidth={1.75} className="krew-hc-search-icon" aria-hidden="true" />
@@ -128,7 +128,7 @@ export default function HireCrew() {
 
         {filtered && filtered.length === 0 && (
           <div className="krew-dash-empty">
-            <p>{crewMembers.length === 0 ? 'No crew members are listed yet - check back soon.' : 'No crew members match that search right now.'}</p>
+            <p>{crewMembers.length === 0 ? 'No crew members are listed yet. Check back soon.' : 'No crew members match that search right now.'}</p>
             {crewMembers.length > 0 ? (
               <button type="button" className="krew-button-secondary krew-button-inline" onClick={clearFilters}>
                 Clear search

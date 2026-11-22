@@ -199,7 +199,7 @@ export default function CrewProfile() {
                 {profile.confirmed_job_count
                   ? `${profile.confirmed_job_count} completed ${profile.confirmed_job_count === 1 ? 'gig' : 'gigs'}`
                   : 'New on KREW'}
-                <InfoTooltip text="Completed gigs are jobs this crew member finished and had payment confirmed on KREW - worked out from confirmed payments, not self-reported." />
+                <InfoTooltip text="Completed gigs are jobs this crew member finished and had payment confirmed on KREW. They come from confirmed payments, not from anything the crew member typed in." />
               </li>
               <li className={available ? 'available' : 'working'}>{available ? 'Available' : 'Currently working'}</li>
             </ul>
@@ -306,14 +306,14 @@ export default function CrewProfile() {
             <div className="krew-cp-block-head">
               <h2 className="krew-cp-section-title">
                 Verified work history
-                <InfoTooltip text="Every job here was paid and confirmed through KREW - nobody can add to this list by hand. The amount, the organizer and the job's private details are never shown." />
+                <InfoTooltip text="Every job here was paid and confirmed through KREW. Nobody can add to this list by hand. The amount, the organizer and the job's private details are never shown." />
               </h2>
               {profile.confirmed_job_count > workHistory.length && (
                 <span className="krew-cp-block-note">Latest {workHistory.length} of {profile.confirmed_job_count}</span>
               )}
             </div>
             {workHistory.length === 0 ? (
-              <p className="krew-cp-empty">No confirmed jobs yet - every job {firstName} is paid for through KREW will show up here.</p>
+              <p className="krew-cp-empty">No confirmed jobs yet. Every job {firstName} is paid for through KREW will show up here.</p>
             ) : (
               <ul className="krew-cp-history">
                 {workHistory.map((job) => {
@@ -478,7 +478,7 @@ function HireDialog({ crewMember, step, onCreated, onClose }) {
             <BadgeCheck size={44} strokeWidth={1.2} aria-hidden="true" />
             <h2>{crewMember.name.split(' ')[0]} is hired</h2>
             <p>
-              The job is in your Payments. Once you've paid, confirm the amount there - when{' '}
+              The job is in your Payments. Once you've paid, confirm the amount there. When{' '}
               {crewMember.name.split(' ')[0]} confirms the same amount, it counts toward both of your records.
             </p>
             <div className="krew-cp-hire-done-actions">

@@ -21,6 +21,11 @@ function formatWhen(value) {
   };
 }
 
+// "2026-11-26" -> "Nov 26, 2026"
+function formatDay(isoDate) {
+  return new Date(`${isoDate}T00:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+}
+
 function kes(amount) {
   return `KES ${Number(amount).toLocaleString()}`;
 }
@@ -49,11 +54,11 @@ function describe(entry) {
     case 'password_reset_used':
       return { text: `${who} reset their password with a code` };
     case 'gig_posted':
-      return { text: `${who} posted the gig "${details.title}"`, more: `${kes(details.amount)}, due ${details.due_date}` };
+      return { text: `${who} posted the gig "${details.title}"`, more: `${kes(details.amount)}, due ${formatDay(details.due_date)}` };
     case 'gig_cancelled':
       return { text: `${who} closed gig #${entry.target_id}` };
     case 'job_created':
-      return { text: `${who} set up ${job} for ${kes(details.amount)}`, more: `Due ${details.due_date} · ${details.how}` };
+      return { text: `${who} set up ${job} for ${kes(details.amount)}`, more: `Due ${formatDay(details.due_date)} · ${details.how}` };
     case 'payment_confirmed':
       return {
         text: `${who} confirmed ${kes(details.amount)} paid for ${job}`,

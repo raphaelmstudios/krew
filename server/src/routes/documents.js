@@ -103,7 +103,7 @@ documentsRouter.post('/:id/documents', requireAuth, canUploadDocuments, (req, re
             const selfieFile = req.files?.selfie?.[0];
             if(!idFile || !selfieFile) {
                 cleanUpSavedFiles(req.files);
-                return res.status(400).json({ error: 'Both id_document and selfie files are required' });
+                return res.status(400).json({ error: 'Please add both a photo of your ID and a selfie.' });
             }
 
             // The files' first bytes have to match the type they claimed to be.

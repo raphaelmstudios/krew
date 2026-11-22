@@ -145,7 +145,7 @@ export default function PostListingForm({ onCreated, onCancel }) {
             className="krew-field-input"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g. Bar staff for a 200-guest wedding"
+            placeholder="e.g. Bar staff for a wedding of 200 guests"
           />
         </div>
 
@@ -205,7 +205,7 @@ export default function PostListingForm({ onCreated, onCancel }) {
             rows={3}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="e.g. Bar service for a 200-guest wedding, 6pm–midnight"
+            placeholder="e.g. Bar service for a wedding of 200 guests, 6pm to midnight"
           />
         </div>
 
@@ -223,7 +223,7 @@ export default function PostListingForm({ onCreated, onCancel }) {
                   <span className="krew-upload-filename">{photoFile.name}</span> · Click to change
                 </>
               ) : (
-                'Add a photo of the venue or the kind of work - JPG or PNG, up to 5MB'
+                'Add a photo of the venue or the kind of work. JPG or PNG, up to 5MB.'
               )}
             </span>
             <input type="file" accept="image/jpeg,image/png" onChange={handlePhotoChange} disabled={submitting} />

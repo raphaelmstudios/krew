@@ -31,24 +31,20 @@ export default function Faq() {
           <p>
             It's the share of an organizer's past jobs that were confirmed as paid by the agreed due date, out of
             every job they've had confirmed on KREW. It's calculated automatically from both sides' payment
-            confirmations, not something an organizer fills in about themselves or that crew members rate them on -
-            the same reasoning Privacy Policy describes for how these numbers are produced.
+            confirmations, not something an organizer fills in about themselves or that crew members rate them on. The Privacy Policy explains how these numbers are produced.
           </p>
 
           <h2>What does a crew member's "completed jobs" count mean?</h2>
           <p>
             The number of jobs a crew member has actually finished and had the payment for confirmed by both sides.
-            An application that's still pending, or a job that's been agreed but not yet paid, doesn't count yet -
-            only ones where both the organizer and the crew member have confirmed the amount.
+            An application that's still pending, or a job that's been agreed but not yet paid, doesn't count yet. Only jobs where both the organizer and the crew member have confirmed the amount count.
           </p>
 
           <h2>What does "verified" mean on KREW?</h2>
           <p>
-            Every account - organizer or crew member - submits an ID document and a selfie when they sign up, and an
+            Every account, organizer or crew member, submits an ID document and a selfie when they sign up, and an
             admin reviews and approves it before that account can post a job, apply to one, or be hired. An account
-            that hasn't been approved yet can browse KREW but can't transact. Verified doesn't mean KREW has
-            background-checked someone's history - it means a real admin has confirmed the ID they signed up with
-            matches a real person.
+            that hasn't been approved yet can browse KREW but can't transact. Verified doesn't mean KREW has checked someone's background. It means a real admin has confirmed that the ID they signed up with matches a real person.
           </p>
 
           <h2>How does payment confirmation work?</h2>
@@ -62,26 +58,23 @@ export default function Faq() {
 
           <h2>How do I file a dispute?</h2>
           <p>
-            From your dashboard's job list, open the job in question and select "Raise a dispute" - this is
-            available any time a job isn't already disputed, including after it's confirmed if something turns out to
+            From your dashboard's job list, open the job in question and select "Raise a dispute". This is available any time a job isn't already disputed, including after it's confirmed if something turns out to
             be wrong. Describe what's wrong, and an admin
             will review it and resolve it from their side; both people on the job are notified once that happens.
-            Filing a dispute doesn't block the other person's account - it just holds that one job open until an
-            admin looks at it.
+            Filing a dispute doesn't block the other person's account. It just holds that one job open until an admin looks at it.
           </p>
 
           <h2>I forgot my password. What now?</h2>
           <p>
             Choose "Forgot password?" on the log in page and enter your phone number. A KREW admin will call that number
-            to check it's really you, then read you a one-time code. Enter it on the "Set a new password" page within 30
+            to check it's really you, then read you a one time code. Enter it on the "Set a new password" page within 30
             minutes. Once your password is changed, every device logged in to your account is logged out. If you still
             know your password and just want a new one, use "Change password" in your dashboard instead.
           </p>
 
           <h2>Who can see my reliability numbers?</h2>
           <p>
-            Anyone browsing KREW can see the completed-jobs count and, for organizers, the on-time percentage - the
-            same information shown on public listings and the crew directory. The actual amount paid on any given
+            Anyone browsing KREW can see the completed jobs count and, for organizers, the on time percentage. It's the same information shown on public listings and the crew directory. The actual amount paid on any given
             job, and your phone number, stay private. See the <Link to="/privacy">Privacy Policy</Link> for the full
             breakdown of what's public and what isn't.
           </p>

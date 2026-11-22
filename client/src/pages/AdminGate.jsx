@@ -8,7 +8,7 @@ export default function AdminGate() {
   return (
     <RoleGate
       role="admin"
-      loginHeading="Admin sign-in"
+      loginHeading="Admin log in"
       loginSubhead="Sign in with an admin account to review pending approvals."
       forbiddenMessage="This account isn't an admin account."
       showSignupLink={false}

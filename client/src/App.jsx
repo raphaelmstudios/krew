@@ -66,7 +66,7 @@ function RegisterFlow() {
           Your documents were received and your account is pending admin approval. We'll notify you once it's reviewed.
         </p>
         <p className="krew-fine-print" style={{ marginTop: 20 }}>
-          You're signed in - <Link to="/dashboard">go to your dashboard</Link> any time to check your status.
+          You're signed in. <Link to="/dashboard">Go to your dashboard</Link> any time to check your status.
         </p>
       </div>
     </AuthLayout>

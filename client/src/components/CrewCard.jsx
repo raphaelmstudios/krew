@@ -20,7 +20,7 @@ export function formatCrewRecord(crewMember) {
     return (
       <>
         <span className="krew-status-pill new">New here</span>
-        <InfoTooltip text="New here means this crew member hasn't completed a job on KREW yet - everyone starts without a track record, it isn't a red flag." />
+        <InfoTooltip text="New here means this crew member hasn't completed a job on KREW yet. Everyone starts without a record, so it isn't a warning sign." />
       </>
     );
   }

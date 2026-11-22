@@ -59,7 +59,7 @@ function formatOrganizerRecord(record) {
     return (
       <>
         <span className="krew-status-pill new">New here</span>
-        <InfoTooltip text="New here means this organizer hasn't had a job confirmed on KREW yet - everyone starts without a track record, it isn't a red flag." />
+        <InfoTooltip text="New here means this organizer hasn't had a job confirmed on KREW yet. Everyone starts without a record, so it isn't a warning sign." />
       </>
     );
   }
@@ -67,7 +67,7 @@ function formatOrganizerRecord(record) {
   return (
     <>
       {record.confirmed_job_count} completed {jobWord} · {record.on_time_percentage}% on time
-      <InfoTooltip text="How many of this organizer's jobs were confirmed paid, and what percentage were paid by the due date - calculated automatically from payment confirmations, not a self-reported rating." />
+      <InfoTooltip text="How many of this organizer's jobs were confirmed as paid, and what share were paid by the due date. KREW works this out from payment confirmations. It is not a rating anyone gives themselves." />
     </>
   );
 }
@@ -556,7 +556,7 @@ export default function CrewDashboard({ user, onLogout }) {
             <span className="krew-shard krew-db-banner-shard-2" aria-hidden="true" />
             <div>
               <h2>Keep creating.</h2>
-              <p>You're on the right track - every confirmed job builds your record on KREW.</p>
+              <p>You're on the right track. Every confirmed job builds your record on KREW.</p>
             </div>
             <Link to={`/crew/${user.id}`} className="krew-db-banner-link">
               View your public profile <ArrowRight size={15} strokeWidth={2} />
@@ -576,7 +576,7 @@ export default function CrewDashboard({ user, onLogout }) {
 
           {listings && listings.length === 0 && (
             <div className="krew-dash-empty">
-              <p>No open gigs right now. Check back soon - and make sure your profile is complete, so organizers can hire you directly.</p>
+              <p>No open gigs right now. Check back soon, and make sure your profile is complete so organizers can hire you directly.</p>
               <button type="button" className="krew-button-primary krew-button-inline" onClick={() => goTo('profile')}>
                 Complete your profile <ArrowRight size={16} strokeWidth={2} />
               </button>
@@ -650,14 +650,14 @@ export default function CrewDashboard({ user, onLogout }) {
         <>
           <div className="krew-db-head">
             <h1>My jobs</h1>
-            <p>Jobs you're hired for. Once you've been paid, confirm the amount here - when both sides confirm, it counts toward your record.</p>
+            <p>Jobs you're hired for. Once you've been paid, confirm the amount here. When both sides confirm, it counts toward your record.</p>
           </div>
 
           {myJobs === null && !error && <div className="krew-dash-loading-note" role="status">Loading…</div>}
 
           {myJobs && myJobs.length === 0 && (
             <div className="krew-dash-empty">
-              <p>No jobs yet - once an organizer hires you or accepts your application, it'll show up here.</p>
+              <p>No jobs yet. Once an organizer hires you or accepts your application, it'll show up here.</p>
               <button type="button" className="krew-button-primary krew-button-inline" onClick={() => goTo('gigs')}>
                 Find gigs <ArrowRight size={16} strokeWidth={2} />
               </button>
@@ -719,7 +719,7 @@ export default function CrewDashboard({ user, onLogout }) {
                   />
                 </div>
                 <div className="krew-field">
-                  <label className="krew-field-label" htmlFor="skills">Skills (comma-separated)</label>
+                  <label className="krew-field-label" htmlFor="skills">Skills (separate them with commas)</label>
                   <input
                     id="skills"
                     type="text"

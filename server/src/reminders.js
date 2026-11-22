@@ -9,6 +9,11 @@ import { createNotification } from './notifications.js';
 
 const CHECK_INTERVAL_MS = 60 * 60 * 1000; // Check every hour for transactions due within the next day
 
+// "2026-11-26" -> "26 Nov 2026", the way dates are shown everywhere else in KREW.
+function formatDay(isoDate) {
+  return new Date(`${isoDate}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+}
+
 export function checkDueReminders() {
   const dueSoon = db
     .prepare(
@@ -26,9 +31,9 @@ export function checkDueReminders() {
       createNotification(
         transaction.organizer_id,
         'payment_due_reminder',
-        `Payment of KES ${Number(transaction.amount).toLocaleString()} to ${transaction.crew_member_name} is due ${
+        `Payment of KES ${Number(transaction.amount).toLocaleString()} to ${transaction.crew_member_name} is due on ${formatDay(
           transaction.due_date
-        } - confirm it on time to keep your on-time record.`,
+        )}. Confirm it on time to keep your on time record.`,
         '/dashboard'
       );
       db.prepare(`UPDATE transactions SET due_reminder_sent_at = datetime('now') WHERE id = ?`).run(transaction.id);

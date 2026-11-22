@@ -163,7 +163,7 @@ jobsRouter.post('/:id/confirm', requireAuth, (req, res) => {
   }
 
   if (transaction.status !== 'pending') {
-    return res.status(409).json({ error: `This job is already ${transaction.status} - it can't be confirmed again.` });
+    return res.status(409).json({ error: `This job is already ${transaction.status}, so it can't be confirmed again.` });
   }
 
   const amountNumber = Number(amount);
@@ -227,7 +227,7 @@ jobsRouter.post('/:id/confirm', requireAuth, (req, res) => {
     createNotification(
       otherPartyId,
       'payment_mismatch',
-      `The payment amounts you and ${req.user.name} confirmed don't match for this job - you may want to raise a dispute.`,
+      `The payment amounts you and ${req.user.name} confirmed don't match for this job. You may want to raise a dispute.`,
       otherPartyLink
     );
   } else {
@@ -283,7 +283,7 @@ jobsRouter.post('/:id/dispute', requireAuth, (req, res) => {
 
   const cleanReason = text(reason, LIMITS.disputeReason);
   if (cleanReason === null) {
-    return res.status(400).json({ error: `Keep the reason to ${LIMITS.disputeReason} characters or fewer - add more in the details.` });
+    return res.status(400).json({ error: `Keep the reason to ${LIMITS.disputeReason} characters or fewer. Add more in the details.` });
   }
   const trimmedReason = cleanReason || null;
   if (!trimmedReason) {

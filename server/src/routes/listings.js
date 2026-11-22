@@ -292,7 +292,7 @@ listingsRouter.post('/:id/accept', requireRole('organizer'), (req, res) => {
   createNotification(
     crewMemberId,
     'application_accepted',
-    `Your application for "${listing.title || 'a job'}" was accepted - you're hired!`,
+    `Your application for "${listing.title || 'a job'}" was accepted. You're hired!`,
     '/dashboard?section=jobs'
   );
 

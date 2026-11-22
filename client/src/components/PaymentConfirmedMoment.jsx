@@ -148,7 +148,7 @@ export default function PaymentConfirmedMoment({ job, viewerRole, onClose }) {
             <ShieldCheck size={20} strokeWidth={1.4} aria-hidden="true" />
             <span>
               {isOrganizer
-                ? 'The amounts match, so this job is complete. It now counts toward your on-time payment record - the record crew see before they apply to your gigs.'
+                ? 'The amounts match, so this job is complete. It now counts toward your on time payment record, which crew see before they apply to your gigs.'
                 : `The amounts match, so this job is complete. It now shows in the verified work history on your public profile, where organizers can see it.`}
             </span>
           </p>

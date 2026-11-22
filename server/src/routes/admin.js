@@ -56,7 +56,7 @@ function setVerificationStatus(newStatus) {
             userId,
             newStatus === 'approved' ? 'account_approved' : 'account_rejected',
             newStatus === 'approved'
-                ? "Your KREW account has been approved - you're all set to get started."
+                ? "Your KREW account has been approved. You're all set to get started."
                 : 'Your KREW account application was not approved.'
         );
 
@@ -194,8 +194,8 @@ adminRouter.post('/disputes/:id/resolve', (req, res) => {
         .get(dispute.transaction_id);
     const resolutionMessage =
         outcome === 'confirm'
-            ? `Your dispute was resolved - the job is now confirmed for KES ${finalAmountNumber.toLocaleString()}.`
-            : 'Your dispute was reviewed - please reconfirm your payment for this job.';
+            ? `Your dispute was resolved. The job is now confirmed for KES ${finalAmountNumber.toLocaleString()}.`
+            : 'Your dispute was reviewed. Please confirm your payment for this job again.';
     createNotification(resolvedTransaction.organizer_id, 'dispute_resolved', resolutionMessage, '/dashboard?section=payments');
     createNotification(resolvedTransaction.crew_member_id, 'dispute_resolved', resolutionMessage, '/dashboard?section=jobs');
 
