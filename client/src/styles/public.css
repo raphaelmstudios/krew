@@ -430,28 +430,6 @@
   rotate: -6deg;
 }
 
-.krew-hx-pause {
-  position: absolute;
-  right: max(24px, calc(50% - 576px));
-  bottom: -30px; /* just under the row, clear of the cards */
-  z-index: 3;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface-card);
-  color: var(--color-text-soft);
-  cursor: pointer;
-  transition: color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease);
-}
-
-.krew-hx-pause:hover {
-  color: var(--color-text);
-  border-color: var(--color-text-soft);
-}
 
 @media (max-width: 860px) {
   .krew-hx {
@@ -503,13 +481,6 @@
     bottom: 9px;
     padding: 5px 9px;
     font-size: 12px;
-  }
-
-  .krew-hx-pause {
-    right: 16px;
-    bottom: -26px;
-    width: 32px;
-    height: 32px;
   }
 }
 
