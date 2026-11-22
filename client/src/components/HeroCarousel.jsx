@@ -5,43 +5,66 @@ import { categoryIcon } from './ListingPhoto.jsx';
 import { prefersReducedMotion } from '../motion.js';
 
 // The homepage hero's moving row of cards: event photos and crew roles, drifting slowly
-// sideways along a curve - the cards at the edges are larger and turned toward the middle,
+// from left to right along a curve - the cards at the edges are larger and turned toward the middle,
 // as if the row wraps around you. Each card opens Find Work filtered to that kind of work.
 //
 // Photos are labelled with the kind of event or work in them, never a name, so nobody in a
 // photo is presented as a particular KREW member. To use new photos, add them to
 // public/images/home/ and list them in CARDS below.
 //
+// Role cards show their line icon until a photo exists at their `src` (in
+// public/images/home/roles/). Drop a photo there with that exact name and the card shows it
+// instead - no code change needed.
+//
 // The row pauses while the pointer is over it or a card has keyboard focus, and has its own
 // pause button (moving content needs one). With reduced motion on it doesn't move at all.
 const CARDS = [
   { type: 'photo', src: '/images/home/people-1.webp', focus: '78% center', label: 'Sound & AV', category: 'Sound & AV' },
-  { type: 'role', label: 'Bar service', category: 'Bar Service', tone: 'plum' },
+  { type: 'role', label: 'Bar service', category: 'Bar Service', tone: 'plum', src: '/images/home/roles/bar-service.webp' },
   { type: 'photo', src: '/images/auth/login-register.webp', focus: 'center 30%', label: 'Live music', category: 'Other' },
-  { type: 'role', label: 'Security', category: 'Security', tone: 'violet' },
+  { type: 'role', label: 'Security', category: 'Security', tone: 'violet', src: '/images/home/roles/security.webp' },
   { type: 'photo', src: '/images/home/people-2.webp', focus: '80% center', label: 'Lighting', category: 'Sound & AV' },
-  { type: 'role', label: 'Ushering', category: 'Ushering & Guest Services', tone: 'lavender' },
+  { type: 'role', label: 'Ushering', category: 'Ushering & Guest Services', tone: 'lavender', src: '/images/home/roles/ushering.webp' },
   { type: 'photo', src: '/images/home/organizer-card.webp', focus: '45% center', label: 'DJ nights', category: 'Sound & AV' },
-  { type: 'role', label: 'Photography', category: 'Photography & Videography', tone: 'plum' },
+  { type: 'role', label: 'Photography', category: 'Photography & Videography', tone: 'plum', src: '/images/home/roles/photography.webp' },
   { type: 'photo', src: '/images/home/crew-card.webp', focus: '58% center', label: 'Stage shows', category: 'Event Setup & Teardown' },
-  { type: 'role', label: 'Catering', category: 'Catering', tone: 'violet' },
+  { type: 'role', label: 'Catering', category: 'Catering', tone: 'violet', src: '/images/home/roles/catering.webp' },
   { type: 'photo', src: '/images/home/hero.webp', focus: '40% center', label: 'Concerts', category: 'Other' },
-  { type: 'role', label: 'Event setup', category: 'Event Setup & Teardown', tone: 'lavender' },
+  { type: 'role', label: 'Event setup', category: 'Event Setup & Teardown', tone: 'lavender', src: '/images/home/roles/event-setup.webp' },
 ];
 
 const SPEED_PX_PER_SECOND = 26;
 const MAX_TURN_DEGREES = 30; // how far the edge cards turn toward the middle
 const EDGE_GROWTH = 0.26; // how much bigger the edge cards are than the middle ones
 
+// True once the role card's photo has loaded; false while it loads or if there isn't one yet.
+function usePhotoExists(src) {
+  const [exists, setExists] = useState(false);
+  useEffect(() => {
+    if (!src) return undefined;
+    let cancelled = false;
+    const image = new Image();
+    image.onload = () => {
+      if (!cancelled) setExists(true);
+    };
+    image.src = src;
+    return () => {
+      cancelled = true;
+    };
+  }, [src]);
+  return exists;
+}
+
 function Card({ card, hidden }) {
   const to = `/find-work?category=${encodeURIComponent(card.category)}`;
   const linkProps = hidden ? { tabIndex: -1, 'aria-hidden': true } : { 'aria-label': `${card.label}: browse gigs` };
-  if (card.type === 'photo') {
+  const rolePhoto = usePhotoExists(card.type === 'role' ? card.src : null);
+  if (card.type === 'photo' || rolePhoto) {
     return (
       <Link to={to} className="krew-hx-card photo" data-hx-card {...linkProps}>
         <span
           className="krew-hx-card-photo"
-          style={{ backgroundImage: `url('${card.src}')`, backgroundPosition: card.focus }}
+          style={{ backgroundImage: `url('${card.src}')`, backgroundPosition: card.focus || 'center' }}
           aria-hidden="true"
         />
         <span className="krew-hx-card-label">{card.label}</span>
@@ -106,9 +129,11 @@ export default function HeroCarousel() {
     function tick(now) {
       const elapsed = last ? Math.min(64, now - last) : 0;
       last = now;
+      // Drifts left to right: the row moves right, and jumps back one full set when it has
+      // moved a whole set's width (the second copy of the cards makes the jump invisible).
       if (!holdRef.current && !pausedRef.current) {
-        offset -= (SPEED_PX_PER_SECOND * elapsed) / 1000;
-        if (offset <= -setWidth) offset += setWidth;
+        offset += (SPEED_PX_PER_SECOND * elapsed) / 1000;
+        if (offset > 0) offset -= setWidth;
       }
       draw();
       frame = requestAnimationFrame(tick);
