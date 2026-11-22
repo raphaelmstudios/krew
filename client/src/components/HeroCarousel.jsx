@@ -1,6 +1,5 @@
 import { createElement, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Pause, Play } from 'lucide-react';
 import { categoryIcon } from './ListingPhoto.jsx';
 import { prefersReducedMotion } from '../motion.js';
 
@@ -16,8 +15,8 @@ import { prefersReducedMotion } from '../motion.js';
 // public/images/home/roles/). Drop a photo there with that exact name and the card shows it
 // instead - no code change needed.
 //
-// The row pauses while the pointer is over it or a card has keyboard focus, and has its own
-// pause button (moving content needs one). With reduced motion on it doesn't move at all.
+// The row pauses while the pointer is over it or a card has keyboard focus. With reduced
+// motion on it doesn't move at all.
 const CARDS = [
   { type: 'photo', src: '/images/home/people-1.webp', focus: '78% center', label: 'Sound & AV', category: 'Sound & AV' },
   { type: 'role', label: 'Bar service', category: 'Bar Service', tone: 'plum', src: '/images/home/roles/bar-service.webp' },
@@ -84,13 +83,6 @@ export default function HeroCarousel() {
   const viewportRef = useRef(null);
   const trackRef = useRef(null);
   const holdRef = useRef(false); // pointer over the row, or a card focused
-  const [paused, setPaused] = useState(false);
-  const pausedRef = useRef(false);
-
-  useEffect(() => {
-    pausedRef.current = paused;
-  }, [paused]);
-
   useEffect(() => {
     const viewport = viewportRef.current;
     const track = trackRef.current;
@@ -131,7 +123,7 @@ export default function HeroCarousel() {
       last = now;
       // Drifts left to right: the row moves right, and jumps back one full set when it has
       // moved a whole set's width (the second copy of the cards makes the jump invisible).
-      if (!holdRef.current && !pausedRef.current) {
+      if (!holdRef.current) {
         offset += (SPEED_PX_PER_SECOND * elapsed) / 1000;
         if (offset > 0) offset -= setWidth;
       }
@@ -153,8 +145,6 @@ export default function HeroCarousel() {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
-
-  const reduced = typeof window !== 'undefined' && prefersReducedMotion();
 
   return (
     <div className="krew-hx-carousel">
@@ -184,17 +174,6 @@ export default function HeroCarousel() {
           )}
         </div>
       </div>
-      {!reduced && (
-        <button
-          type="button"
-          className="krew-hx-pause"
-          onClick={() => setPaused((current) => !current)}
-          aria-label={paused ? 'Play the moving cards' : 'Pause the moving cards'}
-          aria-pressed={paused}
-        >
-          {paused ? <Play size={15} strokeWidth={2} /> : <Pause size={15} strokeWidth={2} />}
-        </button>
-      )}
     </div>
   );
 }
