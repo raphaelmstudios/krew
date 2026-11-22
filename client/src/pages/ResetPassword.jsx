@@ -57,7 +57,7 @@ export default function ResetPassword() {
           <div className="krew-reset-sent">
             <BadgeCheck size={28} strokeWidth={1.4} aria-hidden="true" />
             <p>
-              <strong>Password changed.</strong> You've been logged out everywhere else - log in with your new password.
+              <strong>Password changed.</strong> You've been logged out everywhere else. Log in with your new password.
             </p>
             <Link to="/login" className="krew-button-primary krew-reset-link">
               Log in

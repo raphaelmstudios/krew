@@ -31,18 +31,15 @@ export default function Terms() {
           <p>
             KREW helps organizers find crew and helps crew find work, and keeps a record of who paid and got paid on
             time. KREW does not process, hold, or transfer money. When an organizer and a crew member work together,
-            payment happens directly between them - by cash, mobile money, or however they agree. Afterwards, each
-            side confirms on KREW what was paid and when, and KREW uses that to calculate the completed-job counts and
-            on-time percentages shown on public profiles and listings. KREW is not a party to any payment, and isn't
-            responsible for a payment that doesn't happen as agreed - though a confirmed mismatch or a no-show is
-            exactly the kind of thing the reliability record is there to surface.
+            payment happens directly between them, by cash, mobile money, or however they agree. Afterwards, each
+            side confirms on KREW what was paid and when, and KREW uses that to calculate the completed job counts and on time percentages shown on public profiles and listings. KREW is not a party to any payment, and isn't
+            responsible for a payment that doesn't happen as agreed. Still, a confirmed mismatch or someone not turning up is exactly what the reliability record is there to show.
           </p>
 
           <h2>Accounts and verification</h2>
           <p>
             Organizers and crew members both create an account with a phone number and password, and upload an ID
-            document and a selfie as part of signing up. An admin reviews this before the account is approved -
-            posting a paid listing, applying to one, or being hired directly all require an approved account. You're
+            document and a selfie as part of signing up. An admin reviews this before the account is approved. Posting a paid listing, applying to one, or being hired directly all need an approved account. You're
             responsible for keeping your login details to yourself and for the accuracy of what you submit, including
             your ID documents.
           </p>
@@ -56,7 +53,7 @@ export default function Terms() {
           <h2>What you post</h2>
           <p>
             Job listings, your professional role, your skills, and your profile photo (for crew members) are shown
-            publicly once you add them. Keep them accurate - a listing's title, category, location, amount and due
+            publicly once you add them. Keep them accurate. A listing's title, category, location, amount and due
             date are what crew members are applying to, and a crew profile's role and skills are what organizers are
             hiring based on. Don't post anything false, misleading, or for work that isn't real.
           </p>
@@ -70,9 +67,8 @@ export default function Terms() {
 
           <h2>No warranty</h2>
           <p>
-            KREW is provided as-is, as an in-progress student project. It doesn't come with a guarantee that it will
-            be available, error-free, or fit for any particular purpose, and KREW isn't liable for disputes between
-            organizers and crew members, including disputes about payment, no-shows, or the quality of work. Use your
+            KREW is provided as it is, as a student project that is still in progress. It doesn't come with a guarantee that it will be available, free of errors, or fit for any particular purpose, and KREW isn't liable for disputes between
+            organizers and crew members, including disputes about payment, people not turning up, or the quality of work. Use your
             own judgment when agreeing to and carrying out paid work with someone you meet through KREW.
           </p>
 

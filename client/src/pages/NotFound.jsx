@@ -29,7 +29,7 @@ export default function NotFound() {
             </h1>
             <p className="krew-404-text">
               We checked the call sheet, the green room and behind the stage. Whatever was meant to be at this
-              address isn't here - the link may be old, or mistyped.
+              address isn't here. The link may be old, or mistyped.
             </p>
             <div className="krew-404-actions">
               <Link to="/" className="krew-button-primary krew-button-inline">
@@ -67,7 +67,7 @@ export default function NotFound() {
                   <dd>Never</dd>
                 </div>
               </dl>
-              <div className="krew-404-pass-stamp">No-show</div>
+              <div className="krew-404-pass-stamp">No show</div>
             </div>
           </div>
         </div>

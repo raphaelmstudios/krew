@@ -198,7 +198,7 @@ export default function JobCard({ job, viewerRole, onConfirmed }) {
       {mismatch && (
         <p className="krew-jc-note warning">
           <TriangleAlert size={18} strokeWidth={1.6} aria-hidden="true" />
-          <span>These amounts don't match - double-check yours and update it if it's wrong, or raise a dispute.</span>
+          <span>These amounts don't match. Check yours and update it if it's wrong, or raise a dispute.</span>
         </p>
       )}
 
@@ -206,7 +206,7 @@ export default function JobCard({ job, viewerRole, onConfirmed }) {
         <p className="krew-jc-note success">
           <BadgeCheck size={18} strokeWidth={1.6} aria-hidden="true" />
           <span>
-            Payment confirmed - {isOrganizer ? 'it counts toward your on-time record.' : 'it shows in your verified work history.'}
+            Payment confirmed. {isOrganizer ? 'It counts toward your on time record.' : 'It shows in your verified work history.'}
           </span>
           <span className="krew-jc-note-links">
             <button type="button" className="krew-dash-text-btn" onClick={() => setMomentJob(job)}>
@@ -224,7 +224,7 @@ export default function JobCard({ job, viewerRole, onConfirmed }) {
       {job.status === 'disputed' && (
         <p className="krew-jc-note danger">
           <Scale size={18} strokeWidth={1.6} aria-hidden="true" />
-          <span>Disputed - a KREW admin is reviewing this job. It's left out of both sides' records until it's settled.</span>
+          <span>Disputed. A KREW admin is reviewing this job. It's left out of both sides' records until it's settled.</span>
         </p>
       )}
 

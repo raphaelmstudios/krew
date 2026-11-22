@@ -117,8 +117,7 @@ export default function Home() {
         <p className="krew-home-section-body">
           An organizer posts an open listing with the amount, the date and what the job actually involves, or hires
           someone directly from the crew directory. Crew members browse open listings or set themselves as available
-          to be hired. Either way, nobody has to commit blind - an organizer's on-time payment record and a crew
-          member's completed job count are both visible before anyone agrees to anything.
+          to be hired. Either way, nobody has to commit blind. An organizer's on time payment record and a crew member's completed job count are both visible before anyone agrees to anything.
         </p>
 
         <div className="krew-home-trust-grid" data-reveal-children>
@@ -126,8 +125,7 @@ export default function Home() {
             <HandCoins className="krew-trust-icon" size={38} strokeWidth={1.3} aria-hidden="true" />
             <h3>Real payment records</h3>
             <p>
-              Every job agreement is logged. Once both sides confirm a payment, it becomes part of that organizer's
-              on-time record - an actual history of whether people got paid when they were supposed to.
+              Every job agreement is logged. Once both sides confirm a payment, it becomes part of that organizer's on time record: a real history of whether people got paid when they were supposed to.
             </p>
             <span className="krew-trust-notch"><span className="krew-trust-tag">01 · Payments</span></span>
           </div>
@@ -136,8 +134,7 @@ export default function Home() {
             <Fingerprint className="krew-trust-icon" size={38} strokeWidth={1.3} aria-hidden="true" />
             <h3>Verified identities</h3>
             <p>
-              Every account - organizer or crew - goes through ID verification before they can post a job, apply to
-              one, or get hired. KREW doesn't let unverified accounts transact.
+              Every account, organizer or crew, goes through ID verification before they can post a job, apply to one, or get hired. KREW doesn't let unverified accounts transact.
             </p>
             <span className="krew-trust-notch"><span className="krew-trust-tag">02 · Identity</span></span>
           </div>
@@ -158,8 +155,7 @@ export default function Home() {
         <div className="krew-home-people-copy" data-reveal-children>
           <h2>The people behind events.</h2>
           <p>
-            From concerts to conferences, KREW powers creativity. Bartenders, security, ushers, photographers and
-            sound engineers - the crew most guests never notice - finally get a proper place to find paid work, and
+            From concerts to conferences, KREW powers creativity. Bartenders, security, ushers, photographers and sound engineers are the crew most guests never notice. They finally get a proper place to find paid work, and
             organizers get a place to find them.
           </p>
           <a href="#how-it-works" className="krew-text-link">
@@ -181,8 +177,7 @@ export default function Home() {
             Your work history follows you, not just your <em>word</em>.
           </h2>
           <p>
-            A crew member's completed-jobs count and an organizer's on-time payment percentage are both calculated from
-            confirmed transactions - not reviews, not star ratings, nothing either side can write themselves. The more
+            A crew member's completed jobs count and an organizer's on time payment percentage both come from confirmed payments. Not reviews, not star ratings, and nothing either side can write about themselves. The more
             jobs you complete on KREW, the more that record speaks for you.
           </p>
         </div>
@@ -195,8 +190,7 @@ export default function Home() {
             <div className="krew-home-cta-body">
               <h3>Looking for work</h3>
               <p>
-                Browse open gigs across bar service, security, event setup, ushering, photography and more - or set
-                yourself as available and let organizers come to you.
+                Browse open gigs across bar service, security, event setup, ushering, photography and more. Or set yourself as available and let organizers come to you.
               </p>
               <div className="krew-home-cta-actions">
                 <Link to="/register" className="krew-button-primary krew-button-inline">
@@ -213,8 +207,7 @@ export default function Home() {
             <div className="krew-home-cta-body">
               <h3>Need to hire crew</h3>
               <p>
-                Post a job and let crew apply, or hire someone directly from the crew directory - complete with their
-                real completed-jobs record.
+                Post a job and let crew apply, or hire someone directly from the crew directory, with their real record of completed jobs.
               </p>
               <div className="krew-home-cta-actions">
                 <Link to="/register" className="krew-button-primary krew-button-inline">

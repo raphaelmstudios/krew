@@ -91,7 +91,7 @@ export default function HireForm({ crewMember, onCreated, onCancel }) {
             rows={3}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="e.g. Bar service for a 200-guest wedding, 6pm–midnight"
+            placeholder="e.g. Bar service for a wedding of 200 guests, 6pm to midnight"
           />
         </div>
 

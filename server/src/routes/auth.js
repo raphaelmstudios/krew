@@ -96,7 +96,7 @@ authRouter.post('/register', registerLimit, (req, res) => {
     }
 
     if (role !== 'organizer' && role !== 'crew_member') {
-        return res.status(400).json({ error: 'Role must be either "organizer" or "crew_member".' });
+        return res.status(400).json({ error: 'Choose whether you are an organizer or a crew member.' });
     }
 
     const passwordHash = bycrypt.hashSync(password, BYCRYPT_ROUNDS);

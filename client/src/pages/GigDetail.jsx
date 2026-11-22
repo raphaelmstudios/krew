@@ -306,11 +306,11 @@ export default function GigDetail() {
                 ) : (
                   <p className="krew-gd-description">
                     <span className="krew-status-pill new">New here</span> {listing.organizer_name} hasn't had a job confirmed on
-                    KREW yet - everyone starts without a track record, it isn't a red flag.
+                    KREW yet. Everyone starts without a record, so it isn't a warning sign.
                   </p>
                 )}
                 <p className="krew-gd-posted">
-                  Worked out automatically from payments both sides confirmed on KREW - not a self-reported rating.
+                  Worked out automatically from payments both sides confirmed on KREW. It is not a rating anyone gives themselves.
                 </p>
               </div>
             )}
@@ -339,12 +339,12 @@ export default function GigDetail() {
                   <>
                     {record.confirmed_job_count} completed {record.confirmed_job_count === 1 ? 'job' : 'jobs'} ·{' '}
                     {record.on_time_percentage}% on time
-                    <InfoTooltip text="How many of this organizer's jobs were confirmed paid, and what percentage were paid by the due date - calculated automatically from payment confirmations, not a self-reported rating." />
+                    <InfoTooltip text="How many of this organizer's jobs were confirmed as paid, and what share were paid by the due date. KREW works this out from payment confirmations. It is not a rating anyone gives themselves." />
                   </>
                 ) : (
                   <>
                     <span className="krew-status-pill new">New here</span>
-                    <InfoTooltip text="New here means this organizer hasn't had a job confirmed on KREW yet - everyone starts without a track record, it isn't a red flag." />
+                    <InfoTooltip text="New here means this organizer hasn't had a job confirmed on KREW yet. Everyone starts without a record, so it isn't a warning sign." />
                   </>
                 )}
               </span>

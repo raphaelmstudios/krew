@@ -37,7 +37,7 @@ function formatOrganizerRecord(record) {
     return (
       <>
         <span className="krew-status-pill new">New here</span>
-        <InfoTooltip text="New here means this organizer hasn't had a job confirmed on KREW yet - everyone starts without a track record, it isn't a red flag." />
+        <InfoTooltip text="New here means this organizer hasn't had a job confirmed on KREW yet. Everyone starts without a record, so it isn't a warning sign." />
       </>
     );
   }
@@ -45,7 +45,7 @@ function formatOrganizerRecord(record) {
   return (
     <>
       {record.confirmed_job_count} completed {jobWord} · {record.on_time_percentage}% on time
-      <InfoTooltip text="How many of this organizer's jobs were confirmed paid, and what percentage were paid by the due date - calculated automatically from payment confirmations, not a self-reported rating." />
+      <InfoTooltip text="How many of this organizer's jobs were confirmed as paid, and what share were paid by the due date. KREW works this out from payment confirmations. It is not a rating anyone gives themselves." />
     </>
   );
 }
@@ -174,7 +174,7 @@ export default function FindWork() {
             <p className="krew-home-section-label">Open gigs in Nairobi</p>
             <h1>Find Work</h1>
             <p className="krew-fw-hero-sub">
-              Discover paid event work - with the organizer's real payment record on every listing.
+              Discover paid event work, with the organizer's real payment record on every listing.
             </p>
             <form className="krew-fw-search" onSubmit={handleSearchSubmit} role="search">
               <Search size={19} strokeWidth={1.75} className="krew-fw-search-icon" aria-hidden="true" />
@@ -322,7 +322,7 @@ export default function FindWork() {
 
           {filtered && filtered.length === 0 && (
             <div className="krew-dash-empty">
-              <p>{listings.length === 0 ? 'No open gigs right now - check back soon.' : 'No open gigs match those filters right now.'}</p>
+              <p>{listings.length === 0 ? 'No open gigs right now. Check back soon.' : 'No open gigs match those filters right now.'}</p>
               {listings.length > 0 ? (
                 <button type="button" className="krew-button-secondary krew-button-inline" onClick={clearFilters}>
                   Clear filters

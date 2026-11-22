@@ -403,7 +403,7 @@ export default function Admin({ user, onLogout }) {
     );
   }
 
-  const loadingValue = '–';
+  const loadingValue = '…';
 
   return (
     <DashboardShell user={user || { name: 'Admin', role: 'admin' }} navItems={navItems} active={section} onNavigate={goTo} onLogout={onLogout}>
@@ -436,7 +436,7 @@ export default function Admin({ user, onLogout }) {
                 )}
               </div>
               {pendingUsers === null && <div className="krew-dash-loading-note" role="status">Loading…</div>}
-              {pendingUsers && pendingUsers.length === 0 && <p className="krew-db-empty">You're all caught up - no accounts waiting.</p>}
+              {pendingUsers && pendingUsers.length === 0 && <p className="krew-db-empty">You're all caught up. No accounts are waiting.</p>}
               {pendingUsers && pendingUsers.length > 0 && (
                 <ul className="krew-adm-list">{pendingUsers.slice(0, 4).map((u) => renderApprovalRow(u, true))}</ul>
               )}
@@ -529,7 +529,7 @@ export default function Admin({ user, onLogout }) {
               up". */}
           {openDisputes && openDisputes.length === 0 && disputes && disputes.length > 0 && (
             <div className="krew-dash-empty">
-              <p>No open disputes right now - you're caught up.</p>
+              <p>No open disputes right now. You're all caught up.</p>
               <button type="button" className="krew-button-secondary krew-button-inline" onClick={() => goTo('approvals')}>
                 Check approvals
               </button>
@@ -604,7 +604,7 @@ export default function Admin({ user, onLogout }) {
                             onChange={() => setOutcome('confirm')}
                           />
                           <span>
-                            <strong>The job was paid - confirm it</strong>
+                            <strong>The job was paid, so confirm it</strong>
                             <small>You set the final amount. It counts toward both records, like an agreed confirmation.</small>
                           </span>
                         </label>
@@ -646,7 +646,7 @@ export default function Admin({ user, onLogout }) {
                           rows={3}
                           value={resolutionNotes}
                           onChange={(e) => setResolutionNotes(e.target.value)}
-                          placeholder="Explain what you decided and why - both sides are notified and it's kept as part of the record."
+                          placeholder="Explain what you decided and why. Both sides are told, and it's kept as part of the record."
                         />
                       </div>
 
@@ -757,7 +757,7 @@ export default function Admin({ user, onLogout }) {
                       </div>
                     ) : (
                       <span className="krew-adm-docs missing">
-                        {reset.status === 'code_issued' ? 'A code was already sent - generate a new one if needed' : 'Waiting for a call'}
+                        {reset.status === 'code_issued' ? 'A code was already sent. Make a new one if needed.' : 'Waiting for a call'}
                       </span>
                     )}
                     <div className="krew-adm-actions">
@@ -794,7 +794,7 @@ export default function Admin({ user, onLogout }) {
         <>
           <div className="krew-db-head">
             <h1>Analytics</h1>
-            <p>Live counts from KREW's own records. Payments are only counted once both sides confirmed them (or an admin settled a dispute) - KREW tracks payments, it doesn't process them.</p>
+            <p>Live counts from KREW's own records. Payments are only counted once both sides confirmed them (or an admin settled a dispute). KREW tracks payments. It doesn't process them.</p>
           </div>
 
           {stats === null && <div className="krew-dash-loading-note" role="status">Loading…</div>}

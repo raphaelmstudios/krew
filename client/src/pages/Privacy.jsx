@@ -31,16 +31,14 @@ export default function Privacy() {
 
           <h2>What you give us when you sign up</h2>
           <p>
-            Your name, phone number, a password and whether you're an organizer or crew. Your password is never
-            stored as you typed it - only a one-way scrambled version (a bcrypt hash) that can check a login but
-            can't be turned back into the password.
+            Your name, phone number, a password and whether you're an organizer or crew. Your password is never stored as you typed it. Only a scrambled version is kept (a bcrypt hash), which can check a login but can't be turned back into the password.
           </p>
 
           <h2>Your ID and selfie</h2>
           <p>
             To get approved you upload a photo of your ID and a selfie. They are used for one thing: so a KREW admin
             can check you are who you say you are. They are never shown on your profile, never shared with
-            organizers or crew, and can only be opened by a logged-in KREW admin. They're kept while your account
+            organizers or crew, and can only be opened by a KREW admin who is logged in. They're kept while your account
             exists; uploading new ones replaces the old files.
           </p>
 
@@ -51,13 +49,11 @@ export default function Privacy() {
           <ul>
             <li>
               <strong>Crew:</strong> name, profile photo, professional role, skills, years of experience, bio,
-              portfolio photos, availability, completed-job count and verified work history. Work history shows a
-              gig's public title, category and month - never the amount, the organizer, or the private job
-              description.
+              portfolio photos, availability, completed job count and verified work history. Work history shows a
+              gig's public title, category and month. It never shows the amount, the organizer, or the private job description.
             </li>
             <li>
-              <strong>Organizers:</strong> your name on gigs you post, and your payment record - how many jobs you've
-              paid and had confirmed, the share paid on time, and how early or late payments typically are.
+              <strong>Organizers:</strong> your name on gigs you post, and your payment record: how many jobs you've paid and had confirmed, the share paid on time, and how early or late payments typically are.
             </li>
           </ul>
           <p>Phone numbers are never shown publicly. Only you and KREW admins see yours.</p>
@@ -71,7 +67,7 @@ export default function Privacy() {
 
           <h2>How the numbers are worked out</h2>
           <p>
-            Completed-job counts and on-time percentages are calculated automatically from payments both sides
+            Completed job counts and on time percentages are calculated automatically from payments both sides
             confirmed. Nobody types them in, and nobody can edit them. A disputed job is left out until an admin
             settles it.
           </p>
@@ -98,8 +94,7 @@ export default function Privacy() {
               Google's own privacy terms apply to what you enter there.
             </li>
             <li>
-              <strong>Payments:</strong> KREW doesn't process, hold or move money, so it never sees your M-Pesa or
-              bank details.
+              <strong>Payments:</strong> KREW doesn't process, hold or move money, so it never sees your mobile money or bank details.
             </li>
           </ul>
 
@@ -107,7 +102,7 @@ export default function Privacy() {
           <p>
             You can change your profile, photos, availability and password at any time from your dashboard. If you
             forget your password, a KREW admin calls the phone number on your account to confirm it's you before
-            giving you a one-time reset code - your number is used for nothing else.
+            giving you a one time reset code. Your number is used for nothing else.
           </p>
           <p>
             Under Kenya's Data Protection Act you can see and delete the data KREW holds about you. Open{' '}

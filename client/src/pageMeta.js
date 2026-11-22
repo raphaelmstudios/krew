@@ -18,12 +18,12 @@ export const PAGE_META = {
   '/find-work': {
     title: 'Find paid event gigs in Nairobi · KREW',
     description:
-      "Browse open event gigs in Nairobi - bar service, security, sound, ushering and more - and see each organizer's payment record before applying.",
+      "Browse open event gigs in Nairobi, such as bar service, security, sound and ushering, and see each organizer's payment record before you apply.",
   },
   '/hire-crew': {
     title: 'Hire verified event crew in Nairobi · KREW',
     description:
-      'Find ID-verified bartenders, security, ushers, photographers and sound engineers in Nairobi, each with a record of payment-confirmed jobs.',
+      'Find verified bartenders, security staff, ushers, photographers and sound engineers in Nairobi, each with a record of jobs paid and confirmed.',
   },
   '/login': {
     title: 'Log in · KREW',
@@ -40,16 +40,16 @@ export const PAGE_META = {
   },
   '/forgot-password': {
     title: 'Forgot your password? · KREW',
-    description: 'Ask for a password reset. A KREW admin calls the number on your account to confirm it is you, then gives you a one-time code.',
+    description: 'Ask for a password reset. A KREW admin calls the number on your account to confirm it is you, then gives you a one time code.',
   },
   '/reset-password': {
     title: 'Set a new password · KREW',
-    description: 'Enter the one-time code a KREW admin gave you and choose a new password for your account.',
+    description: 'Enter the one time code a KREW admin gave you and choose a new password for your account.',
   },
   '/faq': {
     title: 'FAQ: how KREW payment records work · KREW',
     description:
-      'What "New here", on-time percentages and completed jobs mean on KREW, how payment confirmation works, and how to raise a dispute.',
+      'What "New here", on time percentages and completed jobs mean on KREW, how payment confirmation works, and how to raise a dispute.',
   },
   '/terms': {
     title: 'Terms of Service · KREW',
@@ -58,7 +58,7 @@ export const PAGE_META = {
   '/privacy': {
     title: 'Privacy Policy · KREW',
     description:
-      'What KREW collects - including your ID and selfie - why, who can see each part, and how long it is kept.',
+      'What KREW collects, including your ID and selfie, why it is collected, who can see each part, and how long it is kept.',
   },
   '/dashboard': {
     title: 'Your dashboard · KREW',
@@ -109,7 +109,7 @@ export function gigMeta(listing) {
 export function crewMeta(profile) {
   const role = profile.professional_role || 'Event crew';
   const jobs = profile.confirmed_job_count
-    ? `${profile.confirmed_job_count} completed, payment-confirmed ${profile.confirmed_job_count === 1 ? 'job' : 'jobs'} on KREW.`
+    ? `${profile.confirmed_job_count} completed and confirmed paid ${profile.confirmed_job_count === 1 ? 'job' : 'jobs'} on KREW.`
     : 'New on KREW.';
   const years = profile.years_experience ? `, ${profile.years_experience}+ years' experience` : '';
   return {

@@ -55,7 +55,7 @@ export default function ForgotPassword() {
             <PhoneCall size={28} strokeWidth={1.4} aria-hidden="true" />
             <p>
               <strong>Request received.</strong> If {phone.trim()} has a KREW account, an admin will call that number
-              soon. Answer a couple of questions about your account and they'll read you an 8-character code. The code
+              soon. Answer a couple of questions about your account and they'll read you a code of 8 characters. The code
               works for 30 minutes.
             </p>
             <Link
