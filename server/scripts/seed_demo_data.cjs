@@ -150,7 +150,8 @@ const insertTransaction = db.prepare(
 insertUser({ name: 'Demo Admin', phone: '0711000001', role: 'admin' });
 
 // Organizers. latePaymentChance shapes their on-time record: Bloomfield always pays on time,
-// Kilele is often a few days late. Lakeside Live is brand new, with no record yet.
+// Kilele is often a few days late. shortPaymentChance is how often they pay less than agreed
+// (both sides confirm the lower amount). Lakeside Live is brand new, with no record yet.
 const ORGANIZERS = [
   {
     key: 'bloomfield',
@@ -182,6 +183,7 @@ const ORGANIZERS = [
     company_name: 'Mvua Festival Co.',
     bio: "Big outdoor music festivals and Afro-house nights for 2,000 to 15,000 people. Our weekends run on dozens of crew at once: stage, sound, bars, security and ushers. Rain or shine (hence the name), the show goes on and the crew gets paid.",
     latePaymentChance: 0.1,
+    shortPaymentChance: 0.05,
     events: [
       { name: 'weekend music festival', location: 'Ngong Racecourse, Nairobi' },
       { name: 'Afro-house night', location: 'Westlands, Nairobi' },
@@ -196,6 +198,7 @@ const ORGANIZERS = [
     company_name: 'Kilele Corporate Events',
     bio: "Conferences, product launches and end-of-year galas for companies in Nairobi. We care about the details: clean AV, sharp ushers and a stage that looks like a brand, not a hotel ballroom. Payments go through our finance team, so allow a few days at month end.",
     latePaymentChance: 0.35,
+    shortPaymentChance: 0.2,
     events: [
       { name: 'product launch', location: 'Westlands, Nairobi' },
       { name: 'tech conference', location: 'Upper Hill, Nairobi' },
@@ -460,6 +463,11 @@ for (const crewMember of CREW) {
       : new Date(eventDay.getTime() + between(2, 26) * 60 * 60 * 1000);
     const otherSideAt = new Date(paidAt.getTime() - between(1, 20) * 60 * 60 * 1000);
     const organizerFirst = random() < 0.5;
+    // A short payment is 10 to 25% less than agreed, rounded to the nearest 500.
+    const paidAmount =
+      organizer.shortPaymentChance && random() < organizer.shortPaymentChance
+        ? Math.round((amount * (1 - between(10, 25) / 100)) / 500) * 500
+        : amount;
 
     let listingId = null;
     if (random() < 0.8) {
@@ -487,9 +495,9 @@ for (const crewMember of CREW) {
       job_description: description,
       status: 'confirmed',
       organizer_confirmed_at: sqlDateTime(organizerFirst ? otherSideAt : paidAt),
-      organizer_confirmed_amount: amount,
+      organizer_confirmed_amount: paidAmount,
       crew_confirmed_at: sqlDateTime(organizerFirst ? paidAt : otherSideAt),
-      crew_confirmed_amount: amount,
+      crew_confirmed_amount: paidAmount,
       completed_at: sqlDateTime(paidAt),
       created_at: sqlDateTime(new Date(eventDay.getTime() - between(2, 5) * DAY)),
     });

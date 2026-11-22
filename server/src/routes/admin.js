@@ -9,6 +9,8 @@ import path from 'path';
 import { db } from '../db.js';
 import { requireAdmin } from '../middleware/auth.js';
 import { createNotification } from '../notifications.js';
+import { logChange } from '../audit.js';
+import bcrypt from 'bcrypt';
 import { text, LIMITS } from '../security.js';
 import crypto from 'node:crypto';
 import { hashResetCode, RESET_CODE_MINUTES } from './auth.js';
@@ -48,6 +50,7 @@ function setVerificationStatus(newStatus) {
         if (result.changes === 0) {
             return res.status(404).json({ error: `No pending account found for user ID: ${userId}` });
         }
+        logChange(req.user.id, newStatus === 'approved' ? 'account_approved' : 'account_rejected', 'user', userId);
 
         createNotification(
             userId,
@@ -148,6 +151,16 @@ adminRouter.post('/disputes/:id/resolve', (req, res) => {
     // decision that only partly made it into the database would misrepresent what was
     // actually decided.
     const resolveDispute = db.transaction(() => {
+        const before = db
+            .prepare(`SELECT status, organizer_confirmed_amount, crew_confirmed_amount FROM transactions WHERE id = ?`)
+            .get(dispute.transaction_id);
+        logChange(req.user.id, 'dispute_resolved', 'job', dispute.transaction_id, {
+            outcome,
+            ...(outcome === 'confirm' ? { final_amount: finalAmountNumber } : {}),
+            organizer_amount_before: before.organizer_confirmed_amount,
+            crew_amount_before: before.crew_confirmed_amount,
+            note: trimmedNotes,
+        });
         db.prepare(
             `UPDATE disputes SET status = 'resolved', resolution_notes = ?, resolved_by = ?, resolved_at = datetime('now') WHERE id = ?`
         ).run(trimmedNotes, req.user.id, disputeId);
@@ -230,7 +243,7 @@ adminRouter.get('/stats', (req, res) => {
             pending: count(`SELECT COUNT(*) AS n FROM users WHERE verification_status = 'pending'`),
             crew: count(`SELECT COUNT(*) AS n FROM users WHERE role = 'crew_member' AND verification_status = 'approved'`),
             organizers: count(`SELECT COUNT(*) AS n FROM users WHERE role = 'organizer' AND verification_status = 'approved'`),
-            rejected: count(`SELECT COUNT(*) AS n FROM users WHERE verification_status = 'rejected'`),
+            rejected: count(`SELECT COUNT(*) AS n FROM users WHERE verification_status = 'rejected' AND deleted_at IS NULL`),
             joined_last_7_days: count(
                 `SELECT COUNT(*) AS n FROM users WHERE role != 'admin' AND created_at >= datetime('now', '-7 days')`
             ),
@@ -286,7 +299,7 @@ const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 adminRouter.post('/password-resets/:id/issue', (req, res) => {
     const resetId = Number(req.params.id);
     const reset = db
-        .prepare(`SELECT id FROM password_resets WHERE id = ? AND status IN ('requested', 'code_issued')`)
+        .prepare(`SELECT id, user_id FROM password_resets WHERE id = ? AND status IN ('requested', 'code_issued')`)
         .get(resetId);
     if (!reset) {
         return res.status(404).json({ error: 'That reset request is no longer open.' });
@@ -302,6 +315,7 @@ adminRouter.post('/password-resets/:id/issue', (req, res) => {
              expires_at = ?, failed_attempts = 0
          WHERE id = ?`
     ).run(hashResetCode(code), req.user.id, expiresAt, resetId);
+    logChange(req.user.id, 'password_reset_code_issued', 'user', reset.user_id);
 
     res.json({ id: resetId, code, expires_at: expiresAt });
 });
@@ -317,3 +331,168 @@ adminRouter.post('/password-resets/:id/cancel', (req, res) => {
     }
     res.json({ id: resetId, status: 'cancelled' });
 });
+
+// --- Account deletion requests (NFR6, see the data_requests table in db.js) ---------------
+// Open requests first, then the 30 most recently handled. Each comes with how many of the
+// person's jobs are still in progress, since deleting mid-job leaves the other side waiting.
+adminRouter.get('/data-requests', (req, res) => {
+    const requests = db
+        .prepare(
+            `SELECT r.id, r.reason, r.status, r.response_note, r.handled_at, r.created_at,
+                    r.user_id, u.name, u.phone, u.role, u.deleted_at,
+                    (SELECT COUNT(*) FROM transactions t
+                     WHERE (t.organizer_id = r.user_id OR t.crew_member_id = r.user_id)
+                       AND t.status IN ('pending', 'disputed')) AS open_jobs
+             FROM data_requests r
+             JOIN users u ON u.id = r.user_id
+             WHERE r.status = 'open'
+                OR r.id IN (SELECT id FROM data_requests WHERE status != 'open' ORDER BY handled_at DESC LIMIT 30)
+             ORDER BY CASE r.status WHEN 'open' THEN 0 ELSE 1 END, r.created_at ASC`
+        )
+        .all();
+    res.json(requests);
+});
+
+// Removes a file kept under the uploads folder, if it's there. Paths outside it are ignored.
+function removeUpload(relativePath) {
+    if (!relativePath) return;
+    const fullPath = path.resolve(UPLOAD_ROOT, relativePath.replace(/\\/g, '/'));
+    if (!fullPath.startsWith(path.resolve(UPLOAD_ROOT) + path.sep)) return;
+    fs.rmSync(fullPath, { force: true });
+}
+
+// Deletes the account. Everything personal goes: name, phone number, password, photos, ID
+// document, selfie, bio, skills, notifications and logins. What stays is the record of jobs
+// and payments, because the other person on each job relies on it for their own history -
+// there the account now shows as "Deleted account". Open gigs are closed and applications
+// still waiting are withdrawn.
+adminRouter.post('/data-requests/:id/complete', (req, res) => {
+    const requestId = Number(req.params.id);
+    const request = db.prepare(`SELECT * FROM data_requests WHERE id = ? AND status = 'open'`).get(requestId);
+    if (!request) {
+        return res.status(404).json({ error: 'That request is no longer open.' });
+    }
+    const user = db.prepare(`SELECT * FROM users WHERE id = ?`).get(request.user_id);
+    if (!user || user.role === 'admin') {
+        return res.status(400).json({ error: 'This account cannot be deleted here.' });
+    }
+    const cleanNote = text(req.body?.response_note, LIMITS.resolutionNotes);
+    if (cleanNote === null) {
+        return res.status(400).json({ error: `Keep the note to ${LIMITS.resolutionNotes} characters or fewer.` });
+    }
+
+    const portfolio = db.prepare(`SELECT image_path FROM portfolio_images WHERE user_id = ?`).all(user.id);
+    const unusablePassword = bcrypt.hashSync(crypto.randomBytes(32).toString('hex'), 10);
+
+    const deleteAccount = db.transaction(() => {
+        db.prepare(
+            `UPDATE users
+             SET name = 'Deleted account', phone = ?, password_hash = ?, id_document_path = NULL, selfie_path = NULL,
+                 profile_photo_path = NULL, cover_photo_path = NULL, bio = NULL, skills = NULL,
+                 professional_role = NULL, years_experience = NULL, company_name = NULL,
+                 verification_status = 'rejected', deleted_at = datetime('now')
+             WHERE id = ?`
+        ).run(`deleted-${user.id}`, unusablePassword, user.id);
+        db.prepare(`DELETE FROM portfolio_images WHERE user_id = ?`).run(user.id);
+        db.prepare(`DELETE FROM sessions WHERE user_id = ?`).run(user.id);
+        db.prepare(`DELETE FROM notifications WHERE user_id = ?`).run(user.id);
+        db.prepare(`DELETE FROM password_resets WHERE user_id = ?`).run(user.id);
+        db.prepare(`DELETE FROM job_applications WHERE crew_member_id = ? AND status = 'pending'`).run(user.id);
+        db.prepare(`UPDATE job_listings SET status = 'cancelled' WHERE organizer_id = ? AND status = 'open'`).run(user.id);
+        db.prepare(
+            `UPDATE data_requests SET status = 'done', response_note = ?, handled_by = ?, handled_at = datetime('now') WHERE id = ?`
+        ).run(cleanNote || null, req.user.id, requestId);
+        logChange(req.user.id, 'deletion_completed', 'user', user.id, { role: user.role });
+    });
+    deleteAccount();
+
+    // The files go once the database no longer points to them.
+    for (const filePath of [user.id_document_path, user.selfie_path, user.profile_photo_path, user.cover_photo_path]) {
+        removeUpload(filePath);
+    }
+    for (const image of portfolio) removeUpload(image.image_path);
+
+    res.json({ id: requestId, status: 'done' });
+});
+
+// Says no, with a reason the person sees (for example: finish your open job first).
+adminRouter.post('/data-requests/:id/decline', (req, res) => {
+    const requestId = Number(req.params.id);
+    const cleanNote = text(req.body?.response_note, LIMITS.resolutionNotes);
+    if (cleanNote === null) {
+        return res.status(400).json({ error: `Keep the note to ${LIMITS.resolutionNotes} characters or fewer.` });
+    }
+    if (!cleanNote) {
+        return res.status(400).json({ error: 'Explain why, so the person knows what to do next.' });
+    }
+    const request = db.prepare(`SELECT user_id FROM data_requests WHERE id = ? AND status = 'open'`).get(requestId);
+    if (!request) {
+        return res.status(404).json({ error: 'That request is no longer open.' });
+    }
+    db.transaction(() => {
+        db.prepare(
+            `UPDATE data_requests SET status = 'declined', response_note = ?, handled_by = ?, handled_at = datetime('now') WHERE id = ?`
+        ).run(cleanNote, req.user.id, requestId);
+        logChange(req.user.id, 'deletion_declined', 'user', request.user_id, { note: cleanNote });
+    })();
+    createNotification(
+        request.user_id,
+        'deletion_declined',
+        `Your request to delete your account was not completed: ${cleanNote}`,
+        '/dashboard'
+    );
+    res.json({ id: requestId, status: 'declined' });
+});
+
+// --- Change log (NFR9, see audit.js) -------------------------------------------------------
+// The latest entries, newest first, 50 at a time (?before=<id> for older ones), optionally
+// only one kind of change (?group=jobs|disputes|accounts|data).
+const ACTIVITY_GROUPS = {
+    jobs: ['gig_posted', 'gig_cancelled', 'job_created', 'payment_confirmed', 'job_completed'],
+    disputes: ['dispute_raised', 'dispute_resolved'],
+    accounts: [
+        'account_created',
+        'account_approved',
+        'account_rejected',
+        'password_changed',
+        'password_reset_code_issued',
+        'password_reset_used',
+    ],
+    data: ['data_copy_downloaded', 'deletion_requested', 'deletion_cancelled', 'deletion_completed', 'deletion_declined'],
+};
+const ACTIVITY_PAGE_SIZE = 50;
+
+adminRouter.get('/activity', (req, res) => {
+    const conditions = [];
+    const params = [];
+    const group = ACTIVITY_GROUPS[req.query.group];
+    if (group) {
+        conditions.push(`a.action IN (${group.map(() => '?').join(', ')})`);
+        params.push(...group);
+    }
+    const before = Number(req.query.before);
+    if (Number.isInteger(before) && before > 0) {
+        conditions.push('a.id < ?');
+        params.push(before);
+    }
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const entries = db
+        .prepare(
+            `SELECT a.id, a.action, a.target_type, a.target_id, a.details, a.created_at,
+                    a.actor_id, actor.name AS actor_name, actor.role AS actor_role,
+                    CASE a.target_type WHEN 'user' THEN target_user.name END AS target_name
+             FROM audit_log a
+             LEFT JOIN users actor ON actor.id = a.actor_id
+             LEFT JOIN users target_user ON a.target_type = 'user' AND target_user.id = a.target_id
+             ${where}
+             ORDER BY a.id DESC
+             LIMIT ${ACTIVITY_PAGE_SIZE + 1}`
+        )
+        .all(...params);
+    const hasMore = entries.length > ACTIVITY_PAGE_SIZE;
+    res.json({
+        entries: entries.slice(0, ACTIVITY_PAGE_SIZE).map((entry) => ({ ...entry, details: entry.details ? JSON.parse(entry.details) : null })),
+        has_more: hasMore,
+    });
+});
+

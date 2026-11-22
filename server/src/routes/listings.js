@@ -10,6 +10,7 @@ import { db } from '../db.js';
 import { requireRole } from '../middleware/auth.js';
 import { computeOrganizerRecord, computeCrewRecord } from './users.js';
 import { createNotification } from '../notifications.js';
+import { logChange } from '../audit.js';
 import { extensionFor, verifySavedFiles } from '../uploadSafety.js';
 import { text, LIMITS } from '../security.js';
 import { UPLOAD_ROOT } from '../paths.js';
@@ -120,6 +121,7 @@ listingsRouter.post('/', requireRole('organizer'), (req, res) => {
        VALUES (?, ?, ?, ?, ?, ?, ?, 'open')`
     )
     .run(organizer.id, amountNumber, due_date, description, cleanTitle, category, cleanLocation);
+  logChange(organizer.id, 'gig_posted', 'gig', result.lastInsertRowid, { title: cleanTitle, amount: amountNumber, due_date });
 
   // Shows up in the organizer's own Recent activity, so a new gig is visible on their
   // dashboard straight away, with a link to its public page.
@@ -206,6 +208,7 @@ listingsRouter.post('/:id/cancel', requireRole('organizer'), (req, res) => {
   if (result.changes === 0) {
     return res.status(404).json({ error: 'No open listing of yours found with that id.' });
   }
+  logChange(req.user.id, 'gig_cancelled', 'gig', listingId);
   res.json({ id: listingId, status: 'cancelled' });
 });
 
@@ -275,6 +278,12 @@ listingsRouter.post('/:id/accept', requireRole('organizer'), (req, res) => {
       `UPDATE job_applications SET status = 'declined' WHERE listing_id = ? AND id != ? AND status = 'pending'`
     ).run(listingId, application.id);
 
+    logChange(req.user.id, 'job_created', 'job', result.lastInsertRowid, {
+      crew_member_id: crewMemberId,
+      amount: listing.amount,
+      due_date: listing.due_date,
+      how: `accepted applicant on gig #${listingId}`,
+    });
     return result.lastInsertRowid;
   });
 

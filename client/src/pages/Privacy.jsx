@@ -109,6 +109,20 @@ export default function Privacy() {
             forget your password, a KREW admin calls the phone number on your account to confirm it's you before
             giving you a one-time reset code - your number is used for nothing else.
           </p>
+          <p>
+            Under Kenya's Data Protection Act you can see and delete the data KREW holds about you. Open{' '}
+            <strong>Your data</strong> in your dashboard menu to download a copy at any time, or to ask for your account
+            to be deleted. An admin deletes it and tells you if anything needs sorting out first, such as a job still
+            in progress. Your name, phone number, password, photos, ID and selfie are removed for good. The jobs and
+            payments you did stay on the other person's history, shown as "Deleted account", because their record
+            depends on them.
+          </p>
+
+          <h2>A record of changes</h2>
+          <p>
+            KREW keeps a log of every change to a job, a payment, a dispute or an account's approval, with who made it
+            and when, so any disagreement can be checked against what actually happened. Only KREW admins can see it.
+          </p>
 
           <h2>Changes to this policy</h2>
           <p>

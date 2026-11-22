@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, CircleHelp, LogOut, KeyRound } from 'lucide-react';
+import { Menu, X, CircleHelp, LogOut, KeyRound, ShieldCheck } from 'lucide-react';
 import Logo from './Logo.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 import NotificationBell from './NotificationBell.jsx';
 import ChangePasswordDialog from './ChangePasswordDialog.jsx';
+import YourDataDialog from './YourDataDialog.jsx';
 
 function initials(name) {
   return (name || '')
@@ -23,6 +24,7 @@ function initials(name) {
 export default function DashboardShell({ user, navItems, active, onNavigate, onLogout, children }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
+  const [showingData, setShowingData] = useState(false);
 
   // Close the phone menu with Esc.
   useEffect(() => {
@@ -84,6 +86,19 @@ export default function DashboardShell({ user, navItems, active, onNavigate, onL
             <KeyRound size={20} strokeWidth={1.5} aria-hidden="true" />
             Change password
           </button>
+          {user.role !== 'admin' && (
+            <button
+              type="button"
+              className="krew-shell-logout"
+              onClick={() => {
+                setMenuOpen(false);
+                setShowingData(true);
+              }}
+            >
+              <ShieldCheck size={20} strokeWidth={1.5} aria-hidden="true" />
+              Your data
+            </button>
+          )}
           <button type="button" className="krew-shell-logout" onClick={onLogout}>
             <LogOut size={20} strokeWidth={1.5} aria-hidden="true" />
             Log out
@@ -114,6 +129,7 @@ export default function DashboardShell({ user, navItems, active, onNavigate, onL
 
         <main className="krew-shell-content">{children}</main>
         {changingPassword && <ChangePasswordDialog onClose={() => setChangingPassword(false)} />}
+        {showingData && <YourDataDialog onClose={() => setShowingData(false)} />}
       </div>
     </div>
   );

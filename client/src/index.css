@@ -842,3 +842,8 @@ summary {
   font-weight: 700;
   color: var(--color-text);
 }
+
+/* A short payment record (paid less than agreed at least once) reads as a warning. */
+.krew-prec-facts dd.short {
+  color: var(--color-warning);
+}
