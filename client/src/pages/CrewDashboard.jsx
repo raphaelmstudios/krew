@@ -23,6 +23,7 @@ import { PAGE_META, sectionTitle } from '../pageMeta.js';
 import InfoTooltip from '../components/InfoTooltip.jsx';
 import ListingPhoto from '../components/ListingPhoto.jsx';
 import { useCoverPhoto, CoverPhotoCard } from '../components/CoverPhoto.jsx';
+import { cropImage } from '../components/ImageCropDialog.jsx';
 
 const MAX_PORTFOLIO_IMAGES = 12;
 
@@ -254,7 +255,11 @@ export default function CrewDashboard({ user, onLogout }) {
   }
 
   async function handlePhotoChange(e) {
-    const file = e.target.files[0];
+    const picked = e.target.files[0];
+    e.target.value = '';
+    if (!picked) return;
+    // Frame the photo first: the same 4:5 shape as the profile page portrait.
+    const file = await cropImage(picked, { aspect: 4 / 5, title: 'Frame your profile photo', outputWidth: 960 });
     if (!file) return;
 
     setPhotoUploading(true);
@@ -273,7 +278,6 @@ export default function CrewDashboard({ user, onLogout }) {
       setProfileBanner({ type: 'error', text: 'Could not reach the server.' });
     } finally {
       setPhotoUploading(false);
-      e.target.value = '';
     }
   }
 

@@ -2941,3 +2941,156 @@ body.krew-modal-open {
     display: none;
   }
 }
+
+
+/* --- Photo cropper (ImageCropDialog.jsx) --- */
+.krew-cp-hire-dialog.krew-crop-dialog {
+  max-width: 560px;
+}
+
+.krew-crop-hint {
+  margin: -6px 0 16px 0;
+  font-size: 13.5px;
+  color: var(--color-text-soft);
+}
+
+.krew-crop-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--color-ink-plum);
+}
+
+.krew-crop-frame {
+  position: relative;
+  flex: none;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  outline: none;
+}
+
+.krew-crop-frame.dragging {
+  cursor: grabbing;
+}
+
+.krew-crop-image {
+  position: absolute;
+  left: 0;
+  top: 0;
+  max-width: none;
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* Dims the photo outside the frame, draws the frame's edge, and shows thirds while moving */
+.krew-crop-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  border-radius: 4px;
+  box-shadow: 0 0 0 9999px rgba(20, 12, 26, 0.7);
+}
+
+.krew-crop-grid::before,
+.krew-crop-grid::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity var(--motion-fast) var(--motion-ease);
+}
+
+.krew-crop-grid::before {
+  background:
+    linear-gradient(to right, transparent calc(33.333% - 0.5px), rgba(255, 255, 255, 0.55) calc(33.333% - 0.5px), rgba(255, 255, 255, 0.55) calc(33.333% + 0.5px), transparent calc(33.333% + 0.5px)),
+    linear-gradient(to right, transparent calc(66.666% - 0.5px), rgba(255, 255, 255, 0.55) calc(66.666% - 0.5px), rgba(255, 255, 255, 0.55) calc(66.666% + 0.5px), transparent calc(66.666% + 0.5px));
+}
+
+.krew-crop-grid::after {
+  background:
+    linear-gradient(to bottom, transparent calc(33.333% - 0.5px), rgba(255, 255, 255, 0.55) calc(33.333% - 0.5px), rgba(255, 255, 255, 0.55) calc(33.333% + 0.5px), transparent calc(33.333% + 0.5px)),
+    linear-gradient(to bottom, transparent calc(66.666% - 0.5px), rgba(255, 255, 255, 0.55) calc(66.666% - 0.5px), rgba(255, 255, 255, 0.55) calc(66.666% + 0.5px), transparent calc(66.666% + 0.5px));
+}
+
+.krew-crop-frame.dragging .krew-crop-grid::before,
+.krew-crop-frame.dragging .krew-crop-grid::after {
+  opacity: 1;
+}
+
+.krew-crop-frame:focus-visible .krew-crop-grid {
+  border-color: var(--color-brand-soft);
+}
+
+.krew-crop-zoom {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.krew-crop-zoom input[type='range'] {
+  flex: 1;
+  min-width: 0;
+  height: 4px;
+  margin: 0 6px;
+  border-radius: 4px;
+  appearance: none;
+  -webkit-appearance: none;
+  background: linear-gradient(to right, var(--color-brand) var(--krew-crop-fill, 0%), var(--color-border) var(--krew-crop-fill, 0%));
+  cursor: pointer;
+}
+
+.krew-crop-zoom input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-surface-card);
+  border: 2px solid var(--color-brand);
+  box-shadow: 0 1px 4px rgba(20, 12, 26, 0.25);
+}
+
+.krew-crop-zoom input[type='range']::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-surface-card);
+  border: 2px solid var(--color-brand);
+}
+
+.krew-crop-zoom-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-text-soft);
+  cursor: pointer;
+  transition: color var(--motion-fast) var(--motion-ease);
+}
+
+.krew-crop-zoom-btn:hover:not(:disabled) {
+  color: var(--color-brand-text);
+}
+
+.krew-crop-zoom-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+@media (max-width: 480px) {
+  .krew-crop-stage {
+    padding: 18px;
+  }
+}

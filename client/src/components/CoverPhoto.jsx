@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ImagePlus, Trash2 } from 'lucide-react';
+import { cropImage } from './ImageCropDialog.jsx';
 
 // The wide cover photo behind a crew member's name on their public profile.
 // Uploading and removing it is shared by the profile page itself (a "Change cover" button on
@@ -25,7 +26,10 @@ export function useCoverPhoto(initialPath, { loadCurrent = false } = {}) {
     };
   }, [loadCurrent]);
 
-  async function upload(file) {
+  async function upload(picked) {
+    if (!picked) return;
+    // Frame it first, in the wide shape of the profile banner.
+    const file = await cropImage(picked, { aspect: 3, title: 'Frame your cover photo', outputWidth: 2400 });
     if (!file) return;
     setBusy(true);
     setError(null);
