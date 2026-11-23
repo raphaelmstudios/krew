@@ -5,8 +5,8 @@
 | | |
 | --- | --- |
 | **Live site** | https://krew-hysf.onrender.com |
-| **Demo video** | ADD VIDEO LINK |
-| **SRS and system design** | ADD SRS LINK |
+| **Demo video** | https://youtu.be/rTI2ad1bCrU |
+| **SRS and system design** | [SRS document (Google Docs)](https://docs.google.com/document/d/1hRzuTSFWmo12YcDorseJf1EQ8TPE245hszdPpYBKiqQ/edit?usp=sharing) |
 | **Demo logins** | See [Trying KREW](#trying-krew). The password for the live site is in the submission document. |
 
 KREW keeps track of payments. It does not send, hold or receive money. Organizers pay crew directly, by cash or mobile money, and both sides then confirm the amount on KREW.
@@ -150,7 +150,7 @@ Every person, company and event in the demo data is made up. Crew profile photos
 | 0711000008 | Organizer: Kilele Corporate Events, often late and sometimes pays less than agreed |
 | 0711000009 | Organizer: Anga Rooftop Socials |
 | 0711000004 | Crew: Achieng Odhiambo, photographer, 14 completed jobs |
-| 0711000005 | Crew: Mutiso Kyalo, bartender, new |
+| 0711000005 | Crew: Mutiso Kyalo, bartender, new in a fresh demo (on the live site he has completed his first job) |
 | 0711000006 | Crew: Nafula Wekesa, waiting for approval |
 | 0711000010 to 0711000017 | Eight more crew, from 1 to 11 completed jobs |
 

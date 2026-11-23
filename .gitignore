@@ -7,6 +7,5 @@ dist/
 .DS_Store
 server/uploads/
 .artifact-cache/
-Claude outputs/
 # Temporary files a mounted drive can leave behind
 .fuse_hidden*
